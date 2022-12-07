@@ -2,6 +2,8 @@
 
 #include <Windows.h>
 
+#include "D3D.h"
+
 namespace wf
 {
 	const bool FULL_SCREEN = false;
@@ -24,5 +26,6 @@ namespace wf
 		bool Render();
 
 	private:
+		D3D* m_directx{ nullptr };
 	};
 }

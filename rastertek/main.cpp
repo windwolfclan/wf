@@ -1,10 +1,10 @@
 #include "System.h"
 
-int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nShowCmd)
+int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nShowCmd )
 {
 	wf::System* system = new wf::System();
 
-	if (system->Initialize())
+	if ( system->Initialize() )
 	{
 		system->Run();
 	}

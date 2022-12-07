@@ -6,7 +6,7 @@ namespace wf
 	{
 	}
 
-	Input::Input(const Input&)
+	Input::Input( const Input& )
 	{
 	}
 
@@ -16,23 +16,23 @@ namespace wf
 
 	void Input::Initialize()
 	{
-		for (bool& key : m_keys)
+		for ( bool& key : m_keys )
 		{
 			key = false;
 		}
 	}
 
-	void Input::KeyDown(unsigned int key)
+	void Input::KeyDown( unsigned int key )
 	{
-		m_keys[key] = true;
+		m_keys[ key ] = true;
 	}
 
-	void Input::KeyUp(unsigned int key)
+	void Input::KeyUp( unsigned int key )
 	{
-		m_keys[key] = false;
+		m_keys[ key ] = false;
 	}
 
-	bool Input::IsKeyDown(unsigned int key)
+	bool Input::IsKeyDown( unsigned int key )
 	{
 		return m_keys[ key ];
 	}

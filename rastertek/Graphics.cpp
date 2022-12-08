@@ -56,11 +56,40 @@ namespace wf
 			return false;
 		}
 
+		m_light_model = new LightModel;
+		if ( !m_light_model->Initialize( device, context, "./resources/StoneFloorTexture.tga" ) )
+		{
+			return false;
+		}
+
+		m_light_shader = new LightShader;
+		if ( !m_light_shader->Initialize( device, _hwnd ) )
+		{
+			return false;
+		}
+
+		m_light.SetDiffuse( 0.0f, 0.0f, 0.0f, 1.0f );
+		m_light.SetDirection( 0.0f, 0.0f, 1.0f );
+
 		return true;
 	}
 
 	void Graphics::Shutdown()
 	{
+		if ( m_light_shader )
+		{
+			m_light_shader->Shutdown();
+			delete m_light_shader;
+			m_light_shader = nullptr;
+		}
+
+		if ( m_light_model )
+		{
+			m_light_model->Shutdown();
+			delete m_light_model;
+			m_light_model = nullptr;
+		}
+
 		if ( m_texture_shader )
 		{
 			m_texture_shader->Shutdown();
@@ -105,7 +134,21 @@ namespace wf
 
 	bool Graphics::Frame()
 	{
-		if ( !Render() )
+		static float rotation{ 0.0f };
+
+		rotation += (float)XM_PI * 0.01f;
+		if ( rotation > 360.0f )
+			rotation -= 360.0f;
+
+		static float b = 0.0f;
+
+		b += (float)XM_PI * 0.005f;
+		if ( b > 1.0f )
+			b -= 1.0f;
+
+		m_light.SetDiffuse( 0.5f, b, b, 1.0f );
+
+		if ( !Render( rotation ) )
 		{
 			return false;
 		}
@@ -113,7 +156,7 @@ namespace wf
 		return true;
 	}
 
-	bool Graphics::Render()
+	bool Graphics::Render( float rotation )
 	{
 		XMMATRIX w;
 		XMMATRIX v;
@@ -127,15 +170,26 @@ namespace wf
 			m_directx->GetWorldMatrix( w );
 			m_camera->GetViewMatrix( v );
 			m_directx->GetProjectionMatrix( p );
+
+			w = XMMatrixRotationZ( rotation );
 		}
 		
 		// render
 		{
-			m_directx->BeginScene( 0.25f, 0.25f, 0.25f, 1.0f );
+			m_directx->BeginScene( 0.0f, 0.25f, 0.5f, 1.0f );
 
-			m_texture_model->Render( context );
+			m_light_model->Render( context );
 
-			if ( !m_texture_shader->Render( context, m_texture_model->GetIndexCount(), w, v, p, m_texture_model->GetTexture() ) )
+			if ( !m_light_shader->Render( 
+				context, 
+				m_light_model->GetIndexCount(), 
+				w, 
+				v, 
+				p, 
+				m_light_model->GetTexture(), 
+				m_light.GetDiffuse(), 
+				m_light.GetDirection() ) 
+				)
 			{
 				return false;
 			}

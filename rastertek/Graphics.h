@@ -5,10 +5,11 @@
 #include "D3D.h"
 #include "Camera.h"
 #include "Model.h"
-
+#include "Light.h"
 
 #include "ColorShader.h"
 #include "TextureShader.h"
+#include "LightShader.h"
 
 namespace wf
 {
@@ -29,17 +30,20 @@ namespace wf
 		bool Frame();
 
 	private:
-		bool Render();
+		bool Render( float );
 
 	private:
 		D3D* m_directx{ nullptr };
 		Camera* m_camera{ nullptr };
-		
+		Light m_light{};
 		
 		ColorModel* m_color_model{ nullptr };
 		ColorShader* m_color_shader{ nullptr };
 
 		TextureModel* m_texture_model{ nullptr };
 		TextureShader* m_texture_shader{ nullptr };
+
+		LightModel* m_light_model{ nullptr };
+		LightShader* m_light_shader{ nullptr };
 	};
 }

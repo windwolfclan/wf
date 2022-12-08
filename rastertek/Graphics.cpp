@@ -25,12 +25,13 @@ namespace wf
 		}
 
 		ID3D11Device* device = m_directx->GetDevice();
+		ID3D11DeviceContext* context = m_directx->GetDeviceContext();
 
 		m_camera = new Camera;
 		m_camera->SetPosition( 0.0f, 0.0f, -5.0f );
 		
-		m_model = new Model;
-		if ( !m_model->Initialize( device ) )
+		m_color_model = new ColorModel;
+		if ( !m_color_model->Initialize( device ) )
 		{
 			MessageBox( _hwnd, L"Could not initialize the model object", L"Error", MB_OK );
 			return false;
@@ -43,11 +44,37 @@ namespace wf
 			return false;
 		}
 
+		m_texture_model = new TextureModel;
+		if ( !m_texture_model->Initialize( device, context, "./resources/StoneFloorTexture.tga" ) )
+		{
+			return false;
+		}
+
+		m_texture_shader = new TextureShader;
+		if ( !m_texture_shader->Initialize( device, _hwnd ) )
+		{
+			return false;
+		}
+
 		return true;
 	}
 
 	void Graphics::Shutdown()
 	{
+		if ( m_texture_shader )
+		{
+			m_texture_shader->Shutdown();
+			delete m_texture_shader;
+			m_texture_shader = nullptr;
+		}
+
+		if ( m_texture_model )
+		{
+			m_texture_model->Shutdown();
+			delete m_texture_model;
+			m_texture_model = nullptr;
+		}
+
 		if ( m_color_shader )
 		{
 			m_color_shader->Shutdown();
@@ -55,11 +82,11 @@ namespace wf
 			m_color_shader = nullptr;
 		}
 
-		if ( m_model )
+		if ( m_color_model )
 		{
-			m_model->Shutdown();
-			delete m_model;
-			m_model = nullptr;
+			m_color_model->Shutdown();
+			delete m_color_model;
+			m_color_model = nullptr;
 		}
 
 		if ( m_camera )
@@ -106,9 +133,9 @@ namespace wf
 		{
 			m_directx->BeginScene( 0.25f, 0.25f, 0.25f, 1.0f );
 
-			m_model->Render( context );
+			m_texture_model->Render( context );
 
-			if ( !m_color_shader->Render( context, m_model->GetIndexCount(), w, v, p ) )
+			if ( !m_texture_shader->Render( context, m_texture_model->GetIndexCount(), w, v, p, m_texture_model->GetTexture() ) )
 			{
 				return false;
 			}

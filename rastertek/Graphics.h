@@ -5,7 +5,10 @@
 #include "D3D.h"
 #include "Camera.h"
 #include "Model.h"
+
+
 #include "ColorShader.h"
+#include "TextureShader.h"
 
 namespace wf
 {
@@ -31,7 +34,12 @@ namespace wf
 	private:
 		D3D* m_directx{ nullptr };
 		Camera* m_camera{ nullptr };
-		Model* m_model{ nullptr };
+		
+		
+		ColorModel* m_color_model{ nullptr };
 		ColorShader* m_color_shader{ nullptr };
+
+		TextureModel* m_texture_model{ nullptr };
+		TextureShader* m_texture_shader{ nullptr };
 	};
 }

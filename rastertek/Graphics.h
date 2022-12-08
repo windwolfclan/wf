@@ -3,6 +3,9 @@
 #include <Windows.h>
 
 #include "D3D.h"
+#include "Camera.h"
+#include "Model.h"
+#include "ColorShader.h"
 
 namespace wf
 {
@@ -27,5 +30,8 @@ namespace wf
 
 	private:
 		D3D* m_directx{ nullptr };
+		Camera* m_camera{ nullptr };
+		Model* m_model{ nullptr };
+		ColorShader* m_color_shader{ nullptr };
 	};
 }

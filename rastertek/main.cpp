@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "System.h"
 
 int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nShowCmd )

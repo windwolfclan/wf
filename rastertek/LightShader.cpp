@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "LightShader.h"
 
 namespace wf

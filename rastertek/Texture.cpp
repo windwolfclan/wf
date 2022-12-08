@@ -1,4 +1,7 @@
+#include "pch.h"
 #include "Texture.h"
+
+#include <stdio.h>
 
 namespace wf
 {

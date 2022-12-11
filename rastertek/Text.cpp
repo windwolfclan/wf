@@ -57,11 +57,23 @@ namespace wf
 			return false;
 		}
 
+		if ( !InitializeSentence( &m_mouse_x, 32, _device ) )
+		{
+			return false;
+		}
+
+		if ( !InitializeSentence( &m_mouse_y, 32, _device ) )
+		{
+			return false;
+		}
+
 		return true;
 	}
 
 	void Text::Shutdown()
 	{
+		ReleaseSentence( &m_mouse_y );
+		ReleaseSentence( &m_mouse_x );
 		ReleaseSentence( &m_sentence2 );
 		ReleaseSentence( &m_sentence1 );
 
@@ -77,6 +89,40 @@ namespace wf
 		}
 
 		if ( !RenderSentence( _context, m_sentence2, _world, _ortho ) )
+		{
+			return false;
+		}
+
+		if ( !RenderSentence( _context, m_mouse_x, _world, _ortho ) )
+		{
+			return false;
+		}
+
+		if ( !RenderSentence( _context, m_mouse_y, _world, _ortho ) )
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	bool Text::SetMousePosition( int _mouse_x, int _mouse_y, ID3D11DeviceContext* _context )
+	{
+		char temp[ 16 ];
+		char mouse[ 16 ];
+
+		_itoa_s( _mouse_x, temp, 10 );
+		strcpy_s( mouse, "Mouse X: " );
+		strcat_s( mouse, temp );
+		if ( !UpdateSentence( m_mouse_x, mouse, 20, 20, 1.0f, 1.0f, 1.0f, _context ) )
+		{
+			return false;
+		}
+
+		_itoa_s( _mouse_y, temp, 10 );
+		strcpy_s( mouse, "Mouse Y: " );
+		strcat_s( mouse, temp );
+		if ( !UpdateSentence( m_mouse_y, mouse, 20, 40, 1.0f, 1.0f, 1.0f, _context ) )
 		{
 			return false;
 		}

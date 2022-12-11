@@ -90,6 +90,11 @@ namespace wf
 			return false;
 		}
 
+		m_cursor = new Bitmap;
+		if ( !m_cursor->Initialize( device, context, _width, _height, "./resources/windwolf.tga", 32, 32 ) )
+		{
+			return false;
+		}
 
 		m_light.SetAmbient( 0.15f, 0.15f, 0.15f, 1.0f );
 		m_light.SetDiffuse( 1.0f, 1.0f, 1.0f, 1.0f );
@@ -102,6 +107,7 @@ namespace wf
 
 	void Graphics::Shutdown()
 	{
+		SAFE_SHUTDOWN( m_cursor );
 		SAFE_SHUTDOWN( m_text );
 		SAFE_SHUTDOWN( m_bitmap );
 		SAFE_SHUTDOWN( m_rastertek_model );
@@ -115,30 +121,29 @@ namespace wf
 		SAFE_SHUTDOWN( m_directx );
 	}
 
-	bool Graphics::Frame()
+	bool Graphics::Frame( int _mouse_x, int _mouse_y )
 	{
-		static float rotation{ 0.0f };
+		ID3D11DeviceContext* context = m_directx->GetDeviceContext();
+		m_mouse_x = _mouse_x;
+		m_mouse_y = _mouse_y;
 
-		rotation += (float)XM_PI * 0.005f;
-		if ( rotation > 360.0f )
-			rotation -= 360.0f;
-
-		static float b = 0.0f;
-
-		b += (float)XM_PI * 0.005f;
-		if ( b > 1.0f )
-			b -= 1.0f;
-
-		if ( !Render( rotation ) )
+		if ( !m_text->SetMousePosition( _mouse_x, _mouse_y, context ) )
 		{
 			return false;
 		}
 
+		m_camera->SetPosition( 0.0f, 0.0f, -10.0f );
+
 		return true;
 	}
 
-	bool Graphics::Render( float rotation )
+	bool Graphics::Render()
 	{
+		static float rotation{ 0.0f };
+		rotation += (float)XM_PI * 0.005f;
+		if ( rotation > 360.0f )
+			rotation -= 360.0f;
+
 		XMMATRIX w;
 		XMMATRIX v;
 		XMMATRIX p;
@@ -210,6 +215,9 @@ namespace wf
 			{
 				return false;
 			}
+
+			m_cursor->Render( context, m_mouse_x, m_mouse_y );
+			m_texture_shader->Render( context, m_cursor->GetIndexCount(), w, v, o, m_cursor->GetTexture() );
 
 			m_directx->TurnOffAlphaBlending();
 

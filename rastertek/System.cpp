@@ -24,7 +24,7 @@ namespace wf
 		InitializeWindows( width, height );
 
 		m_input = new Input();
-		m_input->Initialize();
+		m_input->Initialize( m_hinstance, m_hwnd, width, height );
 
 		m_graphics = new Graphics();
 		if ( !m_graphics->Initialize( width, height, m_hwnd ) )
@@ -44,11 +44,7 @@ namespace wf
 			m_graphics = nullptr;
 		}
 
-		if ( m_input )
-		{
-			delete m_input;
-			m_input = nullptr;
-		}
+		SAFE_SHUTDOWN( m_input );
 
 		ShutdownWindows();
 	}
@@ -79,6 +75,11 @@ namespace wf
 					done = true;
 				}
 			}
+
+			if ( m_input->IsEscapePressed() )
+			{
+				done = true;
+			}
 		}
 
 		return 0;
@@ -86,35 +87,27 @@ namespace wf
 
 	LRESULT System::MessageHandler( HWND _hwnd, UINT _msg, WPARAM _wparam, LPARAM _lparam )
 	{
-		switch ( _msg )
-		{
-			case WM_KEYDOWN:
-			{
-				m_input->KeyDown( (unsigned int)_wparam );
-				return 0;
-			}
-
-			case WM_KEYUP:
-			{
-				m_input->KeyUp( (unsigned int)_wparam );
-				return 0;
-			}
-
-			default:
-			{
-				return DefWindowProc( _hwnd, _msg, _wparam, _lparam );
-			}
-		}
+		return DefWindowProc( _hwnd, _msg, _wparam, _lparam );
 	}
 
 	bool System::Frame()
 	{
-		if ( m_input->IsKeyDown( VK_ESCAPE ) )
+
+		if ( !m_input->Frame() )
 		{
 			return false;
 		}
 
-		if ( !m_graphics->Frame() )
+		int mouse_x{ 0 };
+		int mouse_y{ 0 };
+		m_input->GetMouseLocation( mouse_x, mouse_y );
+
+		if ( !m_graphics->Frame( mouse_x, mouse_y) )
+		{
+			return false;
+		}
+
+		if ( !m_graphics->Render() )
 		{
 			return false;
 		}

@@ -28,10 +28,8 @@ namespace wf
 
 		bool Initialize(int _width, int _height, HWND _hwnd);
 		void Shutdown();
-		bool Frame();
-
-	private:
-		bool Render( float );
+		bool Frame( int _mouse_x, int _mouse_y );
+		bool Render();
 
 	private:
 		D3D* m_directx{ nullptr };
@@ -52,5 +50,10 @@ namespace wf
 		Bitmap* m_bitmap{ nullptr };
 
 		Text* m_text{ nullptr };
+
+		// mouse cursor
+		Bitmap* m_cursor{ nullptr };
+		int m_mouse_x{ 0 };
+		int m_mouse_y{ 0 };
 	};
 }

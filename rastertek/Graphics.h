@@ -44,5 +44,7 @@ namespace wf
 
 		LightModel* m_light_model{ nullptr };
 		LightShader* m_light_shader{ nullptr };
+
+		RasterTekModel* m_rastertek_model{ nullptr };
 	};
 }

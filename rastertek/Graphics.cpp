@@ -29,7 +29,7 @@ namespace wf
 		ID3D11DeviceContext* context = m_directx->GetDeviceContext();
 
 		m_camera = new Camera;
-		m_camera->SetPosition( 0.0f, 0.0f, -5.0f );
+		m_camera->SetPosition( 0.0f, 0.0f, -10.0f );
 		
 		m_color_model = new ColorModel;
 		if ( !m_color_model->Initialize( device ) )
@@ -69,7 +69,14 @@ namespace wf
 			return false;
 		}
 
-		m_light.SetDiffuse( 0.0f, 0.0f, 0.0f, 1.0f );
+		m_rastertek_model = new RasterTekModel;
+		if ( !m_rastertek_model->Initialize( device, context, "./resources/StoneFloorTexture.tga", "./resources/cube.txt" ) )
+		{
+			return false;
+		}
+
+
+		m_light.SetDiffuse( 1.0f, 1.0f, 1.0f, 1.0f );
 		m_light.SetDirection( 0.0f, 0.0f, 1.0f );
 
 		return true;
@@ -77,60 +84,15 @@ namespace wf
 
 	void Graphics::Shutdown()
 	{
-		if ( m_light_shader )
-		{
-			m_light_shader->Shutdown();
-			delete m_light_shader;
-			m_light_shader = nullptr;
-		}
-
-		if ( m_light_model )
-		{
-			m_light_model->Shutdown();
-			delete m_light_model;
-			m_light_model = nullptr;
-		}
-
-		if ( m_texture_shader )
-		{
-			m_texture_shader->Shutdown();
-			delete m_texture_shader;
-			m_texture_shader = nullptr;
-		}
-
-		if ( m_texture_model )
-		{
-			m_texture_model->Shutdown();
-			delete m_texture_model;
-			m_texture_model = nullptr;
-		}
-
-		if ( m_color_shader )
-		{
-			m_color_shader->Shutdown();
-			delete m_color_shader;
-			m_color_shader = nullptr;
-		}
-
-		if ( m_color_model )
-		{
-			m_color_model->Shutdown();
-			delete m_color_model;
-			m_color_model = nullptr;
-		}
-
-		if ( m_camera )
-		{
-			delete m_camera;
-			m_camera = nullptr;
-		}
-
-		if ( m_directx )
-		{
-			m_directx->Shutdown();
-			delete m_directx;
-			m_directx = nullptr;
-		}
+		SAFE_SHUTDOWN( m_rastertek_model );
+		SAFE_SHUTDOWN( m_light_shader );
+		SAFE_SHUTDOWN( m_light_model );
+		SAFE_SHUTDOWN( m_texture_shader );
+		SAFE_SHUTDOWN( m_texture_model );
+		SAFE_SHUTDOWN( m_color_shader );
+		SAFE_SHUTDOWN( m_color_model );
+		SAFE_DELETE( m_camera );
+		SAFE_SHUTDOWN( m_directx );
 	}
 
 	bool Graphics::Frame()
@@ -146,8 +108,6 @@ namespace wf
 		b += (float)XM_PI * 0.005f;
 		if ( b > 1.0f )
 			b -= 1.0f;
-
-		m_light.SetDiffuse( 0.5f, b, b, 1.0f );
 
 		if ( !Render( rotation ) )
 		{
@@ -172,22 +132,22 @@ namespace wf
 			m_camera->GetViewMatrix( v );
 			m_directx->GetProjectionMatrix( p );
 
-			w = XMMatrixRotationZ( rotation );
+			w = XMMatrixRotationY( rotation );
 		}
 		
 		// render
 		{
 			m_directx->BeginScene( 0.0f, 0.25f, 0.5f, 1.0f );
 
-			m_light_model->Render( context );
+			m_rastertek_model->Render( context );
 
 			if ( !m_light_shader->Render( 
 				context, 
-				m_light_model->GetIndexCount(), 
+				m_rastertek_model->GetIndexCount(),
 				w, 
 				v, 
 				p, 
-				m_light_model->GetTexture(), 
+				m_rastertek_model->GetTexture(),
 				m_light.GetDiffuse(), 
 				m_light.GetDirection() ) 
 				)

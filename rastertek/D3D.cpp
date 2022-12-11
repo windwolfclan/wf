@@ -17,6 +17,8 @@ namespace wf
 
 	bool D3D::Initialize( int _width, int _height, bool _vsync, HWND _hwnd, bool _fullscreen, float _far, float _near )
 	{
+		m_width = _width;
+		m_height = _height;
 		m_vsync = _vsync;
 		
 		HRESULT hr{ S_OK };
@@ -396,4 +398,15 @@ namespace wf
 
 		m_device_context->OMSetBlendState( m_alpha_disable_blend_state, blend_factor, 0xffffffff );
 	}
+
+	int D3D::GetWidth() const
+	{
+		return m_width;
+	}
+
+	int D3D::GetHeight() const
+	{
+		return m_height;
+	}
+
 }

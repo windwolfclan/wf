@@ -30,11 +30,17 @@ namespace wf
 		void TurnOnAlphaBlending();
 		void TurnOffAlphaBlending();
 
+		int GetWidth() const;
+		int GetHeight() const;
+
 	private:
 		bool m_vsync{ false };
 		
 		int m_vga_memory{ 0 };
 		char m_vga_name[ MAX_PATH ];
+
+		int m_width{ 0 };
+		int m_height{ 0 };
 
 		IDXGISwapChain* m_swapchain{ nullptr };
 		ID3D11Device* m_device{ nullptr };

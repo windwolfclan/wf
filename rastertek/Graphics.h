@@ -32,6 +32,9 @@ namespace wf
 		bool Render();
 
 	private:
+		void DrawCursor();
+
+	private:
 		D3D* m_directx{ nullptr };
 		Camera* m_camera{ nullptr };
 		Light m_light{};

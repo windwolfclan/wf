@@ -216,8 +216,7 @@ namespace wf
 				return false;
 			}
 
-			m_cursor->Render( context, m_mouse_x, m_mouse_y );
-			m_texture_shader->Render( context, m_cursor->GetIndexCount(), w, v, o, m_cursor->GetTexture() );
+			DrawCursor();
 
 			m_directx->TurnOffAlphaBlending();
 
@@ -227,5 +226,32 @@ namespace wf
 		}
 
 		return true;
+	}
+	void Graphics::DrawCursor()
+	{
+		ID3D11DeviceContext* context = m_directx->GetDeviceContext();
+		XMMATRIX w;
+		XMMATRIX v;
+		XMMATRIX o;
+
+		m_directx->GetWorldMatrix( w );
+		m_camera->GetViewMatrix( v );
+		m_directx->GetOrthoMatrix( o );
+
+		constexpr int CURSOR_SIZE = 32;
+		
+		int x = m_mouse_x;
+		int y = m_mouse_y;
+		int width = m_directx->GetWidth();
+		int height = m_directx->GetHeight();
+
+		if ( x + CURSOR_SIZE > width )
+			x = width - CURSOR_SIZE;
+
+		if ( y + CURSOR_SIZE > height )
+			y = height - CURSOR_SIZE;
+
+		m_cursor->Render( context, x, y );
+		m_texture_shader->Render( context, m_cursor->GetIndexCount(), w, v, o, m_cursor->GetTexture() );
 	}
 }

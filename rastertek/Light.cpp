@@ -38,6 +38,19 @@ namespace wf
 		m_direction.z = _z;
 	}
 
+	void Light::SetSpecular( float _r, float _g, float _b, float _a )
+	{
+		m_specular.x = _r;
+		m_specular.y = _g;
+		m_specular.z = _b;
+		m_specular.w = _a;
+	}
+
+	void Light::SetSpecularPower( float _power )
+	{
+		m_specular_power = _power;
+	}
+
 	XMFLOAT4 Light::GetAmbient() const
 	{
 		return m_ambient;
@@ -51,6 +64,16 @@ namespace wf
 	XMFLOAT3 Light::GetDirection() const
 	{
 		return m_direction;
+	}
+
+	XMFLOAT4 Light::GetSpecular() const
+	{
+		return m_specular;
+	}
+
+	float Light::GetSpecularPower() const
+	{
+		return m_specular_power;
 	}
 
 }

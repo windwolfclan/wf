@@ -20,12 +20,10 @@ namespace wf
 		std::wstring vs = L"light_vs.hlsl";
 		std::wstring ps = L"light_ps.hlsl";
 
-		HRESULT hr = InitializeShader( _device, _hwnd, vs.c_str(), ps.c_str() );
-		if ( FAILED( hr ) )
+		if ( !InitializeShader( _device, _hwnd, vs.c_str(), ps.c_str() ) )
 		{
 			return false;
 		}
-
 
 		return true;
 	}
@@ -35,9 +33,16 @@ namespace wf
 		ShutdownShader();
 	}
 
-	bool LightShader::Render( ID3D11DeviceContext* _context, int _index_count, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView* _srv, XMFLOAT4 _ambient, XMFLOAT4 _diffuse, XMFLOAT3 _direction )
+	bool LightShader::Render( ID3D11DeviceContext* _context, int _index_count, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView* _srv,
+		XMFLOAT4 _ambient,
+		XMFLOAT4 _diffuse,
+		float _specular_power,
+		XMFLOAT4 _specular,
+		XMFLOAT3 _camera_pos,
+		XMFLOAT3 _light_dir
+	)
 	{
-		if ( !SetShaderParameters( _context, _w, _v, _p, _srv, _ambient, _diffuse, _direction ) )
+		if ( !SetShaderParameters( _context, _w, _v, _p, _srv, _ambient, _diffuse, _specular_power, _specular, _camera_pos, _light_dir ) )
 		{
 			return false;
 		}
@@ -133,6 +138,20 @@ namespace wf
 
 		ZeroMemory( &buffer_desc, sizeof( buffer_desc ) );
 		buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
+		buffer_desc.ByteWidth = sizeof( CameraBufferType );
+		buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		buffer_desc.MiscFlags = 0;
+		buffer_desc.StructureByteStride = 0;
+
+		hr = _device->CreateBuffer( &buffer_desc, nullptr, &m_camera_buffer );
+		if ( FAILED( hr ) )
+		{
+			return false;
+		}
+
+		ZeroMemory( &buffer_desc, sizeof( buffer_desc ) );
+		buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
 		buffer_desc.ByteWidth = sizeof( LightBufferType );
 		buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 		buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
@@ -173,41 +192,13 @@ namespace wf
 
 	void LightShader::ShutdownShader()
 	{
-		if ( m_sampler_state )
-		{
-			m_sampler_state->Release();
-			m_sampler_state = nullptr;
-		}
-
-		if ( m_light_buffer )
-		{
-			m_light_buffer->Release();
-			m_light_buffer = nullptr;
-		}
-
-		if ( m_matrix_buffer )
-		{
-			m_matrix_buffer->Release();
-			m_matrix_buffer = nullptr;
-		}
-
-		if ( m_pixel_shader )
-		{
-			m_pixel_shader->Release();
-			m_pixel_shader = nullptr;
-		}
-
-		if ( m_vertex_shader )
-		{
-			m_vertex_shader->Release();
-			m_vertex_shader = nullptr;
-		}
-
-		if ( m_layout )
-		{
-			m_layout->Release();
-			m_layout = nullptr;
-		}
+		SAFE_RELEASE( m_sampler_state );
+		SAFE_RELEASE( m_light_buffer );
+		SAFE_RELEASE( m_camera_buffer );
+		SAFE_RELEASE( m_matrix_buffer );
+		SAFE_RELEASE( m_pixel_shader );
+		SAFE_RELEASE( m_vertex_shader );
+		SAFE_RELEASE( m_layout );
 	}
 
 	void LightShader::OutputShaderErrorMessage( ID3D10Blob* _blob, HWND _hwnd, const wchar_t* _filename )
@@ -234,7 +225,14 @@ namespace wf
 		MessageBox( _hwnd, L"Error compiling shader\nCheck shader-error.txt", _filename, MB_OK );
 	}
 
-	bool LightShader::SetShaderParameters( ID3D11DeviceContext* _context, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView* _srv, XMFLOAT4 _ambient, XMFLOAT4 _diffuse, XMFLOAT3 _direction )
+	bool LightShader::SetShaderParameters( ID3D11DeviceContext* _context, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView* _srv,
+		XMFLOAT4 _ambient,
+		XMFLOAT4 _diffuse,
+		float _specular_power,
+		XMFLOAT4 _specular,
+		XMFLOAT3 _camera_pos,
+		XMFLOAT3 _light_dir
+	)
 	{
 		{
 			_w = XMMatrixTranspose( _w );
@@ -248,6 +246,7 @@ namespace wf
 				data->w = _w;
 				data->v = _v;
 				data->p = _p;
+				
 				_context->Unmap( m_matrix_buffer, 0 );
 			}
 
@@ -257,13 +256,28 @@ namespace wf
 
 		{
 			D3D11_MAPPED_SUBRESOURCE mappedResource;
+			if ( SUCCEEDED( _context->Map( m_camera_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource ) ) )
+			{
+				CameraBufferType* data = (CameraBufferType*)mappedResource.pData;
+				data->pos = _camera_pos;
+				data->padding = 0.0f;
+
+				_context->Unmap( m_camera_buffer, 0 );
+			}
+			UINT slot = 1;
+			_context->VSSetConstantBuffers( slot, 1, &m_camera_buffer );
+		}
+
+		{
+			D3D11_MAPPED_SUBRESOURCE mappedResource;
 			if ( SUCCEEDED( _context->Map( m_light_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource ) ) )
 			{
 				LightBufferType* data = (LightBufferType*)mappedResource.pData;
 				data->ambient = _ambient;
 				data->diffuse = _diffuse;
-				data->direction = _direction;
-				data->padding = 0.0f;
+				data->light_dir = _light_dir;
+				data->specular_power = _specular_power;
+				data->specular = _specular;
 
 				_context->Unmap( m_light_buffer, 0 );
 			}

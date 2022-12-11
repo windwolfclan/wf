@@ -78,7 +78,9 @@ namespace wf
 
 		m_light.SetAmbient( 0.15f, 0.15f, 0.15f, 1.0f );
 		m_light.SetDiffuse( 1.0f, 1.0f, 1.0f, 1.0f );
-		m_light.SetDirection( 1.0f, 0.0f, 0.0f );
+		m_light.SetDirection( 0.0f, 0.0f, 1.0f );
+		m_light.SetSpecular( 0.0f, 1.0f, 1.0f, 1.0f );
+		m_light.SetSpecularPower( 1.0f );
 
 		return true;
 	}
@@ -151,8 +153,12 @@ namespace wf
 				m_rastertek_model->GetTexture(),
 				m_light.GetAmbient(),
 				m_light.GetDiffuse(), 
-				m_light.GetDirection() ) 
-				)
+				m_light.GetSpecularPower(),
+				m_light.GetSpecular(),
+				m_camera->GetPosition(),
+				m_light.GetDirection()
+			)	// Render
+			)	// if
 			{
 				return false;
 			}

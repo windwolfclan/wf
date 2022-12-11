@@ -27,9 +27,12 @@ namespace wf
 
 		ID3D11Device* device = m_directx->GetDevice();
 		ID3D11DeviceContext* context = m_directx->GetDeviceContext();
+		XMMATRIX view;
 
 		m_camera = new Camera;
 		m_camera->SetPosition( 0.0f, 0.0f, -10.0f );
+		m_camera->Render();
+		m_camera->GetViewMatrix( view );
 		
 		m_color_model = new ColorModel;
 		if ( !m_color_model->Initialize( device ) )
@@ -80,6 +83,12 @@ namespace wf
 		{
 			return false;
 		}
+		
+		m_text = new Text;
+		if ( !m_text->Initialize( device, context, _hwnd, _width, _height, view ) )
+		{
+			return false;
+		}
 
 
 		m_light.SetAmbient( 0.15f, 0.15f, 0.15f, 1.0f );
@@ -93,6 +102,7 @@ namespace wf
 
 	void Graphics::Shutdown()
 	{
+		SAFE_SHUTDOWN( m_text );
 		SAFE_SHUTDOWN( m_bitmap );
 		SAFE_SHUTDOWN( m_rastertek_model );
 		SAFE_SHUTDOWN( m_light_shader );
@@ -177,8 +187,10 @@ namespace wf
 			{
 				return false;
 			}
-
+			
 			m_directx->GetWorldMatrix( w );
+
+				
 			if ( !m_texture_shader->Render(
 				context,
 				m_bitmap->GetIndexCount(),
@@ -190,6 +202,16 @@ namespace wf
 			{
 				return false;
 			}
+
+			// text
+			m_directx->TurnOnAlphaBlending();
+
+			if ( !m_text->Render( context, w, o ) )
+			{
+				return false;
+			}
+
+			m_directx->TurnOffAlphaBlending();
 
 			m_directx->TurnOnZBuffer();
 

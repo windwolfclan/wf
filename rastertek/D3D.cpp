@@ -262,6 +262,32 @@ namespace wf
 
 		m_device_context->RSSetState( m_raster_state );
 
+		D3D11_BLEND_DESC blend_desc{};
+		ZeroMemory( &blend_desc, sizeof( blend_desc ) );
+		blend_desc.RenderTarget[ 0 ].BlendEnable = TRUE;
+		blend_desc.RenderTarget[ 0 ].SrcBlend = D3D11_BLEND_ONE;
+		blend_desc.RenderTarget[ 0 ].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+		blend_desc.RenderTarget[ 0 ].BlendOp = D3D11_BLEND_OP_ADD;
+		blend_desc.RenderTarget[ 0 ].SrcBlendAlpha = D3D11_BLEND_ONE;
+		blend_desc.RenderTarget[ 0 ].DestBlendAlpha = D3D11_BLEND_ZERO;
+		blend_desc.RenderTarget[ 0 ].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+		blend_desc.RenderTarget[ 0 ].RenderTargetWriteMask = 0x0f;
+
+		hr = m_device->CreateBlendState( &blend_desc, &m_alpha_enable_blend_state );
+		if ( FAILED( hr ) )
+		{
+			return false;
+		}
+
+		blend_desc.RenderTarget[ 0 ].BlendEnable = FALSE;
+
+		hr = m_device->CreateBlendState( &blend_desc, &m_alpha_disable_blend_state );
+		if ( FAILED( hr ) )
+		{
+			return false;
+		}
+
+
 		D3D11_VIEWPORT viewport{};
 		ZeroMemory( &viewport, sizeof( viewport ) );
 		viewport.Width = (float)_width;
@@ -290,6 +316,8 @@ namespace wf
 			m_swapchain->SetFullscreenState( false, nullptr );
 		}
 
+		SAFE_RELEASE( m_alpha_disable_blend_state );
+		SAFE_RELEASE( m_alpha_enable_blend_state );
 		SAFE_RELEASE( m_raster_state );
 		SAFE_RELEASE( m_depth_stencil_view );
 		SAFE_RELEASE( m_depth_disabled_stencil_state );
@@ -353,5 +381,19 @@ namespace wf
 	void D3D::TurnOffZBuffer()
 	{
 		m_device_context->OMSetDepthStencilState( m_depth_disabled_stencil_state, 1 );
+	}
+
+	void D3D::TurnOnAlphaBlending()
+	{
+		float blend_factor[ 4 ]{ 0.0f, 0.0f, 0.0f, 0.0f };
+
+		m_device_context->OMSetBlendState( m_alpha_enable_blend_state, blend_factor, 0xffffffff );
+	}
+
+	void D3D::TurnOffAlphaBlending()
+	{
+		float blend_factor[ 4 ]{ 0.0f, 0.0f, 0.0f, 0.0f };
+
+		m_device_context->OMSetBlendState( m_alpha_disable_blend_state, blend_factor, 0xffffffff );
 	}
 }

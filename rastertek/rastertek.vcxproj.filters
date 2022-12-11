@@ -63,6 +63,18 @@
     <ClInclude Include="Bitmap.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="Font.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="FontShader.h">
+      <Filter>ShaderClass</Filter>
+    </ClInclude>
+    <ClInclude Include="Text.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="System.cpp">
@@ -107,6 +119,15 @@
     <ClCompile Include="Bitmap.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Font.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="FontShader.cpp">
+      <Filter>ShaderClass</Filter>
+    </ClCompile>
+    <ClCompile Include="Text.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="color_vs.hlsl">
@@ -127,5 +148,16 @@
     <FxCompile Include="light_ps.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
+    <FxCompile Include="font_vs.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="font_ps.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="rastertek.rc">
+      <Filter>리소스 파일</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

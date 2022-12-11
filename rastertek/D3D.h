@@ -27,6 +27,9 @@ namespace wf
 		void TurnOnZBuffer();
 		void TurnOffZBuffer();
 
+		void TurnOnAlphaBlending();
+		void TurnOffAlphaBlending();
+
 	private:
 		bool m_vsync{ false };
 		
@@ -42,6 +45,8 @@ namespace wf
 		ID3D11DepthStencilView* m_depth_stencil_view{ nullptr };
 		ID3D11RasterizerState* m_raster_state{ nullptr };
 		ID3D11DepthStencilState* m_depth_disabled_stencil_state{ nullptr };
+		ID3D11BlendState* m_alpha_enable_blend_state{ nullptr };
+		ID3D11BlendState* m_alpha_disable_blend_state{ nullptr };
 
 		XMMATRIX m_projection_matrix{};
 		XMMATRIX m_world_matrix{};

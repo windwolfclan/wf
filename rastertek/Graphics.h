@@ -6,6 +6,7 @@
 #include "Model.h"
 #include "Light.h"
 #include "Bitmap.h"
+#include "Text.h"
 
 #include "ColorShader.h"
 #include "TextureShader.h"
@@ -48,6 +49,8 @@ namespace wf
 
 		RasterTekModel* m_rastertek_model{ nullptr };
 
-		Bitmap* m_bitmap{};
+		Bitmap* m_bitmap{ nullptr };
+
+		Text* m_text{ nullptr };
 	};
 }

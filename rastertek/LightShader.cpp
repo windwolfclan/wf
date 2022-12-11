@@ -35,9 +35,9 @@ namespace wf
 		ShutdownShader();
 	}
 
-	bool LightShader::Render( ID3D11DeviceContext* _context, int _index_count, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView* _srv, XMFLOAT4 _diffuse, XMFLOAT3 _direction )
+	bool LightShader::Render( ID3D11DeviceContext* _context, int _index_count, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView* _srv, XMFLOAT4 _ambient, XMFLOAT4 _diffuse, XMFLOAT3 _direction )
 	{
-		if ( !SetShaderParameters( _context, _w, _v, _p, _srv, _diffuse, _direction ) )
+		if ( !SetShaderParameters( _context, _w, _v, _p, _srv, _ambient, _diffuse, _direction ) )
 		{
 			return false;
 		}
@@ -234,7 +234,7 @@ namespace wf
 		MessageBox( _hwnd, L"Error compiling shader\nCheck shader-error.txt", _filename, MB_OK );
 	}
 
-	bool LightShader::SetShaderParameters( ID3D11DeviceContext* _context, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView* _srv, XMFLOAT4 _diffuse, XMFLOAT3 _direction )
+	bool LightShader::SetShaderParameters( ID3D11DeviceContext* _context, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView* _srv, XMFLOAT4 _ambient, XMFLOAT4 _diffuse, XMFLOAT3 _direction )
 	{
 		{
 			_w = XMMatrixTranspose( _w );
@@ -260,6 +260,7 @@ namespace wf
 			if ( SUCCEEDED( _context->Map( m_light_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource ) ) )
 			{
 				LightBufferType* data = (LightBufferType*)mappedResource.pData;
+				data->ambient = _ambient;
 				data->diffuse = _diffuse;
 				data->direction = _direction;
 				data->padding = 0.0f;

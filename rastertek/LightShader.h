@@ -14,6 +14,7 @@ namespace wf
 
 		struct LightBufferType
 		{
+			XMFLOAT4 ambient{ 1.0f, 1.0f, 1.0f,1.0f };
 			XMFLOAT4 diffuse{ 1.0f, 1.0f, 1.0f, 1.0f };
 			XMFLOAT3 direction{ 0.0f, 0.0f, 0.0f };
 			float padding{ 0.0f };
@@ -32,7 +33,8 @@ namespace wf
 			XMMATRIX _w, 
 			XMMATRIX _v, 
 			XMMATRIX _p, 
-			ID3D11ShaderResourceView* _srv ,
+			ID3D11ShaderResourceView* _srv,
+			XMFLOAT4 _ambient,
 			XMFLOAT4 _diffuse,
 			XMFLOAT3 _direction
 		);
@@ -48,6 +50,7 @@ namespace wf
 			XMMATRIX _v,
 			XMMATRIX _p,
 			ID3D11ShaderResourceView* _srv,
+			XMFLOAT4 _ambient,
 			XMFLOAT4 _diffuse,
 			XMFLOAT3 _direction
 		);

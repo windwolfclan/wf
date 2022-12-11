@@ -9,13 +9,16 @@ namespace wf
 		Light( const Light& );
 		~Light();
 
+		void SetAmbient( float _r, float _g, float _b, float _a );
 		void SetDiffuse( float _r, float _g, float _b, float _a );
 		void SetDirection( float _x, float _y, float _z );
 
+		XMFLOAT4 GetAmbient() const;
 		XMFLOAT4 GetDiffuse() const;
 		XMFLOAT3 GetDirection() const;
 
 	private:
+		XMFLOAT4 m_ambient{ 1.0f, 1.0f, 1.0f, 1.0f };
 		XMFLOAT4 m_diffuse{ 1.0f, 1.0f, 1.0f, 1.0f };
 		XMFLOAT3 m_direction{ 0.0f, 0.0f, 0.0f };
 	};

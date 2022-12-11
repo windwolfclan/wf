@@ -76,8 +76,9 @@ namespace wf
 		}
 
 
+		m_light.SetAmbient( 0.15f, 0.15f, 0.15f, 1.0f );
 		m_light.SetDiffuse( 1.0f, 1.0f, 1.0f, 1.0f );
-		m_light.SetDirection( 0.0f, 0.0f, 1.0f );
+		m_light.SetDirection( 1.0f, 0.0f, 0.0f );
 
 		return true;
 	}
@@ -99,7 +100,7 @@ namespace wf
 	{
 		static float rotation{ 0.0f };
 
-		rotation += (float)XM_PI * 0.01f;
+		rotation += (float)XM_PI * 0.005f;
 		if ( rotation > 360.0f )
 			rotation -= 360.0f;
 
@@ -148,6 +149,7 @@ namespace wf
 				v, 
 				p, 
 				m_rastertek_model->GetTexture(),
+				m_light.GetAmbient(),
 				m_light.GetDiffuse(), 
 				m_light.GetDirection() ) 
 				)

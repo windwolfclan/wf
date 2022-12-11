@@ -180,7 +180,6 @@ namespace wf
 
 		D3D11_DEPTH_STENCIL_DESC depth_stencil_desc{};
 		ZeroMemory( &depth_stencil_desc, sizeof( depth_stencil_desc ) );
-
 		depth_stencil_desc.DepthEnable = true;
 		depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
 		depth_stencil_desc.DepthFunc = D3D11_COMPARISON_LESS;
@@ -201,6 +200,30 @@ namespace wf
 		{
 			return false;
 		}
+
+		D3D11_DEPTH_STENCIL_DESC depth_disabled_stencil_desc{};
+		ZeroMemory( &depth_disabled_stencil_desc, sizeof( depth_disabled_stencil_desc ) );
+		depth_disabled_stencil_desc.DepthEnable = false;
+		depth_disabled_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+		depth_disabled_stencil_desc.DepthFunc = D3D11_COMPARISON_LESS;
+		depth_disabled_stencil_desc.StencilEnable = true;
+		depth_disabled_stencil_desc.StencilReadMask = 0xFF;
+		depth_disabled_stencil_desc.StencilWriteMask = 0xFF;
+		depth_disabled_stencil_desc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+		depth_disabled_stencil_desc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+		depth_disabled_stencil_desc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+		depth_disabled_stencil_desc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+		depth_disabled_stencil_desc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+		depth_disabled_stencil_desc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+		depth_disabled_stencil_desc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+		depth_disabled_stencil_desc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+		hr = m_device->CreateDepthStencilState( &depth_disabled_stencil_desc, &m_depth_disabled_stencil_state );
+		if ( FAILED( hr ) )
+		{
+			return false;
+		}
+
 
 		m_device_context->OMSetDepthStencilState( m_depth_stencil_state, 1 );
 
@@ -267,53 +290,15 @@ namespace wf
 			m_swapchain->SetFullscreenState( false, nullptr );
 		}
 
-		if ( m_raster_state )
-		{
-			m_raster_state->Release();
-			m_raster_state = nullptr;
-		}
-
-		if ( m_depth_stencil_view )
-		{
-			m_depth_stencil_view->Release();
-			m_depth_stencil_view = nullptr;
-		}
-
-		if ( m_depth_stencil_state )
-		{
-			m_depth_stencil_state->Release();
-			m_depth_stencil_state = nullptr;
-		}
-
-		if ( m_depth_stencil_buffer )
-		{
-			m_depth_stencil_buffer->Release();
-			m_depth_stencil_buffer = nullptr;
-		}
-
-		if ( m_render_target_view )
-		{
-			m_render_target_view->Release();
-			m_render_target_view = nullptr;
-		}
-
-		if ( m_device_context )
-		{
-			m_device_context->Release();
-			m_device_context = nullptr;
-		}
-
-		if ( m_device )
-		{
-			m_device->Release();
-			m_device = nullptr;
-		}
-
-		if ( m_swapchain )
-		{
-			m_swapchain->Release();
-			m_swapchain = nullptr;
-		}
+		SAFE_RELEASE( m_raster_state );
+		SAFE_RELEASE( m_depth_stencil_view );
+		SAFE_RELEASE( m_depth_disabled_stencil_state );
+		SAFE_RELEASE( m_depth_stencil_state );
+		SAFE_RELEASE( m_depth_stencil_buffer );
+		SAFE_RELEASE( m_render_target_view );
+		SAFE_RELEASE( m_device_context );
+		SAFE_RELEASE( m_device );
+		SAFE_RELEASE( m_swapchain );
 	}
 
 	void D3D::BeginScene( float _r, float _g, float _b, float _a )
@@ -358,5 +343,15 @@ namespace wf
 	{
 		strcpy_s( _buffer, 128, m_vga_name );
 		_memory = m_vga_memory;
+	}
+
+	void D3D::TurnOnZBuffer()
+	{
+		m_device_context->OMSetDepthStencilState( m_depth_stencil_state, 1 );
+	}
+
+	void D3D::TurnOffZBuffer()
+	{
+		m_device_context->OMSetDepthStencilState( m_depth_disabled_stencil_state, 1 );
 	}
 }

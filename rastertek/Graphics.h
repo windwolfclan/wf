@@ -5,6 +5,7 @@
 #include "Camera.h"
 #include "Model.h"
 #include "Light.h"
+#include "Bitmap.h"
 
 #include "ColorShader.h"
 #include "TextureShader.h"
@@ -46,5 +47,7 @@ namespace wf
 		LightShader* m_light_shader{ nullptr };
 
 		RasterTekModel* m_rastertek_model{ nullptr };
+
+		Bitmap* m_bitmap{};
 	};
 }

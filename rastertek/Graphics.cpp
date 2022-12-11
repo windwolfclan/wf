@@ -75,6 +75,12 @@ namespace wf
 			return false;
 		}
 
+		m_bitmap = new Bitmap;
+		if ( !m_bitmap->Initialize( device, context, _width, _height, "./resources/StoneFloorTexture.tga", 256, 256 ) )
+		{
+			return false;
+		}
+
 
 		m_light.SetAmbient( 0.15f, 0.15f, 0.15f, 1.0f );
 		m_light.SetDiffuse( 1.0f, 1.0f, 1.0f, 1.0f );
@@ -87,6 +93,7 @@ namespace wf
 
 	void Graphics::Shutdown()
 	{
+		SAFE_SHUTDOWN( m_bitmap );
 		SAFE_SHUTDOWN( m_rastertek_model );
 		SAFE_SHUTDOWN( m_light_shader );
 		SAFE_SHUTDOWN( m_light_model );
@@ -125,6 +132,7 @@ namespace wf
 		XMMATRIX w;
 		XMMATRIX v;
 		XMMATRIX p;
+		XMMATRIX o;
 		ID3D11DeviceContext* context = m_directx->GetDeviceContext();
 
 		m_camera->Render();
@@ -134,6 +142,7 @@ namespace wf
 			m_directx->GetWorldMatrix( w );
 			m_camera->GetViewMatrix( v );
 			m_directx->GetProjectionMatrix( p );
+			m_directx->GetOrthoMatrix( o );
 
 			w = XMMatrixRotationY( rotation );
 		}
@@ -157,11 +166,32 @@ namespace wf
 				m_light.GetSpecular(),
 				m_camera->GetPosition(),
 				m_light.GetDirection()
-			)	// Render
-			)	// if
+			) )
 			{
 				return false;
 			}
+
+			// 2D Draw
+			m_directx->TurnOffZBuffer();
+			if ( !m_bitmap->Render( context, 100, 100 ) )
+			{
+				return false;
+			}
+
+			m_directx->GetWorldMatrix( w );
+			if ( !m_texture_shader->Render(
+				context,
+				m_bitmap->GetIndexCount(),
+				w,
+				v,
+				o,
+				m_bitmap->GetTexture()
+			) )
+			{
+				return false;
+			}
+
+			m_directx->TurnOnZBuffer();
 
 			m_directx->EndScene();
 		}

@@ -41,6 +41,8 @@ namespace wf
 		}
 
 		RenderShader( _context, _index_count );
+
+		return true;
 	}
 
 	bool FontShader::InitializeShader( ID3D11Device* _device, HWND _hwnd, const wchar_t* _vs, const wchar_t* _ps )

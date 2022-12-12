@@ -1,9 +1,8 @@
 #pragma once
 
-
-
 #include "Graphics.h"
 #include "Input.h"
+#include "Sound.h"
 
 namespace wf
 {
@@ -32,6 +31,7 @@ namespace wf
 
 		Input* m_input{};
 		Graphics* m_graphics{};
+		Sound* m_sound{ };
 	};
 
 	static LRESULT CALLBACK WndProc(HWND _hwnd, UINT _msg, WPARAM _wparam, LPARAM _lparam);

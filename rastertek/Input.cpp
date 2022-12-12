@@ -116,6 +116,11 @@ namespace wf
 		return m_keyboard_state[ DIK_ESCAPE ] & 0x80;
 	}
 
+	bool Input::IsSpacePressed()
+	{
+		return m_keyboard_state[ DIK_SPACE ] & 0x80;
+	}
+
 	void Input::GetMouseLocation( int& _x, int& _y )
 	{
 		_x = m_mouse_x;

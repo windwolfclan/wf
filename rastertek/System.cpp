@@ -32,11 +32,19 @@ namespace wf
 			return false;
 		}
 
+		m_sound = new Sound;
+		if ( !m_sound->Initialize( m_hwnd ) )
+		{
+			return false;
+		}
+
 		return true;
 	}
 
 	void System::Shutdown()
 	{
+		SAFE_SHUTDOWN( m_sound );
+
 		if ( m_graphics )
 		{
 			m_graphics->Shutdown();
@@ -79,6 +87,11 @@ namespace wf
 			if ( m_input->IsEscapePressed() )
 			{
 				done = true;
+			}
+
+			if ( m_input->IsSpacePressed() )
+			{
+				m_sound->Play();
 			}
 		}
 

@@ -22,6 +22,7 @@ namespace wf
 		bool Frame();
 
 		bool IsEscapePressed();
+		bool IsSpacePressed();
 		void GetMouseLocation( int& _x, int& _y );
 
 	private:

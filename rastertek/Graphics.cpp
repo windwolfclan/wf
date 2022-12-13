@@ -121,13 +121,23 @@ namespace wf
 		SAFE_SHUTDOWN( m_directx );
 	}
 
-	bool Graphics::Frame( int _mouse_x, int _mouse_y )
+	bool Graphics::Frame( const FrameParam& param )
 	{
 		ID3D11DeviceContext* context = m_directx->GetDeviceContext();
-		m_mouse_x = _mouse_x;
-		m_mouse_y = _mouse_y;
+		m_mouse_x = param.mouse_x;
+		m_mouse_y = param.mouse_y;
 
-		if ( !m_text->SetMousePosition( _mouse_x, _mouse_y, context ) )
+		if ( !m_text->SetMousePosition( param.mouse_x, param.mouse_y, context ) )
+		{
+			return false;
+		}
+
+		if ( !m_text->SetFps( param.fps, context ) )
+		{
+			return false;
+		}
+
+		if ( !m_text->SetCpu( param.usage, context ) )
 		{
 			return false;
 		}

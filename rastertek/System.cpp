@@ -38,11 +38,26 @@ namespace wf
 			return false;
 		}
 
+		m_fps = new Fps;
+		m_fps->Initialize();
+
+		m_cpu = new Cpu;
+		m_cpu->Initialize();
+
+		m_timer = new Timer;
+		if ( !m_timer->Initialize() )
+		{
+			return false;
+		}
+
 		return true;
 	}
 
 	void System::Shutdown()
 	{
+		SAFE_DELETE( m_fps );
+		SAFE_SHUTDOWN( m_cpu );
+		SAFE_DELETE( m_timer );
 		SAFE_SHUTDOWN( m_sound );
 
 		if ( m_graphics )
@@ -105,17 +120,27 @@ namespace wf
 
 	bool System::Frame()
 	{
-
 		if ( !m_input->Frame() )
 		{
 			return false;
 		}
 
+		m_timer->Frame();
+		m_fps->Frame();
+		m_cpu->Frame();
+
 		int mouse_x{ 0 };
 		int mouse_y{ 0 };
 		m_input->GetMouseLocation( mouse_x, mouse_y );
 
-		if ( !m_graphics->Frame( mouse_x, mouse_y) )
+		FrameParam param;
+		param.mouse_x = mouse_x;
+		param.mouse_y = mouse_y;
+		param.fps = m_fps->GetFPS();
+		param.usage = m_cpu->GetCpuPercentage();
+		param.time = m_timer->GetTime();
+
+		if ( !m_graphics->Frame( param ) )
 		{
 			return false;
 		}

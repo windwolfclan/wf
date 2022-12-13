@@ -35,6 +35,8 @@ namespace wf
 		bool Render( ID3D11DeviceContext* _context, XMMATRIX _world, XMMATRIX _ortho );
 
 		bool SetMousePosition( int _mouse_x, int _mouse_y, ID3D11DeviceContext* _context );
+		bool SetFps( int _fps, ID3D11DeviceContext* _context );
+		bool SetCpu( int _usage, ID3D11DeviceContext* _context );
 
 	private:
 		bool InitializeSentence( SentenceType** _sentence, int _max_length, ID3D11Device* _device );
@@ -54,5 +56,8 @@ namespace wf
 
 		SentenceType* m_mouse_x{ nullptr };
 		SentenceType* m_mouse_y{ nullptr };
+
+		SentenceType* m_fps{ nullptr };
+		SentenceType* m_usage{ nullptr };
 	};
 }

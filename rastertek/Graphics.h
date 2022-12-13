@@ -19,6 +19,15 @@ namespace wf
 	const float SCREEN_DEPTH = 1000.0f;
 	const float SCREEN_NEAR = 0.1f;
 
+	struct FrameParam
+	{
+		int mouse_x{ 0 };
+		int mouse_y{ 0 };
+		int fps{ 0 };
+		int usage{ 0 };
+		float time{ 0.0f };
+	};
+
 	class Graphics
 	{
 	public:
@@ -28,7 +37,7 @@ namespace wf
 
 		bool Initialize(int _width, int _height, HWND _hwnd);
 		void Shutdown();
-		bool Frame( int _mouse_x, int _mouse_y );
+		bool Frame( const FrameParam& param );
 		bool Render();
 
 	private:

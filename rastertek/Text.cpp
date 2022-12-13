@@ -67,11 +67,23 @@ namespace wf
 			return false;
 		}
 
+		if ( !InitializeSentence( &m_fps, 32, _device ) )
+		{
+			return false;
+		}
+
+		if ( !InitializeSentence( &m_usage, 32, _device ) )
+		{
+			return false;
+		}
+
 		return true;
 	}
 
 	void Text::Shutdown()
 	{
+		ReleaseSentence( &m_usage );
+		ReleaseSentence( &m_fps );
 		ReleaseSentence( &m_mouse_y );
 		ReleaseSentence( &m_mouse_x );
 		ReleaseSentence( &m_sentence2 );
@@ -89,6 +101,16 @@ namespace wf
 		}
 
 		if ( !RenderSentence( _context, m_sentence2, _world, _ortho ) )
+		{
+			return false;
+		}
+
+		if ( !RenderSentence( _context, m_fps, _world, _ortho ) )
+		{
+			return false;
+		}
+
+		if ( !RenderSentence( _context, m_usage, _world, _ortho ) )
 		{
 			return false;
 		}
@@ -114,7 +136,7 @@ namespace wf
 		_itoa_s( _mouse_x, temp, 10 );
 		strcpy_s( mouse, "Mouse X: " );
 		strcat_s( mouse, temp );
-		if ( !UpdateSentence( m_mouse_x, mouse, 20, 20, 1.0f, 1.0f, 1.0f, _context ) )
+		if ( !UpdateSentence( m_mouse_x, mouse, 20, 60, 1.0f, 1.0f, 1.0f, _context ) )
 		{
 			return false;
 		}
@@ -122,7 +144,64 @@ namespace wf
 		_itoa_s( _mouse_y, temp, 10 );
 		strcpy_s( mouse, "Mouse Y: " );
 		strcat_s( mouse, temp );
-		if ( !UpdateSentence( m_mouse_y, mouse, 20, 40, 1.0f, 1.0f, 1.0f, _context ) )
+		if ( !UpdateSentence( m_mouse_y, mouse, 20, 80, 1.0f, 1.0f, 1.0f, _context ) )
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	bool Text::SetFps( int _fps, ID3D11DeviceContext* _context )
+	{
+		char temp[ 32 ];
+		char fps[ 32 ];
+
+		float r{ 0.0f };
+		float g{ 0.0f };
+		float b{ 0.0f };
+
+		_itoa_s( _fps, temp, 10 );
+		strcpy_s( fps, "FPS: " );
+		strcat_s( fps, temp );
+
+		if ( _fps >= 60 ) 
+		{
+			g = 1.0f;
+		}
+		else if ( _fps >= 30 ) 
+		{
+			r = 1.0f;
+			g = 1.0f;
+		}
+		else
+		{
+			r = 1.0f;
+		}
+
+		if ( !UpdateSentence( m_fps, fps, 20, 20, r, g, b, _context ) )
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	bool Text::SetCpu( int _usage, ID3D11DeviceContext* _context )
+	{
+		char temp[ 32 ];
+		char usage[ 32 ];
+
+		float r{ 0.0f };
+		float g{ 1.0f };
+		float b{ 0.0f };
+
+		_itoa_s( _usage, temp, 10 );
+		strcpy_s( usage, "CPU: " );
+		strcat_s( usage, temp );
+		strcat_s( usage, "%" );
+
+		if ( !UpdateSentence( m_usage, usage, 20, 40, r, g, b, _context ) )
 		{
 			return false;
 		}

@@ -51,9 +51,6 @@ namespace wf
 		int m_screen_height{ 0 };
 		XMMATRIX m_view{};
 
-		SentenceType* m_sentence1{ nullptr };
-		SentenceType* m_sentence2{ nullptr };
-
 		SentenceType* m_mouse_x{ nullptr };
 		SentenceType* m_mouse_y{ nullptr };
 

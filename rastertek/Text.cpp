@@ -37,26 +37,6 @@ namespace wf
 			return false;
 		}
 
-		if ( !InitializeSentence( &m_sentence1, 16, _device ) )
-		{
-			return false;
-		}
-
-		if ( !UpdateSentence( m_sentence1, "Hello", 100, 100, 1.0f, 1.0f, 1.0f, _context ) )
-		{
-			return false;
-		}
-
-		if ( !InitializeSentence( &m_sentence2, 16, _device ) )
-		{
-			return false;
-		}
-
-		if ( !UpdateSentence( m_sentence2, "Goodbye", 100, 200, 1.0f, 1.0f, 0.0f, _context ) )
-		{
-			return false;
-		}
-
 		if ( !InitializeSentence( &m_mouse_x, 32, _device ) )
 		{
 			return false;
@@ -86,8 +66,6 @@ namespace wf
 		ReleaseSentence( &m_fps );
 		ReleaseSentence( &m_mouse_y );
 		ReleaseSentence( &m_mouse_x );
-		ReleaseSentence( &m_sentence2 );
-		ReleaseSentence( &m_sentence1 );
 
 		SAFE_SHUTDOWN( m_font_shader );
 		SAFE_SHUTDOWN( m_font );
@@ -95,16 +73,6 @@ namespace wf
 
 	bool Text::Render( ID3D11DeviceContext* _context, XMMATRIX _world, XMMATRIX _ortho )
 	{
-		if ( !RenderSentence( _context, m_sentence1, _world, _ortho ) )
-		{
-			return false;
-		}
-
-		if ( !RenderSentence( _context, m_sentence2, _world, _ortho ) )
-		{
-			return false;
-		}
-
 		if ( !RenderSentence( _context, m_fps, _world, _ortho ) )
 		{
 			return false;

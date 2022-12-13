@@ -4,16 +4,6 @@ namespace wf
 {
 	class Texture
 	{
-	private:
-		struct TargaHeader
-		{
-			unsigned char data1[ 12 ]{ 0, };
-			unsigned short width{ 0 };
-			unsigned short height{ 0 };
-			unsigned char bpp{ 0 };
-			unsigned char data2{ 0 };
-		};
-
 	public:
 		Texture();
 		Texture( const Texture& );

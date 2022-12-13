@@ -96,6 +96,18 @@ namespace wf
 			return false;
 		}
 
+		m_dual_texture_shader = new DualTextureShader;
+		if ( !m_dual_texture_shader->Initialize( device, _hwnd ) )
+		{
+			return false;
+		}
+
+		m_texture_array = new TextureArray;
+		if ( !m_texture_array->Intialize( device, context, L"./resources/dirt.tga", L"./resources/stone.tga" ) )
+		{
+			return false;
+		}
+
 		m_light.SetAmbient( 0.15f, 0.15f, 0.15f, 1.0f );
 		m_light.SetDiffuse( 1.0f, 1.0f, 1.0f, 1.0f );
 		m_light.SetDirection( 0.0f, 0.0f, 1.0f );
@@ -107,6 +119,8 @@ namespace wf
 
 	void Graphics::Shutdown()
 	{
+		SAFE_SHUTDOWN( m_texture_array );
+		SAFE_SHUTDOWN( m_dual_texture_shader );
 		SAFE_SHUTDOWN( m_cursor );
 		SAFE_SHUTDOWN( m_text );
 		SAFE_SHUTDOWN( m_bitmap );
@@ -205,15 +219,7 @@ namespace wf
 			
 			m_directx->GetWorldMatrix( w );
 
-				
-			if ( !m_texture_shader->Render(
-				context,
-				m_bitmap->GetIndexCount(),
-				w,
-				v,
-				o,
-				m_bitmap->GetTexture()
-			) )
+			if ( !m_dual_texture_shader->Render( context, m_bitmap->GetIndexCount(), w, v, o, m_texture_array->GetTextureArray() ) )
 			{
 				return false;
 			}

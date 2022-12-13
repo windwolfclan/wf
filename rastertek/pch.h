@@ -22,6 +22,20 @@ using namespace DirectX;
 
 #include "ShaderBase.h"
 
+namespace wf
+{
+	struct TargaHeader
+	{
+		unsigned char data1[ 12 ]{ 0, };
+		unsigned short width{ 0 };
+		unsigned short height{ 0 };
+		unsigned char bpp{ 0 };
+		unsigned char data2{ 0 };
+	};
+
+	bool LoadTarga( const wchar_t* _path, int& _width, int& _height, unsigned char*& _buffer );
+}
+
 #define SAFE_SHUTDOWN( x ) if( x ) { x->Shutdown(); delete x; x = nullptr; }
 #define SAFE_RELEASE( x ) if( x ) { x->Release(); x = nullptr; }
 #define SAFE_DELETE( x ) if( x ) { delete x; x = nullptr; }

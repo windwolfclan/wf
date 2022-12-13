@@ -7,10 +7,12 @@
 #include "Light.h"
 #include "Bitmap.h"
 #include "Text.h"
+#include "TextureArray.h"
 
 #include "ColorShader.h"
 #include "TextureShader.h"
 #include "LightShader.h"
+#include "DualTextureShader.h"
 
 namespace wf
 {
@@ -58,6 +60,9 @@ namespace wf
 		LightShader* m_light_shader{ nullptr };
 
 		RasterTekModel* m_rastertek_model{ nullptr };
+
+		DualTextureShader* m_dual_texture_shader{ nullptr };
+		TextureArray* m_texture_array{ nullptr };
 
 		Bitmap* m_bitmap{ nullptr };
 

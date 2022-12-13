@@ -90,6 +90,12 @@
     <ClInclude Include="ShaderBase.h">
       <Filter>ShaderClass</Filter>
     </ClInclude>
+    <ClInclude Include="DualTextureShader.h">
+      <Filter>ShaderClass</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureArray.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="System.cpp">
@@ -158,6 +164,12 @@
     <ClCompile Include="ShaderBase.cpp">
       <Filter>ShaderClass</Filter>
     </ClCompile>
+    <ClCompile Include="DualTextureShader.cpp">
+      <Filter>ShaderClass</Filter>
+    </ClCompile>
+    <ClCompile Include="TextureArray.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="color_vs.hlsl">
@@ -182,6 +194,12 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="font_ps.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="dual_vs.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="dual_ps.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

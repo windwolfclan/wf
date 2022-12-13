@@ -3,6 +3,7 @@
 namespace wf
 {
 	class FontShader
+		: public ShaderBase
 	{
 	private:
 		struct MatrixBufferType
@@ -22,8 +23,6 @@ namespace wf
 		FontShader( const FontShader& );
 		~FontShader();
 
-		bool Initialize( ID3D11Device* _device, HWND _hwnd );
-		void Shutdown();
 		bool Render(
 			ID3D11DeviceContext* _context,
 			int _index_count,
@@ -35,10 +34,6 @@ namespace wf
 		);
 
 	private:
-		bool InitializeShader( ID3D11Device* _device, HWND _hwnd, const wchar_t* _vs, const wchar_t* _ps );
-		void ShutdownShader();
-		void OutputShaderErrorMessage( ID3D10Blob* _blob, HWND _hwnd, const wchar_t* _filename );
-
 		bool SetShaderParameters(
 			ID3D11DeviceContext* _context,
 			XMMATRIX _w,
@@ -49,13 +44,13 @@ namespace wf
 		);
 		void RenderShader( ID3D11DeviceContext* _context, int _index_count );
 
+		virtual bool InitializeLayout( ID3D11Device* _device, ID3D10Blob*& _blob ) override;
+		virtual bool InitializeBuffers( ID3D11Device* _device ) override;
+		virtual void ReleaseBuffers() override;
+
 	private:
-		ID3D11InputLayout* m_layout{ nullptr };
-		ID3D11VertexShader* m_vertex_shader{ nullptr };
-		ID3D11PixelShader* m_pixel_shader{ nullptr };
 		ID3D11Buffer* m_matrix_buffer{ nullptr };
 		ID3D11Buffer* m_pixel_buffer{ nullptr };
-
 		ID3D11SamplerState* m_sampler_state{ nullptr };
 	};
 }

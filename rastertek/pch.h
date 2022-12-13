@@ -20,6 +20,8 @@
 
 using namespace DirectX;
 
+#include "ShaderBase.h"
+
 #define SAFE_SHUTDOWN( x ) if( x ) { x->Shutdown(); delete x; x = nullptr; }
 #define SAFE_RELEASE( x ) if( x ) { x->Release(); x = nullptr; }
 #define SAFE_DELETE( x ) if( x ) { delete x; x = nullptr; }

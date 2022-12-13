@@ -17,6 +17,9 @@ namespace wf
 
 	bool Graphics::Initialize(int _width, int _height, HWND _hwnd)
 	{
+		m_width = _width;
+		m_height = _height;
+
 		m_directx = new D3D;
 
 		if ( !m_directx->Initialize( _width, _height, VSYNC_ENABLED, _hwnd, FULL_SCREEN, SCREEN_DEPTH, SCREEN_NEAR ) )
@@ -102,8 +105,19 @@ namespace wf
 			return false;
 		}
 
-		m_texture_array = new TextureArray;
-		if ( !m_texture_array->Intialize( device, context, L"./resources/dirt.tga", L"./resources/stone.tga" ) )
+		m_lightmap_shader = new LightmapShader;
+		if ( !m_lightmap_shader->Initialize( device, _hwnd ) )
+		{
+			return false;
+		}
+
+		
+		if ( !InitializeBitmaps( device, context ) )
+		{
+			return false;
+		}
+
+		if ( !InitializeTextureArray( device, context ) )
 		{
 			return false;
 		}
@@ -119,7 +133,10 @@ namespace wf
 
 	void Graphics::Shutdown()
 	{
-		SAFE_SHUTDOWN( m_texture_array );
+		ReleaseTextureArray();
+		ReleaseBitmaps();
+
+		SAFE_SHUTDOWN( m_lightmap_shader );
 		SAFE_SHUTDOWN( m_dual_texture_shader );
 		SAFE_SHUTDOWN( m_cursor );
 		SAFE_SHUTDOWN( m_text );
@@ -211,15 +228,26 @@ namespace wf
 			}
 
 			// 2D Draw
+			m_directx->GetWorldMatrix( w );
 			m_directx->TurnOffZBuffer();
-			if ( !m_bitmap->Render( context, 100, 100 ) )
+
+
+			if ( !m_bitmaps[ 0 ]->Render( context, 100, 100 ) )
 			{
 				return false;
 			}
-			
-			m_directx->GetWorldMatrix( w );
 
-			if ( !m_dual_texture_shader->Render( context, m_bitmap->GetIndexCount(), w, v, o, m_texture_array->GetTextureArray() ) )
+			if ( !m_dual_texture_shader->Render( context, m_bitmaps[ 0 ]->GetIndexCount(), w, v, o, m_texture_arrays[ 0 ]->GetTextureArray() ) )
+			{
+				return false;
+			}
+
+			if ( !m_bitmaps[ 1 ]->Render( context, 100, 300 ) )
+			{
+				return false;
+			}
+
+			if ( !m_lightmap_shader->Render( context, m_bitmaps[ 1 ]->GetIndexCount(), w, v, o, m_texture_arrays[ 1 ]->GetTextureArray() ) )
 			{
 				return false;
 			}
@@ -243,6 +271,7 @@ namespace wf
 
 		return true;
 	}
+
 	void Graphics::DrawCursor()
 	{
 		ID3D11DeviceContext* context = m_directx->GetDeviceContext();
@@ -270,4 +299,59 @@ namespace wf
 		m_cursor->Render( context, x, y );
 		m_texture_shader->Render( context, m_cursor->GetIndexCount(), w, v, o, m_cursor->GetTexture() );
 	}
+
+	bool Graphics::InitializeBitmaps( ID3D11Device*& _device, ID3D11DeviceContext*& _context )
+	{
+		for ( int i = 0; i < BITMAP_COUNT; ++i )
+		{
+			m_bitmaps[ i ] = new Bitmap;
+			if ( !m_bitmaps[ i ]->Initialize( _device, _context, m_width, m_height, "./resources/StoneFloorTexture.tga", 150, 150 ) )
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	void Graphics::ReleaseBitmaps()
+	{
+		for ( int i = 0; i < BITMAP_COUNT; ++i )
+		{
+			SAFE_SHUTDOWN( m_bitmaps[ i ] );
+		}
+	}
+
+	bool Graphics::InitializeTextureArray( ID3D11Device*& _device, ID3D11DeviceContext*& _context )
+	{
+		const wchar_t* path_1[ TEXTURE_ARRAY_COUNT ] = {
+			 L"./resources/dirt.tga",
+			 L"./resources/stone.tga"
+		};
+
+		const wchar_t* path_2[ TEXTURE_ARRAY_COUNT ] = {
+			L"./resources/stone.tga",
+			L"resources/lightmap.tga"
+		};
+
+		for ( int i = 0; i < TEXTURE_ARRAY_COUNT; ++i )
+		{
+			m_texture_arrays[ i ] = new TextureArray;
+			if ( !m_texture_arrays[ i ]->Intialize( _device, _context, path_1[ i ], path_2[ i ] ) )
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	void Graphics::ReleaseTextureArray()
+	{
+		for ( int i = 0; i < TEXTURE_ARRAY_COUNT; ++i )
+		{
+			SAFE_SHUTDOWN( m_texture_arrays[ i ] );
+		}
+	}
+
 }

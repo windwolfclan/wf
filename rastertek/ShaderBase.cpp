@@ -5,8 +5,7 @@ namespace wf
 {
 	bool ShaderBase::Initialize( ID3D11Device* _device, HWND _hwnd )
 	{
-		HRESULT hr = InitializeShader( _device, _hwnd );
-		if ( FAILED( hr ) )
+		if( !InitializeShader( _device, _hwnd ) )
 		{
 			return false;
 		}

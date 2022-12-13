@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "D3D.h"
 #include "Camera.h"
 #include "Model.h"
@@ -13,6 +12,7 @@
 #include "TextureShader.h"
 #include "LightShader.h"
 #include "DualTextureShader.h"
+#include "LightmapShader.h"
 
 namespace wf
 {
@@ -30,6 +30,12 @@ namespace wf
 		float time{ 0.0f };
 	};
 
+	constexpr int DUAL_TEXTURE_ARRAY = 0;
+	constexpr int LIGHTMAP_TEXTURE_ARRAY = 1;
+	constexpr int TEXTURE_ARRAY_COUNT = 2;
+
+	constexpr int BITMAP_COUNT = TEXTURE_ARRAY_COUNT;
+
 	class Graphics
 	{
 	public:
@@ -44,6 +50,13 @@ namespace wf
 
 	private:
 		void DrawCursor();
+
+		bool InitializeBitmaps( ID3D11Device*& _device, ID3D11DeviceContext*& _context );
+		void ReleaseBitmaps();
+
+		bool InitializeTextureArray( ID3D11Device*& _device, ID3D11DeviceContext*& _context );
+		void ReleaseTextureArray();
+
 
 	private:
 		D3D* m_directx{ nullptr };
@@ -62,7 +75,11 @@ namespace wf
 		RasterTekModel* m_rastertek_model{ nullptr };
 
 		DualTextureShader* m_dual_texture_shader{ nullptr };
-		TextureArray* m_texture_array{ nullptr };
+
+		LightmapShader* m_lightmap_shader{ nullptr };
+		
+		std::array<Bitmap*, BITMAP_COUNT> m_bitmaps;
+		std::array<TextureArray*, TEXTURE_ARRAY_COUNT> m_texture_arrays;
 
 		Bitmap* m_bitmap{ nullptr };
 
@@ -72,5 +89,7 @@ namespace wf
 		Bitmap* m_cursor{ nullptr };
 		int m_mouse_x{ 0 };
 		int m_mouse_y{ 0 };
+		int m_width{ 0 };
+		int m_height{ 0 };
 	};
 }

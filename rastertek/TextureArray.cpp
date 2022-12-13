@@ -3,9 +3,6 @@
 
 namespace wf
 {
-
-
-
 	TextureArray::TextureArray()
 	{
 	}
@@ -33,11 +30,38 @@ namespace wf
 		return true;
 	}
 
+	bool TextureArray::Intialize( ID3D11Device* _device, ID3D11DeviceContext* _context, const wchar_t* _texture_path1, const wchar_t* _texture_path2, const wchar_t* _texture_path3 )
+	{
+		if ( nullptr == _texture_path3 )
+		{
+			return Intialize( _device, _context, _texture_path1, _texture_path2 );
+		}
+
+		if ( !LoadTexture( _device, _context, _texture_path1, m_textures[ 0 ], m_views[ 0 ] ) )
+		{
+			return false;
+		}
+
+		if ( !LoadTexture( _device, _context, _texture_path2, m_textures[ 1 ], m_views[ 1 ] ) )
+		{
+			return false;
+		}
+
+		if ( !LoadTexture( _device, _context, _texture_path3, m_textures[ 2 ], m_views[ 2 ] ) )
+		{
+			return false;
+		}
+
+		return true;
+	}
+
 	void TextureArray::Shutdown()
 	{
+		SAFE_RELEASE( m_views[ 2 ] );
 		SAFE_RELEASE( m_views[ 1 ] );
 		SAFE_RELEASE( m_views[ 0 ] );
 
+		SAFE_RELEASE( m_textures[ 2 ] );
 		SAFE_RELEASE( m_textures[ 1 ] );
 		SAFE_RELEASE( m_textures[ 0 ] );
 	}

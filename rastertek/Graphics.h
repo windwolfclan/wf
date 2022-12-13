@@ -13,6 +13,7 @@
 #include "LightShader.h"
 #include "DualTextureShader.h"
 #include "LightmapShader.h"
+#include "AlphamapShader.h"
 
 namespace wf
 {
@@ -32,7 +33,8 @@ namespace wf
 
 	constexpr int DUAL_TEXTURE_ARRAY = 0;
 	constexpr int LIGHTMAP_TEXTURE_ARRAY = 1;
-	constexpr int TEXTURE_ARRAY_COUNT = 2;
+	constexpr int ALPHAMAP_TEXTURE_ARRAY = 2;
+	constexpr int TEXTURE_ARRAY_COUNT = 3;
 
 	constexpr int BITMAP_COUNT = TEXTURE_ARRAY_COUNT;
 
@@ -77,6 +79,8 @@ namespace wf
 		DualTextureShader* m_dual_texture_shader{ nullptr };
 
 		LightmapShader* m_lightmap_shader{ nullptr };
+
+		AlphamapShader* m_alphamap_shader{ nullptr };
 		
 		std::array<Bitmap*, BITMAP_COUNT> m_bitmaps;
 		std::array<TextureArray*, TEXTURE_ARRAY_COUNT> m_texture_arrays;

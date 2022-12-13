@@ -99,6 +99,9 @@
     <ClInclude Include="LightmapShader.h">
       <Filter>ShaderClass</Filter>
     </ClInclude>
+    <ClInclude Include="AlphamapShader.h">
+      <Filter>ShaderClass</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="System.cpp">
@@ -176,6 +179,9 @@
     <ClCompile Include="LightmapShader.cpp">
       <Filter>ShaderClass</Filter>
     </ClCompile>
+    <ClCompile Include="AlphamapShader.cpp">
+      <Filter>ShaderClass</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="color_vs.hlsl">
@@ -212,6 +218,12 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="lightmap_ps.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="alphamap_vs.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="alphamap_ps.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

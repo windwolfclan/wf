@@ -111,6 +111,11 @@ namespace wf
 			return false;
 		}
 
+		m_alphamap_shader = new AlphamapShader;
+		if ( !m_alphamap_shader->Initialize( device, _hwnd ) )
+		{
+			return false;
+		}
 		
 		if ( !InitializeBitmaps( device, context ) )
 		{
@@ -136,6 +141,7 @@ namespace wf
 		ReleaseTextureArray();
 		ReleaseBitmaps();
 
+		SAFE_SHUTDOWN( m_alphamap_shader );
 		SAFE_SHUTDOWN( m_lightmap_shader );
 		SAFE_SHUTDOWN( m_dual_texture_shader );
 		SAFE_SHUTDOWN( m_cursor );
@@ -252,6 +258,16 @@ namespace wf
 				return false;
 			}
 
+			if ( !m_bitmaps[ 2 ]->Render( context, 100, 500 ) )
+			{
+				return false;
+			}
+
+			if ( !m_alphamap_shader->Render( context, m_bitmaps[ 1 ]->GetIndexCount(), w, v, o, m_texture_arrays[ 2 ]->GetTextureArray() ) )
+			{
+				return false;
+			}
+
 			// text
 			m_directx->TurnOnAlphaBlending();
 
@@ -326,18 +342,27 @@ namespace wf
 	{
 		const wchar_t* path_1[ TEXTURE_ARRAY_COUNT ] = {
 			 L"./resources/dirt.tga",
+			 L"./resources/stone.tga",
 			 L"./resources/stone.tga"
 		};
 
 		const wchar_t* path_2[ TEXTURE_ARRAY_COUNT ] = {
 			L"./resources/stone.tga",
-			L"resources/lightmap.tga"
+			L"resources/lightmap.tga",
+			L"./resources/dirt.tga",
 		};
+
+		const wchar_t* path_3[ TEXTURE_ARRAY_COUNT ] = {
+			 nullptr,
+			 nullptr,
+			 L"resources/alphamap.tga"
+		};
+
 
 		for ( int i = 0; i < TEXTURE_ARRAY_COUNT; ++i )
 		{
 			m_texture_arrays[ i ] = new TextureArray;
-			if ( !m_texture_arrays[ i ]->Intialize( _device, _context, path_1[ i ], path_2[ i ] ) )
+			if ( !m_texture_arrays[ i ]->Intialize( _device, _context, path_1[ i ], path_2[ i ], path_3[ i ] ) )
 			{
 				return false;
 			}

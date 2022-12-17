@@ -22,6 +22,9 @@
     <Filter Include="pch">
       <UniqueIdentifier>{ac78577a-a6fa-473b-8743-69dca750be37}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ModelClass">
+      <UniqueIdentifier>{28ebf893-2ee9-4b59-abb0-0b2d476e85c9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="System.h">
@@ -101,6 +104,12 @@
     </ClInclude>
     <ClInclude Include="AlphamapShader.h">
       <Filter>ShaderClass</Filter>
+    </ClInclude>
+    <ClInclude Include="BumpShader.h">
+      <Filter>ShaderClass</Filter>
+    </ClInclude>
+    <ClInclude Include="BumpModel.h">
+      <Filter>ModelClass</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -182,6 +191,12 @@
     <ClCompile Include="AlphamapShader.cpp">
       <Filter>ShaderClass</Filter>
     </ClCompile>
+    <ClCompile Include="BumpShader.cpp">
+      <Filter>ShaderClass</Filter>
+    </ClCompile>
+    <ClCompile Include="BumpModel.cpp">
+      <Filter>ModelClass</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="color_vs.hlsl">
@@ -224,6 +239,12 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="alphamap_ps.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="bump_vs.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="bump_ps.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

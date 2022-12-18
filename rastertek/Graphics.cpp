@@ -242,47 +242,24 @@ namespace wf
 		{
 			m_directx->BeginScene( 0.0f, 0.25f, 0.5f, 1.0f );
 
+			m_rastertek_model->Render( context );
 
-			ModelData* model_data = m_model_loader->GetModelData( L"cube1" );
-			if ( model_data )
+			if ( !m_light_shader->Render(
+				context,
+				m_rastertek_model->GetIndexCount(),
+				w,
+				v,
+				p,
+				m_rastertek_model->GetTexture(),
+				m_light.GetAmbient(),
+				m_light.GetDiffuse(),
+				m_light.GetSpecularPower(),
+				m_light.GetSpecular(),
+				m_camera->GetPosition(),
+				m_light.GetDirection()
+			) )
 			{
-				RenderModelData( context, model_data );
-
-				if ( !m_bump_shader->Render(
-					context,
-					model_data->index_count,
-					w,
-					v,
-					p,
-					m_texture_arrays[ BUMPMAP_TEXTURE_ARRAY ]->GetTextureArray(),
-					m_light.GetDiffuse(),
-					m_light.GetDirection()
-				) )
-				{
-					return false;
-				}
-			}
-			else
-			{
-				m_rastertek_model->Render( context );
-
-				if ( !m_light_shader->Render(
-					context,
-					m_rastertek_model->GetIndexCount(),
-					w,
-					v,
-					p,
-					m_rastertek_model->GetTexture(),
-					m_light.GetAmbient(),
-					m_light.GetDiffuse(),
-					m_light.GetSpecularPower(),
-					m_light.GetSpecular(),
-					m_camera->GetPosition(),
-					m_light.GetDirection()
-				) )
-				{
-					return false;
-				}
+				return false;
 			}
 
 			// 2D Draw
@@ -331,6 +308,35 @@ namespace wf
 							return false;
 						}
 						break;
+					}
+
+					case 3:
+					{
+						ModelData* model_data = m_model_loader->GetModelData( L"cube1" );
+						if ( model_data )
+						{
+							RenderModelData( context, model_data );
+
+							XMMATRIX w = XMMatrixIdentity();
+							XMMATRIX s = XMMatrixScaling( 0.5f, 0.5f, 0.5f );
+							XMMATRIX t = XMMatrixTranslation( -3.0f, 2.0f, -2.0f );
+
+							w = w * s * t;
+
+							if ( !m_bump_shader->Render(
+								context,
+								model_data->index_count,
+								w,
+								v,
+								p,
+								m_texture_arrays[ BUMPMAP_TEXTURE_ARRAY ]->GetTextureArray(),
+								m_light.GetDiffuse(),
+								m_light.GetDirection()
+							) )
+							{
+								return false;
+							}
+						}
 					}
 				}
 			}

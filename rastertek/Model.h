@@ -6,6 +6,28 @@
 
 namespace wf
 {
+	struct IModel
+	{
+		IModel() = default;
+		virtual ~IModel() = default;
+
+		bool Initialize( ID3D11Device* _device );
+		void Shutdown();
+		void Render( ID3D11DeviceContext* _context );
+		int GetIndexCount();
+
+	protected:
+		virtual bool InitializeBuffers( ID3D11Device* _device ) = 0;
+		virtual void ShutdownBuffers() = 0;
+		virtual void RenderBuffers( ID3D11DeviceContext* _context ) = 0;
+
+	protected:
+		ID3D11Buffer* m_vertex_buffer{ nullptr };
+		ID3D11Buffer* m_index_buffer{ nullptr };
+		int m_vertex_count{ 0 };
+		int m_index_count{ 0 };
+	};
+
 	class ColorModel
 	{
 	private:

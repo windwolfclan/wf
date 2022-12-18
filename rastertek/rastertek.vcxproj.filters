@@ -111,6 +111,9 @@
     <ClInclude Include="BumpModel.h">
       <Filter>ModelClass</Filter>
     </ClInclude>
+    <ClInclude Include="ModelLoader.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="System.cpp">
@@ -196,6 +199,9 @@
     </ClCompile>
     <ClCompile Include="BumpModel.cpp">
       <Filter>ModelClass</Filter>
+    </ClCompile>
+    <ClCompile Include="ModelLoader.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

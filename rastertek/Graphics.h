@@ -7,6 +7,7 @@
 #include "Bitmap.h"
 #include "Text.h"
 #include "TextureArray.h"
+#include "ModelLoader.h"
 
 #include "ColorShader.h"
 #include "TextureShader.h"
@@ -14,6 +15,7 @@
 #include "DualTextureShader.h"
 #include "LightmapShader.h"
 #include "AlphamapShader.h"
+#include "BumpShader.h"
 
 namespace wf
 {
@@ -34,7 +36,8 @@ namespace wf
 	constexpr int DUAL_TEXTURE_ARRAY = 0;
 	constexpr int LIGHTMAP_TEXTURE_ARRAY = 1;
 	constexpr int ALPHAMAP_TEXTURE_ARRAY = 2;
-	constexpr int TEXTURE_ARRAY_COUNT = 3;
+	constexpr int BUMPMAP_TEXTURE_ARRAY = 3;
+	constexpr int TEXTURE_ARRAY_COUNT = 4;
 
 	constexpr int BITMAP_COUNT = TEXTURE_ARRAY_COUNT;
 
@@ -64,6 +67,8 @@ namespace wf
 		D3D* m_directx{ nullptr };
 		Camera* m_camera{ nullptr };
 		Light m_light{};
+
+		ModelLoader* m_model_loader{ nullptr };
 		
 		ColorModel* m_color_model{ nullptr };
 		ColorShader* m_color_shader{ nullptr };
@@ -81,6 +86,8 @@ namespace wf
 		LightmapShader* m_lightmap_shader{ nullptr };
 
 		AlphamapShader* m_alphamap_shader{ nullptr };
+
+		BumpShader* m_bump_shader{ nullptr };
 		
 		std::array<Bitmap*, BITMAP_COUNT> m_bitmaps;
 		std::array<TextureArray*, TEXTURE_ARRAY_COUNT> m_texture_arrays;

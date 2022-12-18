@@ -36,7 +36,28 @@ namespace wf
 		m_camera->SetPosition( 0.0f, 0.0f, -10.0f );
 		m_camera->Render();
 		m_camera->GetViewMatrix( view );
-		
+
+		m_model_loader = new ModelLoader;
+		if ( !m_model_loader )
+		{
+			return false;
+		}
+
+		ModelParam param;
+		param.device = device;
+		param.path = L"./resources/cube.txt";
+		param.key = L"cube1";
+		if ( !m_model_loader->LoadTangentSpaceModel( param ) )
+		{
+			return false;
+		}
+
+		param.key = L"cube2";
+		if ( !m_model_loader->LoadRastertekModel( param ) )
+		{
+			return false;
+		}
+
 		m_color_model = new ColorModel;
 		if ( !m_color_model->Initialize( device ) )
 		{
@@ -116,6 +137,12 @@ namespace wf
 		{
 			return false;
 		}
+
+		m_bump_shader = new BumpShader;
+		if ( !m_bump_shader->Initialize( device, _hwnd ) )
+		{
+			return false;
+		}
 		
 		if ( !InitializeBitmaps( device, context ) )
 		{
@@ -141,6 +168,7 @@ namespace wf
 		ReleaseTextureArray();
 		ReleaseBitmaps();
 
+		SAFE_SHUTDOWN( m_bump_shader );
 		SAFE_SHUTDOWN( m_alphamap_shader );
 		SAFE_SHUTDOWN( m_lightmap_shader );
 		SAFE_SHUTDOWN( m_dual_texture_shader );
@@ -154,6 +182,7 @@ namespace wf
 		SAFE_SHUTDOWN( m_texture_model );
 		SAFE_SHUTDOWN( m_color_shader );
 		SAFE_SHUTDOWN( m_color_model );
+		SAFE_SHUTDOWN( m_model_loader );
 		SAFE_DELETE( m_camera );
 		SAFE_SHUTDOWN( m_directx );
 	}
@@ -213,60 +242,99 @@ namespace wf
 		{
 			m_directx->BeginScene( 0.0f, 0.25f, 0.5f, 1.0f );
 
-			m_rastertek_model->Render( context );
 
-			if ( !m_light_shader->Render( 
-				context, 
-				m_rastertek_model->GetIndexCount(),
-				w, 
-				v, 
-				p, 
-				m_rastertek_model->GetTexture(),
-				m_light.GetAmbient(),
-				m_light.GetDiffuse(), 
-				m_light.GetSpecularPower(),
-				m_light.GetSpecular(),
-				m_camera->GetPosition(),
-				m_light.GetDirection()
-			) )
+			ModelData* model_data = m_model_loader->GetModelData( L"cube1" );
+			if ( model_data )
 			{
-				return false;
+				RenderModelData( context, model_data );
+
+				if ( !m_bump_shader->Render(
+					context,
+					model_data->index_count,
+					w,
+					v,
+					p,
+					m_texture_arrays[ BUMPMAP_TEXTURE_ARRAY ]->GetTextureArray(),
+					m_light.GetDiffuse(),
+					m_light.GetDirection()
+				) )
+				{
+					return false;
+				}
+			}
+			else
+			{
+				m_rastertek_model->Render( context );
+
+				if ( !m_light_shader->Render(
+					context,
+					m_rastertek_model->GetIndexCount(),
+					w,
+					v,
+					p,
+					m_rastertek_model->GetTexture(),
+					m_light.GetAmbient(),
+					m_light.GetDiffuse(),
+					m_light.GetSpecularPower(),
+					m_light.GetSpecular(),
+					m_camera->GetPosition(),
+					m_light.GetDirection()
+				) )
+				{
+					return false;
+				}
 			}
 
 			// 2D Draw
 			m_directx->GetWorldMatrix( w );
 			m_directx->TurnOffZBuffer();
 
+			POINT lt[] = {
+				{ 100, 100 },
+				{ 100, 300 },
+				{ 100, 500 },
+				{ 300, 100 },
+			};
 
-			if ( !m_bitmaps[ 0 ]->Render( context, 100, 100 ) )
+			for ( int i = 0; i < BITMAP_COUNT; ++i ) 
 			{
-				return false;
+				if ( !m_bitmaps[ i ]->Render( context, lt[ i ].x, lt[ i ].y ) )
+				{
+					return false;
+				}
+
+				int index_count = m_bitmaps[ i ]->GetIndexCount();
+				switch ( i )
+				{
+					case 0:
+					{
+						if ( !m_dual_texture_shader->Render( context, index_count, w, v, o, m_texture_arrays[ 0 ]->GetTextureArray() ) )
+						{
+							return false;
+						}
+						break;
+					}
+
+					case 1:
+					{
+						if ( !m_lightmap_shader->Render( context, m_bitmaps[ 1 ]->GetIndexCount(), w, v, o, m_texture_arrays[ 1 ]->GetTextureArray() ) )
+						{
+							return false;
+						}
+						break;
+					}
+
+					case 2:
+					{
+						if ( !m_alphamap_shader->Render( context, m_bitmaps[ 1 ]->GetIndexCount(), w, v, o, m_texture_arrays[ 2 ]->GetTextureArray() ) )
+						{
+							return false;
+						}
+						break;
+					}
+				}
 			}
 
-			if ( !m_dual_texture_shader->Render( context, m_bitmaps[ 0 ]->GetIndexCount(), w, v, o, m_texture_arrays[ 0 ]->GetTextureArray() ) )
-			{
-				return false;
-			}
-
-			if ( !m_bitmaps[ 1 ]->Render( context, 100, 300 ) )
-			{
-				return false;
-			}
-
-			if ( !m_lightmap_shader->Render( context, m_bitmaps[ 1 ]->GetIndexCount(), w, v, o, m_texture_arrays[ 1 ]->GetTextureArray() ) )
-			{
-				return false;
-			}
-
-			if ( !m_bitmaps[ 2 ]->Render( context, 100, 500 ) )
-			{
-				return false;
-			}
-
-			if ( !m_alphamap_shader->Render( context, m_bitmaps[ 1 ]->GetIndexCount(), w, v, o, m_texture_arrays[ 2 ]->GetTextureArray() ) )
-			{
-				return false;
-			}
 
 			// text
 			m_directx->TurnOnAlphaBlending();
@@ -343,6 +411,7 @@ namespace wf
 		const wchar_t* path_1[ TEXTURE_ARRAY_COUNT ] = {
 			 L"./resources/dirt.tga",
 			 L"./resources/stone.tga",
+			 L"./resources/stone.tga",
 			 L"./resources/stone.tga"
 		};
 
@@ -350,12 +419,14 @@ namespace wf
 			L"./resources/stone.tga",
 			L"resources/lightmap.tga",
 			L"./resources/dirt.tga",
+			L"./resources/bump.tga",
 		};
 
 		const wchar_t* path_3[ TEXTURE_ARRAY_COUNT ] = {
 			 nullptr,
 			 nullptr,
-			 L"resources/alphamap.tga"
+			 L"resources/alphamap.tga",
+			 nullptr
 		};
 
 

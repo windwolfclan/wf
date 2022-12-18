@@ -39,10 +39,10 @@ VS_OUTPUT bump_vs( VS_INPUT input )
 	output.normal = normalize( output.normal );
 
 	output.tangent = mul( input.tangent, ( float3x3 )w );
-	output.tangent = normalize( tangent.normal );
+	output.tangent = normalize( output.tangent );
 
 	output.binormal = mul( input.binormal, ( float3x3 )w );
-	output.binormal = normalize( binormal.normal );
+	output.binormal = normalize( output.binormal );
 
 	return output;
 }

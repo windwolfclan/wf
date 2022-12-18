@@ -12,6 +12,9 @@
 #include <mmsystem.h>
 #include <fstream>
 #include <array>
+#include <string>
+#include <map>
+#include <unordered_map>
 
 #include <d3d11.h>
 #include <DirectXMath.h>

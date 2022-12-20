@@ -409,4 +409,13 @@ namespace wf
 		return m_height;
 	}
 
+	ID3D11DepthStencilView* D3D::GetDepthStencilView()
+	{
+		return m_depth_stencil_view;
+	}
+
+	void D3D::SetBackBufferRenderTarget()
+	{
+		m_device_context->OMSetRenderTargets( 1, &m_render_target_view, m_depth_stencil_view );
+	}
 }

@@ -33,6 +33,9 @@ namespace wf
 		int GetWidth() const;
 		int GetHeight() const;
 
+		ID3D11DepthStencilView* GetDepthStencilView();
+		void SetBackBufferRenderTarget();
+
 	private:
 		bool m_vsync{ false };
 		

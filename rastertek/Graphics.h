@@ -8,6 +8,7 @@
 #include "Text.h"
 #include "TextureArray.h"
 #include "ModelLoader.h"
+#include "RenderTexture.h"
 
 #include "ColorShader.h"
 #include "TextureShader.h"
@@ -99,6 +100,8 @@ namespace wf
 		Bitmap* m_bitmap{ nullptr };
 
 		Text* m_text{ nullptr };
+
+		RenderTexture* m_rt1{ nullptr };
 
 		// mouse cursor
 		Bitmap* m_cursor{ nullptr };

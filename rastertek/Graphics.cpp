@@ -149,6 +149,12 @@ namespace wf
 		{
 			return false;
 		}
+
+		m_rt1 = new RenderTexture;
+		if ( !m_rt1->Initialize( device, _width, _height ) )
+		{
+			return false;
+		}
 		
 		if ( !InitializeBitmaps( device, context ) )
 		{
@@ -174,6 +180,7 @@ namespace wf
 		ReleaseTextureArray();
 		ReleaseBitmaps();
 
+		SAFE_SHUTDOWN( m_rt1 );
 		SAFE_SHUTDOWN( m_specular_shader );
 		SAFE_SHUTDOWN( m_bump_shader );
 		SAFE_SHUTDOWN( m_alphamap_shader );
@@ -232,6 +239,7 @@ namespace wf
 		XMMATRIX p;
 		XMMATRIX o;
 		ID3D11DeviceContext* context = m_directx->GetDeviceContext();
+		ID3D11DepthStencilView* dsv = m_directx->GetDepthStencilView();
 
 		m_camera->Render();
 
@@ -242,58 +250,68 @@ namespace wf
 			m_directx->GetProjectionMatrix( p );
 			m_directx->GetOrthoMatrix( o );
 
-			w = XMMatrixRotationY( rotation );
+			// w = XMMatrixRotationY( rotation );
 		}
-		
+
+		// render to texture
+		{
+			m_rt1->SetRenderTarget( context, dsv );
+
+			m_rt1->ClearRenderTarget( context, dsv, 0.0f, 1.0f, 0.0f, 1.0f );
+
+			m_rastertek_model->Render( context );
+
+			if ( !m_texture_shader->Render(
+				context,
+				m_rastertek_model->GetIndexCount(),
+				w,
+				v,
+				p,
+				m_rastertek_model->GetTexture()
+			) )
+			{
+				return false;
+			}
+
+			m_directx->SetBackBufferRenderTarget();
+		}
+
 		// render
 		{
 			m_directx->BeginScene( 0.0f, 0.25f, 0.5f, 1.0f );
 
-			ModelData* model_data = m_model_loader->GetModelData( L"cube1" );
-			if ( model_data )
+			m_rastertek_model->Render( context );
+
+			if ( !m_texture_shader->Render(
+				context,
+				m_rastertek_model->GetIndexCount(),
+				w,
+				v,
+				p,
+				// m_texture_model->GetTexture()
+				m_rt1->GetShaderResourceView()
+			) )
 			{
-				RenderModelData( context, model_data );
-
-				if ( !m_specular_shader->Render(
-					context,
-					model_data->index_count,
-					w,
-					v,
-					p,
-					m_texture_arrays[ SPECULAR_TEXTURE_ARRAY ]->GetTextureArray(),
-					m_camera->GetPosition(),
-					m_light.GetDiffuse(),
-					m_light.GetSpecular(),
-					m_light.GetSpecularPower(),
-					m_light.GetDirection()
-				) )
-				{
-					return false;
-				}
+				return false;
 			}
-			else
+
+			/*if ( !m_light_shader->Render(
+				context,
+				m_rastertek_model->GetIndexCount(),
+				w,
+				v,
+				p,
+				m_rastertek_model->GetTexture(),
+				m_light.GetAmbient(),
+				m_light.GetDiffuse(),
+				m_light.GetSpecularPower(),
+				m_light.GetSpecular(),
+				m_camera->GetPosition(),
+				m_light.GetDirection()
+			) )
 			{
-
-				m_rastertek_model->Render( context );
-
-				if ( !m_light_shader->Render(
-					context,
-					m_rastertek_model->GetIndexCount(),
-					w,
-					v,
-					p,
-					m_rastertek_model->GetTexture(),
-					m_light.GetAmbient(),
-					m_light.GetDiffuse(),
-					m_light.GetSpecularPower(),
-					m_light.GetSpecular(),
-					m_camera->GetPosition(),
-					m_light.GetDirection()
-				) )
-				{
-					return false;
-				}
-			}
+				return false;
+			}*/
 
 			// 2D Draw
 			m_directx->GetWorldMatrix( w );
@@ -411,6 +429,19 @@ namespace wf
 				}
 			}
 
+			m_bitmap->Render( context, 300, 500 );
+			if ( !m_texture_shader->Render(
+				context,
+				m_rastertek_model->GetIndexCount(),
+				w,
+				v,
+				o,
+				// m_texture_model->GetTexture()
+				m_rt1->GetShaderResourceView()
+			) )
+			{
+				return false;
+			}
 
 			// text
 			m_directx->TurnOnAlphaBlending();

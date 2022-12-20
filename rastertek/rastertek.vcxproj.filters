@@ -123,6 +123,9 @@
     <ClInclude Include="Quad.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="FogShader.h">
+      <Filter>ShaderClass</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="System.cpp">
@@ -221,6 +224,9 @@
     <ClCompile Include="Quad.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="FogShader.cpp">
+      <Filter>ShaderClass</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="color_vs.hlsl">
@@ -275,6 +281,12 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="specular_ps.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="fog_vs.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="fog_ps.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

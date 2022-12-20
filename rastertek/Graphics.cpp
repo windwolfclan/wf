@@ -11,6 +11,7 @@
 #include "AlphamapShader.h"
 #include "BumpShader.h"
 #include "SpecularmapShader.h"
+#include "FogShader.h"
 
 namespace wf
 {
@@ -77,34 +78,15 @@ namespace wf
 			MessageBox( _hwnd, L"Could not initialize the model object", L"Error", MB_OK );
 			return false;
 		}
-
-		m_color_shader = new ColorShader;
-		if ( !m_color_shader->Initialize( device, _hwnd ) )
-		{
-			MessageBox( _hwnd, L"Could not initialize the color shader", L"Error", MB_OK );
-			return false;
-		}
-
+	
 		m_texture_model = new TextureModel;
 		if ( !m_texture_model->Initialize( device, context, "./resources/StoneFloorTexture.tga" ) )
 		{
 			return false;
 		}
 
-		m_texture_shader = new TextureShader;
-		if ( !m_texture_shader->Initialize( device, _hwnd ) )
-		{
-			return false;
-		}
-
 		m_light_model = new LightModel;
 		if ( !m_light_model->Initialize( device, context, "./resources/StoneFloorTexture.tga" ) )
-		{
-			return false;
-		}
-
-		m_light_shader = new LightShader;
-		if ( !m_light_shader->Initialize( device, _hwnd ) )
 		{
 			return false;
 		}
@@ -127,38 +109,29 @@ namespace wf
 			return false;
 		}
 
-		m_dual_texture_shader = new DualTextureShader;
-		if ( !m_dual_texture_shader->Initialize( device, _hwnd ) )
-		{
-			return false;
-		}
+#define INITIALIZE_WF_SHADER( p, type )\
+p = new type;\
+if( !p->Initialize( device, _hwnd ) ) return false;
 
-		m_lightmap_shader = new LightmapShader;
-		if ( !m_lightmap_shader->Initialize( device, _hwnd ) )
-		{
-			return false;
-		}
+		INITIALIZE_WF_SHADER( m_color_shader, ColorShader );
+		INITIALIZE_WF_SHADER( m_texture_shader, TextureShader );
+		INITIALIZE_WF_SHADER( m_light_shader, LightShader );
+		INITIALIZE_WF_SHADER( m_dual_texture_shader, DualTextureShader );
+		INITIALIZE_WF_SHADER( m_lightmap_shader, LightmapShader );
+		INITIALIZE_WF_SHADER( m_alphamap_shader, AlphamapShader );
+		INITIALIZE_WF_SHADER( m_bump_shader, BumpShader );
+		INITIALIZE_WF_SHADER( m_specular_shader, SpecularShader );
+		INITIALIZE_WF_SHADER( m_fog_shader, FogShader );
 
-		m_alphamap_shader = new AlphamapShader;
-		if ( !m_alphamap_shader->Initialize( device, _hwnd ) )
-		{
-			return false;
-		}
-
-		m_bump_shader = new BumpShader;
-		if ( !m_bump_shader->Initialize( device, _hwnd ) )
-		{
-			return false;
-		}
-
-		m_specular_shader = new SpecularShader;
-		if ( !m_specular_shader->Initialize( device, _hwnd ) )
-		{
-			return false;
-		}
 
 		m_rt1 = new RenderTexture;
 		if ( !m_rt1->Initialize( device, _width, _height ) )
+		{
+			return false;
+		}
+
+		m_rt2 = new RenderTexture;
+		if ( !m_rt2->Initialize( device, _width, _height ) )
 		{
 			return false;
 		}
@@ -187,7 +160,9 @@ namespace wf
 		ShutdownQuads();
 		ReleaseTextureArray();
 
+		SAFE_SHUTDOWN( m_rt2 );
 		SAFE_SHUTDOWN( m_rt1 );
+		SAFE_SHUTDOWN( m_fog_shader );
 		SAFE_SHUTDOWN( m_specular_shader );
 		SAFE_SHUTDOWN( m_bump_shader );
 		SAFE_SHUTDOWN( m_alphamap_shader );
@@ -240,6 +215,9 @@ namespace wf
 		if ( rotation > 360.0f )
 			rotation -= 360.0f;
 
+		float fog_start = 0.0f;
+		float fog_end = 10.0f;
+
 		XMMATRIX w;
 		XMMATRIX v;
 		XMMATRIX p;
@@ -256,7 +234,7 @@ namespace wf
 			m_directx->GetProjectionMatrix( p );
 			m_directx->GetOrthoMatrix( o );
 
-			// w = XMMatrixRotationY( rotation );
+			w = XMMatrixRotationY( rotation );
 		}
 
 #pragma region RENDER TO TEXTURE
@@ -279,6 +257,26 @@ namespace wf
 				return false;
 			}
 
+			m_rt2->SetRenderTarget( context, dsv );
+
+			m_rt2->ClearRenderTarget( context, dsv, 0.5f, 0.5f, 0.5f, 1.0f );
+
+			m_rastertek_model->Render( context );
+
+			if ( !m_fog_shader->Render(
+				context,
+				m_rastertek_model->GetIndexCount(),
+				w,
+				v,
+				p,
+				m_rastertek_model->GetTexture(),
+				fog_start,
+				fog_end
+			) )
+			{
+				return false;
+			}
+
 			m_directx->SetBackBufferRenderTarget();
 		}
 #pragma endregion
@@ -289,14 +287,13 @@ namespace wf
 
 			m_rastertek_model->Render( context );
 
-			if ( !m_texture_shader->Render(
+			if ( !m_fog_shader->Render(
 				context,
 				m_rastertek_model->GetIndexCount(),
-				w,
-				v,
-				p,
-				// m_texture_model->GetTexture()
-				m_rt1->GetShaderResourceView()
+				w, v, p,
+				m_rastertek_model->GetTexture(),
+				fog_start,
+				fog_end
 			) )
 			{
 				return false;
@@ -313,6 +310,7 @@ namespace wf
 				{ 300, 100 },
 				{ 300, 300 },
 				{ 300, 500 },
+				{ 500, 100 },
 			};
 
 			for ( int i = 0; i < QUAD_COUNT; ++i )
@@ -373,6 +371,15 @@ namespace wf
 					case 5:
 					{
 						if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt1->GetShaderResourceView() ) )
+						{
+							return false;
+						}
+						break;
+					}
+
+					case 6:
+					{
+						if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt2->GetShaderResourceView() ) )
 						{
 							return false;
 						}
@@ -487,6 +494,7 @@ namespace wf
 			quad_type::texture,
 			quad_type::tangent_space,
 			quad_type::tangent_space,
+			quad_type::texture,
 			quad_type::texture,
 		};
 

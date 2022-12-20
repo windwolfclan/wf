@@ -20,6 +20,7 @@ namespace wf
 	class AlphamapShader;
 	class BumpShader;
 	class SpecularShader;
+	class FogShader;
 
 	class Quad;
 	class TextureQuad;
@@ -50,7 +51,7 @@ namespace wf
 	constexpr int RENDER_TEXTURE_ARRAY = 5;
 	constexpr int TEXTURE_ARRAY_COUNT = 6;
 
-	constexpr int QUAD_COUNT = TEXTURE_ARRAY_COUNT;
+	constexpr int QUAD_COUNT = 7;
 
 	class Graphics
 	{
@@ -93,8 +94,10 @@ namespace wf
 		AlphamapShader* m_alphamap_shader{ nullptr };
 		BumpShader* m_bump_shader{ nullptr };
 		SpecularShader* m_specular_shader{ nullptr };
+		FogShader* m_fog_shader{ nullptr };
 		
 		RenderTexture* m_rt1{ nullptr };
+		RenderTexture* m_rt2{ nullptr };
 		std::array<TextureArray*, TEXTURE_ARRAY_COUNT> m_texture_arrays;
 		std::array<Quad*, QUAD_COUNT> m_quads;
 

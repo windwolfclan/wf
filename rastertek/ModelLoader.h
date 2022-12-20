@@ -2,45 +2,6 @@
 
 namespace wf
 {
-	struct PositionTextureVertex
-	{
-		XMFLOAT3 pos{ 0.0f, 0.0f, 0.0f };
-		XMFLOAT2 tex{ 0.0f, 0.0f };
-	};
-
-	struct PositionTextureNormalVertex
-	{
-		XMFLOAT3 pos{ 0.0f, 0.0f, 0.0f };
-		XMFLOAT2 tex{ 0.0f, 0.0f };
-		XMFLOAT3 normal{ 0.0f, 0.0f, 0.0f };
-	};
-
-	using RastertekVertex = PositionTextureNormalVertex;
-
-	struct PositionTextureNormalTangentBinormalVertex
-	{
-		XMFLOAT3 pos{ 0.0f, 0.0f, 0.0f };
-		XMFLOAT2 tex{ 0.0f, 0.0f };
-		XMFLOAT3 normal{ 0.0f, 0.0f, 0.0f };
-		XMFLOAT3 tangent{ 0.0f, 0.0f, 0.0f };
-		XMFLOAT3 binormal{ 0.0f, 0.0f, 0.0f };
-	};
-
-	using TangentSpaceVertex = PositionTextureNormalTangentBinormalVertex;
-
-	struct RastertekVertexData
-	{
-		float x{ 0.0f };
-		float y{ 0.0f };
-		float z{ 0.0f };
-		float u{ 0.0f };
-		float v{ 0.0f };
-		float nx{ 0.0f };
-		float ny{ 0.0f };
-		float nz{ 0.0f };
-	};
-
-
 	struct ModelData
 	{
 		ID3D11Buffer* vertex_buffer{ nullptr };

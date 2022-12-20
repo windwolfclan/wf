@@ -10,14 +10,21 @@
 #include "ModelLoader.h"
 #include "RenderTexture.h"
 
-#include "ColorShader.h"
-#include "TextureShader.h"
-#include "LightShader.h"
-#include "DualTextureShader.h"
-#include "LightmapShader.h"
-#include "AlphamapShader.h"
-#include "BumpShader.h"
-#include "SpecularmapShader.h"
+namespace wf
+{
+	class ColorShader;
+	class TextureShader;
+	class LightShader;
+	class DualTextureShader;
+	class LightmapShader;
+	class AlphamapShader;
+	class BumpShader;
+	class SpecularShader;
+
+	class Quad;
+	class TextureQuad;
+	class TangentSpaceQuad;
+}
 
 namespace wf
 {
@@ -40,9 +47,10 @@ namespace wf
 	constexpr int ALPHAMAP_TEXTURE_ARRAY = 2;
 	constexpr int BUMPMAP_TEXTURE_ARRAY = 3;
 	constexpr int SPECULAR_TEXTURE_ARRAY = 4;
-	constexpr int TEXTURE_ARRAY_COUNT = 5;
+	constexpr int RENDER_TEXTURE_ARRAY = 5;
+	constexpr int TEXTURE_ARRAY_COUNT = 6;
 
-	constexpr int BITMAP_COUNT = TEXTURE_ARRAY_COUNT;
+	constexpr int QUAD_COUNT = TEXTURE_ARRAY_COUNT;
 
 	class Graphics
 	{
@@ -59,12 +67,11 @@ namespace wf
 	private:
 		void DrawCursor();
 
-		bool InitializeBitmaps( ID3D11Device*& _device, ID3D11DeviceContext*& _context );
-		void ReleaseBitmaps();
-
 		bool InitializeTextureArray( ID3D11Device*& _device, ID3D11DeviceContext*& _context );
 		void ReleaseTextureArray();
 
+		bool InitializeQuads( ID3D11Device*& _device );
+		void ShutdownQuads();
 
 	private:
 		D3D* m_directx{ nullptr };
@@ -74,34 +81,24 @@ namespace wf
 		ModelLoader* m_model_loader{ nullptr };
 		
 		ColorModel* m_color_model{ nullptr };
-		ColorShader* m_color_shader{ nullptr };
-
 		TextureModel* m_texture_model{ nullptr };
-		TextureShader* m_texture_shader{ nullptr };
-
 		LightModel* m_light_model{ nullptr };
-		LightShader* m_light_shader{ nullptr };
-
 		RasterTekModel* m_rastertek_model{ nullptr };
 
+		ColorShader* m_color_shader{ nullptr };
+		TextureShader* m_texture_shader{ nullptr };
+		LightShader* m_light_shader{ nullptr };
 		DualTextureShader* m_dual_texture_shader{ nullptr };
-
 		LightmapShader* m_lightmap_shader{ nullptr };
-
 		AlphamapShader* m_alphamap_shader{ nullptr };
-
 		BumpShader* m_bump_shader{ nullptr };
-
 		SpecularShader* m_specular_shader{ nullptr };
 		
-		std::array<Bitmap*, BITMAP_COUNT> m_bitmaps;
+		RenderTexture* m_rt1{ nullptr };
 		std::array<TextureArray*, TEXTURE_ARRAY_COUNT> m_texture_arrays;
-
-		Bitmap* m_bitmap{ nullptr };
+		std::array<Quad*, QUAD_COUNT> m_quads;
 
 		Text* m_text{ nullptr };
-
-		RenderTexture* m_rt1{ nullptr };
 
 		// mouse cursor
 		Bitmap* m_cursor{ nullptr };

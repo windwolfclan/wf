@@ -1,6 +1,17 @@
 #include "pch.h"
 #include "Graphics.h"
 
+#include "Quad.h"
+
+#include "ColorShader.h"
+#include "TextureShader.h"
+#include "LightShader.h"
+#include "DualTextureShader.h"
+#include "LightmapShader.h"
+#include "AlphamapShader.h"
+#include "BumpShader.h"
+#include "SpecularmapShader.h"
+
 namespace wf
 {
 	Graphics::Graphics()
@@ -17,6 +28,8 @@ namespace wf
 
 	bool Graphics::Initialize(int _width, int _height, HWND _hwnd)
 	{
+		Quad::SetScreenSize( _width, _height );
+
 		m_width = _width;
 		m_height = _height;
 
@@ -101,12 +114,6 @@ namespace wf
 		{
 			return false;
 		}
-
-		m_bitmap = new Bitmap;
-		if ( !m_bitmap->Initialize( device, context, _width, _height, "./resources/StoneFloorTexture.tga", 256, 256 ) )
-		{
-			return false;
-		}
 		
 		m_text = new Text;
 		if ( !m_text->Initialize( device, context, _hwnd, _width, _height, view ) )
@@ -156,12 +163,12 @@ namespace wf
 			return false;
 		}
 		
-		if ( !InitializeBitmaps( device, context ) )
+		if ( !InitializeTextureArray( device, context ) )
 		{
 			return false;
 		}
 
-		if ( !InitializeTextureArray( device, context ) )
+		if ( !InitializeQuads( device ) )
 		{
 			return false;
 		}
@@ -177,8 +184,8 @@ namespace wf
 
 	void Graphics::Shutdown()
 	{
+		ShutdownQuads();
 		ReleaseTextureArray();
-		ReleaseBitmaps();
 
 		SAFE_SHUTDOWN( m_rt1 );
 		SAFE_SHUTDOWN( m_specular_shader );
@@ -188,7 +195,6 @@ namespace wf
 		SAFE_SHUTDOWN( m_dual_texture_shader );
 		SAFE_SHUTDOWN( m_cursor );
 		SAFE_SHUTDOWN( m_text );
-		SAFE_SHUTDOWN( m_bitmap );
 		SAFE_SHUTDOWN( m_rastertek_model );
 		SAFE_SHUTDOWN( m_light_shader );
 		SAFE_SHUTDOWN( m_light_model );
@@ -253,7 +259,7 @@ namespace wf
 			// w = XMMatrixRotationY( rotation );
 		}
 
-		// render to texture
+#pragma region RENDER TO TEXTURE
 		{
 			m_rt1->SetRenderTarget( context, dsv );
 
@@ -275,6 +281,7 @@ namespace wf
 
 			m_directx->SetBackBufferRenderTarget();
 		}
+#pragma endregion
 
 		// render
 		{
@@ -295,24 +302,6 @@ namespace wf
 				return false;
 			}
 
-			/*if ( !m_light_shader->Render(
-				context,
-				m_rastertek_model->GetIndexCount(),
-				w,
-				v,
-				p,
-				m_rastertek_model->GetTexture(),
-				m_light.GetAmbient(),
-				m_light.GetDiffuse(),
-				m_light.GetSpecularPower(),
-				m_light.GetSpecular(),
-				m_camera->GetPosition(),
-				m_light.GetDirection()
-			) )
-			{
-				return false;
-			}*/
-
 			// 2D Draw
 			m_directx->GetWorldMatrix( w );
 			m_directx->TurnOffZBuffer();
@@ -323,21 +312,22 @@ namespace wf
 				{ 100, 500 },
 				{ 300, 100 },
 				{ 300, 300 },
+				{ 300, 500 },
 			};
 
-			for ( int i = 0; i < BITMAP_COUNT; ++i ) 
+			for ( int i = 0; i < QUAD_COUNT; ++i )
 			{
-				if ( !m_bitmaps[ i ]->Render( context, lt[ i ].x, lt[ i ].y ) )
+				if ( !m_quads[ i ]->Render( context, lt[ i ].x, lt[ i ].y ) )
 				{
 					return false;
 				}
 
-				int index_count = m_bitmaps[ i ]->GetIndexCount();
+				int index_count = m_quads[ i ]->GetIndexCount();
 				switch ( i )
 				{
 					case 0:
 					{
-						if ( !m_dual_texture_shader->Render( context, index_count, w, v, o, m_texture_arrays[ 0 ]->GetTextureArray() ) )
+						if ( !m_dual_texture_shader->Render( context, index_count, w, v, o, m_texture_arrays[ DUAL_TEXTURE_ARRAY ]->GetTextureArray() ) )
 						{
 							return false;
 						}
@@ -346,7 +336,7 @@ namespace wf
 
 					case 1:
 					{
-						if ( !m_lightmap_shader->Render( context, m_bitmaps[ 1 ]->GetIndexCount(), w, v, o, m_texture_arrays[ 1 ]->GetTextureArray() ) )
+						if ( !m_lightmap_shader->Render( context, index_count, w, v, o, m_texture_arrays[ LIGHTMAP_TEXTURE_ARRAY ]->GetTextureArray() ) )
 						{
 							return false;
 						}
@@ -355,7 +345,7 @@ namespace wf
 
 					case 2:
 					{
-						if ( !m_alphamap_shader->Render( context, m_bitmaps[ 1 ]->GetIndexCount(), w, v, o, m_texture_arrays[ 2 ]->GetTextureArray() ) )
+						if ( !m_alphamap_shader->Render( context, index_count, w, v, o, m_texture_arrays[ ALPHAMAP_TEXTURE_ARRAY ]->GetTextureArray() ) )
 						{
 							return false;
 						}
@@ -364,83 +354,31 @@ namespace wf
 
 					case 3:
 					{
-						ModelData* model_data = m_model_loader->GetModelData( L"cube1" );
-						if ( model_data )
+						if ( !m_bump_shader->Render( context, index_count, w, v, o, m_texture_arrays[ BUMPMAP_TEXTURE_ARRAY ]->GetTextureArray(), m_light.GetDiffuse(), m_light.GetDirection() ) )
 						{
-							RenderModelData( context, model_data );
-
-							XMMATRIX w = XMMatrixIdentity();
-							XMMATRIX s = XMMatrixScaling( 0.5f, 0.5f, 0.5f );
-							XMMATRIX t = XMMatrixTranslation( -3.0f, 2.0f, -2.0f );
-
-							w = w * s * t;
-
-							if ( !m_bump_shader->Render(
-								context,
-								model_data->index_count,
-								w,
-								v,
-								p,
-								m_texture_arrays[ BUMPMAP_TEXTURE_ARRAY ]->GetTextureArray(),
-								m_light.GetDiffuse(),
-								m_light.GetDirection()
-							) )
-							{
-								return false;
-							}
+							return false;
 						}
-
 						break;
 					}
 
 					case 4:
 					{
-						ModelData* model_data = m_model_loader->GetModelData( L"cube1" );
-						if ( model_data )
+						if ( !m_specular_shader->Render( context, index_count, w, v, o, m_texture_arrays[ SPECULAR_TEXTURE_ARRAY ]->GetTextureArray(), m_camera->GetPosition(), m_light.GetDiffuse(), m_light.GetSpecular(), m_light.GetSpecularPower(), m_light.GetDirection() ) ) 
+						{ 
+							return false; 
+						}					
+						break;
+					}
+
+					case 5:
+					{
+						if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt1->GetShaderResourceView() ) )
 						{
-							RenderModelData( context, model_data );
-
-							XMMATRIX w = XMMatrixIdentity();
-							XMMATRIX s = XMMatrixScaling( 0.5f, 0.5f, 0.5f );
-							XMMATRIX t = XMMatrixTranslation( -2.7f, 0.4f, -2.5f );
-
-							w = w * s * t;
-
-							if ( !m_specular_shader->Render(
-								context,
-								model_data->index_count,
-								w,
-								v,
-								p,
-								m_texture_arrays[ SPECULAR_TEXTURE_ARRAY ]->GetTextureArray(),
-								m_camera->GetPosition(),
-								m_light.GetDiffuse(),
-								m_light.GetSpecular(),
-								m_light.GetSpecularPower(),
-								m_light.GetDirection()
-							) )
-							{
-								return false;
-							}
+							return false;
 						}
-
 						break;
 					}
 				}
-			}
-
-			m_bitmap->Render( context, 300, 500 );
-			if ( !m_texture_shader->Render(
-				context,
-				m_rastertek_model->GetIndexCount(),
-				w,
-				v,
-				o,
-				// m_texture_model->GetTexture()
-				m_rt1->GetShaderResourceView()
-			) )
-			{
-				return false;
 			}
 
 			// text
@@ -491,28 +429,6 @@ namespace wf
 		m_texture_shader->Render( context, m_cursor->GetIndexCount(), w, v, o, m_cursor->GetTexture() );
 	}
 
-	bool Graphics::InitializeBitmaps( ID3D11Device*& _device, ID3D11DeviceContext*& _context )
-	{
-		for ( int i = 0; i < BITMAP_COUNT; ++i )
-		{
-			m_bitmaps[ i ] = new Bitmap;
-			if ( !m_bitmaps[ i ]->Initialize( _device, _context, m_width, m_height, "./resources/StoneFloorTexture.tga", 150, 150 ) )
-			{
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	void Graphics::ReleaseBitmaps()
-	{
-		for ( int i = 0; i < BITMAP_COUNT; ++i )
-		{
-			SAFE_SHUTDOWN( m_bitmaps[ i ] );
-		}
-	}
-
 	bool Graphics::InitializeTextureArray( ID3D11Device*& _device, ID3D11DeviceContext*& _context )
 	{
 		const wchar_t* path_1[ TEXTURE_ARRAY_COUNT ] = {
@@ -520,7 +436,8 @@ namespace wf
 			 L"./resources/stone.tga",
 			 L"./resources/stone.tga",
 			 L"./resources/stone.tga",
-			 L"./resources/bump2.tga"
+			 L"./resources/bump2.tga",
+			 L"./resources/stone.tga"
 		};
 
 		const wchar_t* path_2[ TEXTURE_ARRAY_COUNT ] = {
@@ -528,7 +445,8 @@ namespace wf
 			L"resources/lightmap.tga",
 			L"./resources/dirt.tga",
 			L"./resources/bump.tga",
-			L"./resources/stone2.tga"
+			L"./resources/stone2.tga",
+			L"./resources/bump.tga"
 		};
 
 		const wchar_t* path_3[ TEXTURE_ARRAY_COUNT ] = {
@@ -536,7 +454,8 @@ namespace wf
 			 nullptr,
 			 L"resources/alphamap.tga",
 			 nullptr,
-			 L"resources/specular.tga"
+			 L"resources/specular.tga",
+			 nullptr
 		};
 
 
@@ -558,6 +477,43 @@ namespace wf
 		{
 			SAFE_SHUTDOWN( m_texture_arrays[ i ] );
 		}
+	}
+
+	bool Graphics::InitializeQuads( ID3D11Device*& _device )
+	{
+		quad_type types[] = {
+			quad_type::texture,
+			quad_type::texture,
+			quad_type::texture,
+			quad_type::tangent_space,
+			quad_type::tangent_space,
+			quad_type::texture,
+		};
+
+		for ( int i = 0; i < QUAD_COUNT; ++i )
+		{
+			m_quads[ i ] = Quad::CreateQuad( types[ i ] );
+			if ( !m_quads[ i ] )
+			{
+				return false;
+			}
+
+			if ( !m_quads[ i ]->Initialize( _device, 150, 150 ) )
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	void Graphics::ShutdownQuads()
+	{
+		for ( int i = 0; i < QUAD_COUNT; ++i )
+		{
+			SAFE_SHUTDOWN( m_quads[ i ] );
+		}
+
 	}
 
 }

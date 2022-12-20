@@ -16,6 +16,7 @@
 #include "LightmapShader.h"
 #include "AlphamapShader.h"
 #include "BumpShader.h"
+#include "SpecularmapShader.h"
 
 namespace wf
 {
@@ -37,7 +38,8 @@ namespace wf
 	constexpr int LIGHTMAP_TEXTURE_ARRAY = 1;
 	constexpr int ALPHAMAP_TEXTURE_ARRAY = 2;
 	constexpr int BUMPMAP_TEXTURE_ARRAY = 3;
-	constexpr int TEXTURE_ARRAY_COUNT = 4;
+	constexpr int SPECULAR_TEXTURE_ARRAY = 4;
+	constexpr int TEXTURE_ARRAY_COUNT = 5;
 
 	constexpr int BITMAP_COUNT = TEXTURE_ARRAY_COUNT;
 
@@ -88,6 +90,8 @@ namespace wf
 		AlphamapShader* m_alphamap_shader{ nullptr };
 
 		BumpShader* m_bump_shader{ nullptr };
+
+		SpecularShader* m_specular_shader{ nullptr };
 		
 		std::array<Bitmap*, BITMAP_COUNT> m_bitmaps;
 		std::array<TextureArray*, TEXTURE_ARRAY_COUNT> m_texture_arrays;

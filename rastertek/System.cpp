@@ -145,7 +145,8 @@ namespace wf
 			return false;
 		}
 
-		if ( !m_graphics->Render() )
+		float delta = m_timer->GetTime();
+		if ( !m_graphics->Render( delta ) )
 		{
 			return false;
 		}

@@ -21,6 +21,7 @@ namespace wf
 	class BumpShader;
 	class SpecularShader;
 	class FogShader;
+	class TranslateShader;
 
 	class Quad;
 	class TextureQuad;
@@ -51,7 +52,7 @@ namespace wf
 	constexpr int RENDER_TEXTURE_ARRAY = 5;
 	constexpr int TEXTURE_ARRAY_COUNT = 6;
 
-	constexpr int QUAD_COUNT = 7;
+	constexpr int QUAD_COUNT = 8;
 
 	class Graphics
 	{
@@ -63,7 +64,7 @@ namespace wf
 		bool Initialize(int _width, int _height, HWND _hwnd);
 		void Shutdown();
 		bool Frame( const FrameParam& param );
-		bool Render();
+		bool Render( float _delta );
 
 	private:
 		void DrawCursor();
@@ -95,6 +96,7 @@ namespace wf
 		BumpShader* m_bump_shader{ nullptr };
 		SpecularShader* m_specular_shader{ nullptr };
 		FogShader* m_fog_shader{ nullptr };
+		TranslateShader* m_translate_shader{ nullptr };
 		
 		RenderTexture* m_rt1{ nullptr };
 		RenderTexture* m_rt2{ nullptr };

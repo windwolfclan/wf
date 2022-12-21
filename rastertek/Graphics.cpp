@@ -12,6 +12,7 @@
 #include "BumpShader.h"
 #include "SpecularmapShader.h"
 #include "FogShader.h"
+#include "TranslateShader.h"
 
 namespace wf
 {
@@ -122,6 +123,7 @@ if( !p->Initialize( device, _hwnd ) ) return false;
 		INITIALIZE_WF_SHADER( m_bump_shader, BumpShader );
 		INITIALIZE_WF_SHADER( m_specular_shader, SpecularShader );
 		INITIALIZE_WF_SHADER( m_fog_shader, FogShader );
+		INITIALIZE_WF_SHADER( m_translate_shader, TranslateShader );
 
 
 		m_rt1 = new RenderTexture;
@@ -162,6 +164,7 @@ if( !p->Initialize( device, _hwnd ) ) return false;
 
 		SAFE_SHUTDOWN( m_rt2 );
 		SAFE_SHUTDOWN( m_rt1 );
+		SAFE_SHUTDOWN( m_translate_shader );
 		SAFE_SHUTDOWN( m_fog_shader );
 		SAFE_SHUTDOWN( m_specular_shader );
 		SAFE_SHUTDOWN( m_bump_shader );
@@ -208,7 +211,7 @@ if( !p->Initialize( device, _hwnd ) ) return false;
 		return true;
 	}
 
-	bool Graphics::Render()
+	bool Graphics::Render( float _delta )
 	{
 		static float rotation{ 0.0f };
 		rotation += (float)XM_PI * 0.005f;
@@ -307,10 +310,11 @@ if( !p->Initialize( device, _hwnd ) ) return false;
 				{ 100, 100 },
 				{ 100, 300 },
 				{ 100, 500 },
+				{ 100, 700 },
 				{ 300, 100 },
 				{ 300, 300 },
 				{ 300, 500 },
-				{ 500, 100 },
+				{ 300, 700 },
 			};
 
 			for ( int i = 0; i < QUAD_COUNT; ++i )
@@ -385,6 +389,21 @@ if( !p->Initialize( device, _hwnd ) ) return false;
 						}
 						break;
 					}
+
+					case 7:
+					{
+						static float x;
+						static float y;
+
+						x += _delta * 0.0001f;
+						y += _delta * 0.0001f;
+
+						if ( !m_translate_shader->Render( context, index_count, w, v, o, m_texture_model->GetTexture(), x, y ) )
+						{
+							return false;
+						}
+						break;
+					}
 				}
 			}
 
@@ -425,12 +444,6 @@ if( !p->Initialize( device, _hwnd ) ) return false;
 		int y = m_mouse_y;
 		int width = m_directx->GetWidth();
 		int height = m_directx->GetHeight();
-
-		if ( x + CURSOR_SIZE > width )
-			x = width - CURSOR_SIZE;
-
-		if ( y + CURSOR_SIZE > height )
-			y = height - CURSOR_SIZE;
 
 		m_cursor->Render( context, x, y );
 		m_texture_shader->Render( context, m_cursor->GetIndexCount(), w, v, o, m_cursor->GetTexture() );
@@ -494,6 +507,7 @@ if( !p->Initialize( device, _hwnd ) ) return false;
 			quad_type::texture,
 			quad_type::tangent_space,
 			quad_type::tangent_space,
+			quad_type::texture,
 			quad_type::texture,
 			quad_type::texture,
 		};

@@ -22,6 +22,7 @@ namespace wf
 	class SpecularShader;
 	class FogShader;
 	class TranslateShader;
+	class TransparentShader;
 
 	class Quad;
 	class TextureQuad;
@@ -52,7 +53,7 @@ namespace wf
 	constexpr int RENDER_TEXTURE_ARRAY = 5;
 	constexpr int TEXTURE_ARRAY_COUNT = 6;
 
-	constexpr int QUAD_COUNT = 8;
+	constexpr int QUAD_COUNT = 9;
 
 	class Graphics
 	{
@@ -97,9 +98,11 @@ namespace wf
 		SpecularShader* m_specular_shader{ nullptr };
 		FogShader* m_fog_shader{ nullptr };
 		TranslateShader* m_translate_shader{ nullptr };
+		TransparentShader* m_transparent_shader{ nullptr };
 		
 		RenderTexture* m_rt1{ nullptr };
 		RenderTexture* m_rt2{ nullptr };
+		RenderTexture* m_rt3{ nullptr };
 		std::array<TextureArray*, TEXTURE_ARRAY_COUNT> m_texture_arrays;
 		std::array<Quad*, QUAD_COUNT> m_quads;
 

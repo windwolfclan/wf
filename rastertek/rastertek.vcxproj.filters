@@ -129,6 +129,9 @@
     <ClInclude Include="TranslateShader.h">
       <Filter>ShaderClass</Filter>
     </ClInclude>
+    <ClInclude Include="TransparentShader.h">
+      <Filter>ShaderClass</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="System.cpp">
@@ -233,6 +236,9 @@
     <ClCompile Include="TranslateShader.cpp">
       <Filter>ShaderClass</Filter>
     </ClCompile>
+    <ClCompile Include="TransparentShader.cpp">
+      <Filter>ShaderClass</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="color_vs.hlsl">
@@ -299,6 +305,12 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="translate_ps.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="transparent_vs.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="transparent_ps.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

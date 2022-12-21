@@ -13,6 +13,7 @@
 #include "SpecularmapShader.h"
 #include "FogShader.h"
 #include "TranslateShader.h"
+#include "TransparentShader.h"
 
 namespace wf
 {
@@ -124,19 +125,17 @@ if( !p->Initialize( device, _hwnd ) ) return false;
 		INITIALIZE_WF_SHADER( m_specular_shader, SpecularShader );
 		INITIALIZE_WF_SHADER( m_fog_shader, FogShader );
 		INITIALIZE_WF_SHADER( m_translate_shader, TranslateShader );
+		INITIALIZE_WF_SHADER( m_transparent_shader, TransparentShader );
 
 
-		m_rt1 = new RenderTexture;
-		if ( !m_rt1->Initialize( device, _width, _height ) )
-		{
-			return false;
-		}
 
-		m_rt2 = new RenderTexture;
-		if ( !m_rt2->Initialize( device, _width, _height ) )
-		{
-			return false;
-		}
+#define INITIALIZE_RENDER_TEXTURE( p )\
+p = new RenderTexture;\
+if( !p->Initialize( device, _width, _height ) ) return false;
+
+		INITIALIZE_RENDER_TEXTURE( m_rt1 );
+		INITIALIZE_RENDER_TEXTURE( m_rt2 );
+		INITIALIZE_RENDER_TEXTURE( m_rt3 );
 		
 		if ( !InitializeTextureArray( device, context ) )
 		{
@@ -162,8 +161,10 @@ if( !p->Initialize( device, _hwnd ) ) return false;
 		ShutdownQuads();
 		ReleaseTextureArray();
 
+		SAFE_SHUTDOWN( m_rt3 );
 		SAFE_SHUTDOWN( m_rt2 );
 		SAFE_SHUTDOWN( m_rt1 );
+		SAFE_SHUTDOWN( m_transparent_shader );
 		SAFE_SHUTDOWN( m_translate_shader );
 		SAFE_SHUTDOWN( m_fog_shader );
 		SAFE_SHUTDOWN( m_specular_shader );
@@ -280,6 +281,25 @@ if( !p->Initialize( device, _hwnd ) ) return false;
 				return false;
 			}
 
+			m_directx->TurnOnAlphaBlending();
+			m_rt3->SetRenderTarget( context, dsv );
+			m_rt3->ClearRenderTarget( context, dsv, 0.3f, 0.3f, 1.0f, 1.0f );
+			m_rastertek_model->Render( context );
+
+			if ( !m_transparent_shader->Render(
+				context,
+				m_rastertek_model->GetIndexCount(),
+				w,
+				v,
+				p,
+				m_rastertek_model->GetTexture(),
+				0.5f
+			) )
+			{
+				return false;
+			}
+			m_directx->TurnOffAlphaBlending();
+
 			m_directx->SetBackBufferRenderTarget();
 		}
 #pragma endregion
@@ -288,19 +308,22 @@ if( !p->Initialize( device, _hwnd ) ) return false;
 		{
 			m_directx->BeginScene( 0.0f, 0.25f, 0.5f, 1.0f );
 
+			m_directx->TurnOnAlphaBlending();
+
 			m_rastertek_model->Render( context );
 
-			if ( !m_fog_shader->Render(
+			if ( !m_transparent_shader->Render(
 				context,
 				m_rastertek_model->GetIndexCount(),
 				w, v, p,
 				m_rastertek_model->GetTexture(),
-				fog_start,
-				fog_end
+				0.2f
 			) )
 			{
 				return false;
 			}
+
+			m_directx->TurnOffAlphaBlending();
 
 			// 2D Draw
 			m_directx->GetWorldMatrix( w );
@@ -315,6 +338,7 @@ if( !p->Initialize( device, _hwnd ) ) return false;
 				{ 300, 300 },
 				{ 300, 500 },
 				{ 300, 700 },
+				{ 500, 100 },
 			};
 
 			for ( int i = 0; i < QUAD_COUNT; ++i )
@@ -399,6 +423,15 @@ if( !p->Initialize( device, _hwnd ) ) return false;
 						y += _delta * 0.0001f;
 
 						if ( !m_translate_shader->Render( context, index_count, w, v, o, m_texture_model->GetTexture(), x, y ) )
+						{
+							return false;
+						}
+						break;
+					}
+
+					case 8:
+					{
+						if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt3->GetShaderResourceView() ) )
 						{
 							return false;
 						}
@@ -507,6 +540,7 @@ if( !p->Initialize( device, _hwnd ) ) return false;
 			quad_type::texture,
 			quad_type::tangent_space,
 			quad_type::tangent_space,
+			quad_type::texture,
 			quad_type::texture,
 			quad_type::texture,
 			quad_type::texture,

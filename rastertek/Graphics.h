@@ -90,6 +90,7 @@ namespace wf
 		TextureModel* m_texture_model{ nullptr };
 		LightModel* m_light_model{ nullptr };
 		RasterTekModel* m_rastertek_model{ nullptr };
+		RasterTekModel* m_floor{ nullptr };
 
 		ColorShader* m_color_shader{ nullptr };
 		TextureShader* m_texture_shader{ nullptr };

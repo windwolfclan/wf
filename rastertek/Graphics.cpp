@@ -100,6 +100,13 @@ namespace wf
 		{
 			return false;
 		}
+
+		m_floor = new RasterTekModel;
+		if ( !m_floor->Initialize( device, context, "./resources/blue.tga", "./resources/floor.txt" ) )
+		{
+			return false;
+		}
+
 		
 		m_text = new Text;
 		if ( !m_text->Initialize( device, context, _hwnd, _width, _height, view ) )
@@ -189,6 +196,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 		SAFE_SHUTDOWN( m_dual_texture_shader );
 		SAFE_SHUTDOWN( m_cursor );
 		SAFE_SHUTDOWN( m_text );
+		SAFE_SHUTDOWN( m_floor );
 		SAFE_SHUTDOWN( m_rastertek_model );
 		SAFE_SHUTDOWN( m_light_shader );
 		SAFE_SHUTDOWN( m_light_model );
@@ -241,6 +249,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 		XMMATRIX v;
 		XMMATRIX p;
 		XMMATRIX o;
+		XMMATRIX r;
 		ID3D11DeviceContext* context = m_directx->GetDeviceContext();
 		ID3D11DepthStencilView* dsv = m_directx->GetDepthStencilView();
 
@@ -314,6 +323,25 @@ if( !p->Initialize( device, context, path ) ) return false;
 				return false;
 			}
 			m_directx->TurnOffAlphaBlending();
+		
+			m_camera->RenderReflect( -1.5f );
+			m_camera->GetReflectionMatrix( r );
+
+			m_rt4->SetRenderTarget( context, dsv );
+			m_rt4->ClearRenderTarget( context, dsv, 0.3f, 0.3f, 0.3f, 1.0f );
+			m_rastertek_model->Render( context );
+
+			if ( !m_texture_shader->Render(
+				context,
+				m_rastertek_model->GetIndexCount(),
+				w,
+				r,
+				p,
+				m_seafloor_texture->GetTexture()
+			) )
+			{
+				return false;
+			}
 
 			m_directx->SetBackBufferRenderTarget();
 		}
@@ -321,7 +349,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 
 		// render
 		{
-			m_directx->BeginScene( 0.0f, 0.25f, 0.5f, 1.0f );
+			m_directx->BeginScene( 0.2f, 0.2f, 0.2f, 1.0f );
 
 			m_directx->TurnOnAlphaBlending();
 
@@ -338,6 +366,20 @@ if( !p->Initialize( device, context, path ) ) return false;
 			}
 
 			m_directx->TurnOffAlphaBlending();
+
+			XMMATRIX w2 = XMMatrixTranslation( 0.0f, -1.5f, 0.0f );
+			m_floor->Render( context );
+			if ( !m_reflection_shader->Render(
+				context,
+				m_floor->GetIndexCount(),
+				w2, v, p,
+				m_floor->GetTexture(),
+				m_rt4->GetShaderResourceView(),
+				r
+			) )
+			{
+				return false;
+			}
 
 			// 2D Draw
 			m_directx->GetWorldMatrix( w );

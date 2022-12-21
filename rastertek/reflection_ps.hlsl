@@ -18,7 +18,7 @@ float4 reflection_ps( PS_INPUT input ) : SV_TARGET
 	float4 src_color = src_texture.Sample( sample_state, input.tex );
 	float4 reflect_color = reflect_texture.Sample( sample_state, reflect_tex );
 
-	float4 color = lerp( src_color, reflect_color, 0.15f );
+	float4 color = lerp( src_color, reflect_color, 0.3f );
 
 	return color;
 }

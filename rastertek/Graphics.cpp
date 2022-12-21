@@ -2,6 +2,7 @@
 #include "Graphics.h"
 
 #include "Quad.h"
+#include "Texture.h"
 
 #include "ColorShader.h"
 #include "TextureShader.h"
@@ -14,6 +15,7 @@
 #include "FogShader.h"
 #include "TranslateShader.h"
 #include "TransparentShader.h"
+#include "ReflectionShader.h"
 
 namespace wf
 {
@@ -126,6 +128,7 @@ if( !p->Initialize( device, _hwnd ) ) return false;
 		INITIALIZE_WF_SHADER( m_fog_shader, FogShader );
 		INITIALIZE_WF_SHADER( m_translate_shader, TranslateShader );
 		INITIALIZE_WF_SHADER( m_transparent_shader, TransparentShader );
+		INITIALIZE_WF_SHADER( m_reflection_shader, ReflectionShader );
 
 
 
@@ -136,6 +139,14 @@ if( !p->Initialize( device, _width, _height ) ) return false;
 		INITIALIZE_RENDER_TEXTURE( m_rt1 );
 		INITIALIZE_RENDER_TEXTURE( m_rt2 );
 		INITIALIZE_RENDER_TEXTURE( m_rt3 );
+		INITIALIZE_RENDER_TEXTURE( m_rt4 );
+
+#define INITIALIZE_TEXTURE( p, path )\
+p = new Texture;\
+if( !p->Initialize( device, context, path ) ) return false;
+
+		INITIALIZE_TEXTURE( m_blue_texture, "./resources/blue.tga" );
+		INITIALIZE_TEXTURE( m_seafloor_texture, "./resources/seafloor.tga" );
 		
 		if ( !InitializeTextureArray( device, context ) )
 		{
@@ -161,9 +172,13 @@ if( !p->Initialize( device, _width, _height ) ) return false;
 		ShutdownQuads();
 		ReleaseTextureArray();
 
+		SAFE_SHUTDOWN( m_seafloor_texture );
+		SAFE_SHUTDOWN( m_blue_texture );
+		SAFE_SHUTDOWN( m_rt4 );
 		SAFE_SHUTDOWN( m_rt3 );
 		SAFE_SHUTDOWN( m_rt2 );
 		SAFE_SHUTDOWN( m_rt1 );
+		SAFE_SHUTDOWN( m_reflection_shader );
 		SAFE_SHUTDOWN( m_transparent_shader );
 		SAFE_SHUTDOWN( m_translate_shader );
 		SAFE_SHUTDOWN( m_fog_shader );
@@ -312,12 +327,11 @@ if( !p->Initialize( device, _width, _height ) ) return false;
 
 			m_rastertek_model->Render( context );
 
-			if ( !m_transparent_shader->Render(
+			if ( !m_texture_shader->Render(
 				context,
 				m_rastertek_model->GetIndexCount(),
 				w, v, p,
-				m_rastertek_model->GetTexture(),
-				0.2f
+				m_seafloor_texture->GetTexture()
 			) )
 			{
 				return false;

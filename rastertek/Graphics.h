@@ -12,6 +12,8 @@
 
 namespace wf
 {
+	class Texture;
+
 	class ColorShader;
 	class TextureShader;
 	class LightShader;
@@ -23,6 +25,7 @@ namespace wf
 	class FogShader;
 	class TranslateShader;
 	class TransparentShader;
+	class ReflectionShader;
 
 	class Quad;
 	class TextureQuad;
@@ -99,12 +102,17 @@ namespace wf
 		FogShader* m_fog_shader{ nullptr };
 		TranslateShader* m_translate_shader{ nullptr };
 		TransparentShader* m_transparent_shader{ nullptr };
+		ReflectionShader* m_reflection_shader{ nullptr };
 		
 		RenderTexture* m_rt1{ nullptr };
 		RenderTexture* m_rt2{ nullptr };
 		RenderTexture* m_rt3{ nullptr };
+		RenderTexture* m_rt4{ nullptr };
 		std::array<TextureArray*, TEXTURE_ARRAY_COUNT> m_texture_arrays;
 		std::array<Quad*, QUAD_COUNT> m_quads;
+
+		Texture* m_blue_texture{ nullptr };
+		Texture* m_seafloor_texture{ nullptr };
 
 		Text* m_text{ nullptr };
 

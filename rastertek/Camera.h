@@ -18,6 +18,9 @@ namespace wf
 		void Render();
 		void GetViewMatrix( XMMATRIX& _m );
 
+		void RenderReflect( float _height );
+		void GetReflectionMatrix( XMMATRIX& _m );
+
 	private:
 		float m_x{ 0.0f };
 		float m_y{ 0.0f };
@@ -28,5 +31,6 @@ namespace wf
 		float m_roll{ 0.0f };
 
 		XMMATRIX m_view_matrix{};
+		XMMATRIX m_reflect_matrix{};
 	};
 }

@@ -56,7 +56,7 @@ namespace wf
 	constexpr int RENDER_TEXTURE_ARRAY = 5;
 	constexpr int TEXTURE_ARRAY_COUNT = 6;
 
-	constexpr int QUAD_COUNT = 9;
+	constexpr int QUAD_COUNT = 10;
 
 	class Graphics
 	{
@@ -78,6 +78,8 @@ namespace wf
 
 		bool InitializeQuads( ID3D11Device*& _device );
 		void ShutdownQuads();
+
+		void Draw2DResult( XMMATRIX& w, XMMATRIX& v, XMMATRIX& o, float _delta );
 
 	private:
 		D3D* m_directx{ nullptr };
@@ -109,6 +111,7 @@ namespace wf
 		RenderTexture* m_rt2{ nullptr };
 		RenderTexture* m_rt3{ nullptr };
 		RenderTexture* m_rt4{ nullptr };
+		RenderTexture* m_rt5{ nullptr };
 		std::array<TextureArray*, TEXTURE_ARRAY_COUNT> m_texture_arrays;
 		std::array<Quad*, QUAD_COUNT> m_quads;
 

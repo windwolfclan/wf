@@ -147,6 +147,7 @@ if( !p->Initialize( device, _width, _height ) ) return false;
 		INITIALIZE_RENDER_TEXTURE( m_rt2 );
 		INITIALIZE_RENDER_TEXTURE( m_rt3 );
 		INITIALIZE_RENDER_TEXTURE( m_rt4 );
+		INITIALIZE_RENDER_TEXTURE( m_rt5 );
 
 #define INITIALIZE_TEXTURE( p, path )\
 p = new Texture;\
@@ -181,6 +182,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 
 		SAFE_SHUTDOWN( m_seafloor_texture );
 		SAFE_SHUTDOWN( m_blue_texture );
+		SAFE_SHUTDOWN( m_rt5 );
 		SAFE_SHUTDOWN( m_rt4 );
 		SAFE_SHUTDOWN( m_rt3 );
 		SAFE_SHUTDOWN( m_rt2 );
@@ -328,7 +330,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 			m_camera->GetReflectionMatrix( r );
 
 			m_rt4->SetRenderTarget( context, dsv );
-			m_rt4->ClearRenderTarget( context, dsv, 0.3f, 0.3f, 0.3f, 1.0f );
+			m_rt4->ClearRenderTarget( context, dsv, 0.0f, 0.0f, 0.0f, 1.0f );
 			m_rastertek_model->Render( context );
 
 			if ( !m_texture_shader->Render(
@@ -343,15 +345,8 @@ if( !p->Initialize( device, context, path ) ) return false;
 				return false;
 			}
 
-			m_directx->SetBackBufferRenderTarget();
-		}
-#pragma endregion
-
-		// render
-		{
-			m_directx->BeginScene( 0.2f, 0.2f, 0.2f, 1.0f );
-
-			m_directx->TurnOnAlphaBlending();
+			m_rt5->SetRenderTarget( context, dsv );
+			m_rt5->ClearRenderTarget( context, dsv, 0.0f, 0.0f, 0.0f, 1.0f );
 
 			m_rastertek_model->Render( context );
 
@@ -381,119 +376,58 @@ if( !p->Initialize( device, context, path ) ) return false;
 				return false;
 			}
 
-			// 2D Draw
-			m_directx->GetWorldMatrix( w );
-			m_directx->TurnOffZBuffer();
+			m_directx->SetBackBufferRenderTarget();
+		}
+#pragma endregion
 
-			POINT lt[] = {
-				{ 100, 100 },
-				{ 100, 300 },
-				{ 100, 500 },
-				{ 100, 700 },
-				{ 300, 100 },
-				{ 300, 300 },
-				{ 300, 500 },
-				{ 300, 700 },
-				{ 500, 100 },
-			};
+		// render
+		{
+			// static bool draw_2d{ true };
+			static bool draw_2d{ false };
 
-			for ( int i = 0; i < QUAD_COUNT; ++i )
+			m_directx->BeginScene( 0.2f, 0.2f, 0.2f, 1.0f );
+
+
+			if ( !draw_2d )
 			{
-				if ( !m_quads[ i ]->Render( context, lt[ i ].x, lt[ i ].y ) )
+				m_directx->TurnOnAlphaBlending();
+
+				m_rastertek_model->Render( context );
+
+				if ( !m_texture_shader->Render(
+					context,
+					m_rastertek_model->GetIndexCount(),
+					w, v, p,
+					m_seafloor_texture->GetTexture()
+				) )
 				{
 					return false;
 				}
 
-				int index_count = m_quads[ i ]->GetIndexCount();
-				switch ( i )
+				m_directx->TurnOffAlphaBlending();
+
+				XMMATRIX w2 = XMMatrixTranslation( 0.0f, -1.5f, 0.0f );
+				m_floor->Render( context );
+				if ( !m_reflection_shader->Render(
+					context,
+					m_floor->GetIndexCount(),
+					w2, v, p,
+					m_floor->GetTexture(),
+					m_rt4->GetShaderResourceView(),
+					r
+				) )
 				{
-					case 0:
-					{
-						if ( !m_dual_texture_shader->Render( context, index_count, w, v, o, m_texture_arrays[ DUAL_TEXTURE_ARRAY ]->GetTextureArray() ) )
-						{
-							return false;
-						}
-						break;
-					}
-
-					case 1:
-					{
-						if ( !m_lightmap_shader->Render( context, index_count, w, v, o, m_texture_arrays[ LIGHTMAP_TEXTURE_ARRAY ]->GetTextureArray() ) )
-						{
-							return false;
-						}
-						break;
-					}
-
-					case 2:
-					{
-						if ( !m_alphamap_shader->Render( context, index_count, w, v, o, m_texture_arrays[ ALPHAMAP_TEXTURE_ARRAY ]->GetTextureArray() ) )
-						{
-							return false;
-						}
-						break;
-					}
-
-					case 3:
-					{
-						if ( !m_bump_shader->Render( context, index_count, w, v, o, m_texture_arrays[ BUMPMAP_TEXTURE_ARRAY ]->GetTextureArray(), m_light.GetDiffuse(), m_light.GetDirection() ) )
-						{
-							return false;
-						}
-						break;
-					}
-
-					case 4:
-					{
-						if ( !m_specular_shader->Render( context, index_count, w, v, o, m_texture_arrays[ SPECULAR_TEXTURE_ARRAY ]->GetTextureArray(), m_camera->GetPosition(), m_light.GetDiffuse(), m_light.GetSpecular(), m_light.GetSpecularPower(), m_light.GetDirection() ) ) 
-						{ 
-							return false; 
-						}					
-						break;
-					}
-
-					case 5:
-					{
-						if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt1->GetShaderResourceView() ) )
-						{
-							return false;
-						}
-						break;
-					}
-
-					case 6:
-					{
-						if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt2->GetShaderResourceView() ) )
-						{
-							return false;
-						}
-						break;
-					}
-
-					case 7:
-					{
-						static float x;
-						static float y;
-
-						x += _delta * 0.0001f;
-						y += _delta * 0.0001f;
-
-						if ( !m_translate_shader->Render( context, index_count, w, v, o, m_texture_model->GetTexture(), x, y ) )
-						{
-							return false;
-						}
-						break;
-					}
-
-					case 8:
-					{
-						if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt3->GetShaderResourceView() ) )
-						{
-							return false;
-						}
-						break;
-					}
+					return false;
 				}
+			}
+
+			// 2D Draw
+			m_directx->GetWorldMatrix( w );
+			m_directx->TurnOffZBuffer();
+
+			if ( draw_2d )
+			{
+				Draw2DResult( w, v, o, _delta );
 			}
 
 			// text
@@ -600,6 +534,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 			quad_type::texture,
 			quad_type::texture,
 			quad_type::texture,
+			quad_type::texture,
 		};
 
 		for ( int i = 0; i < QUAD_COUNT; ++i )
@@ -628,4 +563,129 @@ if( !p->Initialize( device, context, path ) ) return false;
 
 	}
 
+	void Graphics::Draw2DResult( XMMATRIX& w, XMMATRIX& v, XMMATRIX& o, float _delta )
+	{
+		ID3D11DeviceContext* context = m_directx->GetDeviceContext();
+
+		POINT lt[] = {
+		{ 100, 100 },
+		{ 100, 300 },
+		{ 100, 500 },
+		{ 100, 700 },
+		{ 300, 100 },
+		{ 300, 300 },
+		{ 300, 500 },
+		{ 300, 700 },
+		{ 500, 100 },
+		{ 500, 300 },
+		};
+
+		for ( int i = 0; i < QUAD_COUNT; ++i )
+		{
+			if ( !m_quads[ i ]->Render( context, lt[ i ].x, lt[ i ].y ) )
+			{
+				return;
+			}
+
+			int index_count = m_quads[ i ]->GetIndexCount();
+			switch ( i )
+			{
+			case 0:
+			{
+				if ( !m_dual_texture_shader->Render( context, index_count, w, v, o, m_texture_arrays[ DUAL_TEXTURE_ARRAY ]->GetTextureArray() ) )
+				{
+					return;
+				}
+				break;
+			}
+
+			case 1:
+			{
+				if ( !m_lightmap_shader->Render( context, index_count, w, v, o, m_texture_arrays[ LIGHTMAP_TEXTURE_ARRAY ]->GetTextureArray() ) )
+				{
+					return;
+				}
+				break;
+			}
+
+			case 2:
+			{
+				if ( !m_alphamap_shader->Render( context, index_count, w, v, o, m_texture_arrays[ ALPHAMAP_TEXTURE_ARRAY ]->GetTextureArray() ) )
+				{
+					return;
+				}
+				break;
+			}
+
+			case 3:
+			{
+				if ( !m_bump_shader->Render( context, index_count, w, v, o, m_texture_arrays[ BUMPMAP_TEXTURE_ARRAY ]->GetTextureArray(), m_light.GetDiffuse(), m_light.GetDirection() ) )
+				{
+					return;
+				}
+				break;
+			}
+
+			case 4:
+			{
+				if ( !m_specular_shader->Render( context, index_count, w, v, o, m_texture_arrays[ SPECULAR_TEXTURE_ARRAY ]->GetTextureArray(), m_camera->GetPosition(), m_light.GetDiffuse(), m_light.GetSpecular(), m_light.GetSpecularPower(), m_light.GetDirection() ) )
+				{
+					return;
+				}
+				break;
+			}
+
+			case 5:
+			{
+				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt1->GetShaderResourceView() ) )
+				{
+					return;
+				}
+				break;
+			}
+
+			case 6:
+			{
+				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt2->GetShaderResourceView() ) )
+				{
+					return;
+				}
+				break;
+			}
+
+			case 7:
+			{
+				static float x;
+				static float y;
+
+				x += _delta * 0.0001f;
+				y += _delta * 0.0001f;
+
+				if ( !m_translate_shader->Render( context, index_count, w, v, o, m_texture_model->GetTexture(), x, y ) )
+				{
+					return;
+				}
+				break;
+			}
+
+			case 8:
+			{
+				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt3->GetShaderResourceView() ) )
+				{
+					return;
+				}
+				break;
+			}
+
+			case 9:
+			{
+				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt5->GetShaderResourceView() ) )
+				{
+					return;
+				}
+				break;
+			}
+			}
+		}
+	}
 }

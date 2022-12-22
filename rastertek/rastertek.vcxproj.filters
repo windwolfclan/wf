@@ -132,6 +132,9 @@
     <ClInclude Include="TransparentShader.h">
       <Filter>ShaderClass</Filter>
     </ClInclude>
+    <ClInclude Include="FadeShader.h">
+      <Filter>ShaderClass</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="System.cpp">
@@ -239,6 +242,9 @@
     <ClCompile Include="TransparentShader.cpp">
       <Filter>ShaderClass</Filter>
     </ClCompile>
+    <ClCompile Include="FadeShader.cpp">
+      <Filter>ShaderClass</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="color_vs.hlsl">
@@ -311,6 +317,12 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="transparent_ps.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="fade_ps.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="fade_vs.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

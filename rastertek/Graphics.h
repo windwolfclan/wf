@@ -23,6 +23,7 @@ namespace wf
 	class FogShader;
 	class TranslateShader;
 	class TransparentShader;
+	class FadeShader;
 
 	class Quad;
 	class TextureQuad;
@@ -76,6 +77,9 @@ namespace wf
 		bool InitializeQuads( ID3D11Device*& _device );
 		void ShutdownQuads();
 
+		void FrameFade( float _time );
+		void DrawFade();
+
 	private:
 		D3D* m_directx{ nullptr };
 		Camera* m_camera{ nullptr };
@@ -99,14 +103,22 @@ namespace wf
 		FogShader* m_fog_shader{ nullptr };
 		TranslateShader* m_translate_shader{ nullptr };
 		TransparentShader* m_transparent_shader{ nullptr };
+		FadeShader* m_fade_shader{ nullptr };
 		
 		RenderTexture* m_rt1{ nullptr };
 		RenderTexture* m_rt2{ nullptr };
 		RenderTexture* m_rt3{ nullptr };
+		RenderTexture* m_rt4{ nullptr };
 		std::array<TextureArray*, TEXTURE_ARRAY_COUNT> m_texture_arrays;
 		std::array<Quad*, QUAD_COUNT> m_quads;
 
 		Text* m_text{ nullptr };
+
+		// fade
+		float m_fade_time{ 0.0f };
+		float m_fade_rate{ 0.0f };
+		bool m_fade_finish{ false };
+		
 
 		// mouse cursor
 		Bitmap* m_cursor{ nullptr };

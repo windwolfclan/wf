@@ -14,6 +14,7 @@
 #include "FogShader.h"
 #include "TranslateShader.h"
 #include "TransparentShader.h"
+#include "FadeShader.h"
 
 namespace wf
 {
@@ -126,6 +127,7 @@ if( !p->Initialize( device, _hwnd ) ) return false;
 		INITIALIZE_WF_SHADER( m_fog_shader, FogShader );
 		INITIALIZE_WF_SHADER( m_translate_shader, TranslateShader );
 		INITIALIZE_WF_SHADER( m_transparent_shader, TransparentShader );
+		INITIALIZE_WF_SHADER( m_fade_shader, FadeShader );
 
 
 
@@ -136,6 +138,7 @@ if( !p->Initialize( device, _width, _height ) ) return false;
 		INITIALIZE_RENDER_TEXTURE( m_rt1 );
 		INITIALIZE_RENDER_TEXTURE( m_rt2 );
 		INITIALIZE_RENDER_TEXTURE( m_rt3 );
+		INITIALIZE_RENDER_TEXTURE( m_rt4 );
 		
 		if ( !InitializeTextureArray( device, context ) )
 		{
@@ -161,9 +164,11 @@ if( !p->Initialize( device, _width, _height ) ) return false;
 		ShutdownQuads();
 		ReleaseTextureArray();
 
+		SAFE_SHUTDOWN( m_rt4 );
 		SAFE_SHUTDOWN( m_rt3 );
 		SAFE_SHUTDOWN( m_rt2 );
 		SAFE_SHUTDOWN( m_rt1 );
+		SAFE_SHUTDOWN( m_fade_shader );
 		SAFE_SHUTDOWN( m_transparent_shader );
 		SAFE_SHUTDOWN( m_translate_shader );
 		SAFE_SHUTDOWN( m_fog_shader );
@@ -208,6 +213,8 @@ if( !p->Initialize( device, _width, _height ) ) return false;
 		}
 
 		m_camera->SetPosition( 0.0f, 0.0f, -10.0f );
+
+		FrameFade( param.time );
 
 		return true;
 	}
@@ -298,7 +305,10 @@ if( !p->Initialize( device, _width, _height ) ) return false;
 			{
 				return false;
 			}
+			
 			m_directx->TurnOffAlphaBlending();
+
+			DrawFade();
 
 			m_directx->SetBackBufferRenderTarget();
 		}
@@ -308,22 +318,17 @@ if( !p->Initialize( device, _width, _height ) ) return false;
 		{
 			m_directx->BeginScene( 0.0f, 0.25f, 0.5f, 1.0f );
 
-			m_directx->TurnOnAlphaBlending();
-
 			m_rastertek_model->Render( context );
 
-			if ( !m_transparent_shader->Render(
+			if ( !m_texture_shader->Render(
 				context,
 				m_rastertek_model->GetIndexCount(),
 				w, v, p,
-				m_rastertek_model->GetTexture(),
-				0.2f
+				m_rt4->GetShaderResourceView()
 			) )
 			{
 				return false;
 			}
-
-			m_directx->TurnOffAlphaBlending();
 
 			// 2D Draw
 			m_directx->GetWorldMatrix( w );
@@ -570,6 +575,50 @@ if( !p->Initialize( device, _width, _height ) ) return false;
 			SAFE_SHUTDOWN( m_quads[ i ] );
 		}
 
+	}
+
+	void Graphics::FrameFade( float _time )
+	{
+		float duration = 2000.0f;
+
+		if ( m_fade_time > duration )
+		{
+			m_fade_time = 0.0f;
+		}
+		else
+		{
+			m_fade_time += _time;
+
+			m_fade_rate = m_fade_time / duration;
+		}
+	}
+
+	void Graphics::DrawFade()
+	{
+		XMMATRIX w;
+		XMMATRIX v;
+		XMMATRIX p;
+
+		ID3D11DeviceContext* context = m_directx->GetDeviceContext();
+		ID3D11DepthStencilView* dsv = m_directx->GetDepthStencilView();
+
+		m_directx->GetWorldMatrix( w );
+		m_camera->GetViewMatrix( v );
+		m_directx->GetProjectionMatrix( p );
+
+		m_rt4->SetRenderTarget( context, dsv );
+		m_rt4->ClearRenderTarget( context, dsv, 0.0f, 0.0f, 0.0f, 1.0f );
+		m_rastertek_model->Render( context );
+
+		m_fade_shader->Render(
+			context,
+			m_rastertek_model->GetIndexCount(),
+			w,
+			v,
+			p,
+			m_rastertek_model->GetTexture(),
+			m_fade_rate
+		);
 	}
 
 }

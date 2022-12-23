@@ -17,6 +17,7 @@
 #include "TransparentShader.h"
 #include "FadeShader.h"
 #include "ReflectionShader.h"
+#include "MultiLightShader.h"
 
 namespace wf
 {
@@ -108,6 +109,12 @@ namespace wf
 			return false;
 		}
 
+		m_plane = new RasterTekModel;
+		if ( !m_plane->Initialize( device, context, "./resources/stone.tga", "./resources/plane01.txt" ) )
+		{
+			return false;
+		}
+
 		
 		m_text = new Text;
 		if ( !m_text->Initialize( device, context, _hwnd, _width, _height, view ) )
@@ -138,6 +145,7 @@ if( !p->Initialize( device, _hwnd ) ) return false;
 		INITIALIZE_WF_SHADER( m_transparent_shader, TransparentShader );
 		INITIALIZE_WF_SHADER( m_fade_shader, FadeShader );
 		INITIALIZE_WF_SHADER( m_reflection_shader, ReflectionShader );
+		INITIALIZE_WF_SHADER( m_multi_light_shader, MultiLightShader );
 
 
 
@@ -148,9 +156,10 @@ if( !p->Initialize( device, _width, _height ) ) return false;
 		INITIALIZE_RENDER_TEXTURE( m_rt1 );
 		INITIALIZE_RENDER_TEXTURE( m_rt2 );
 		INITIALIZE_RENDER_TEXTURE( m_rt3 );
-		INITIALIZE_RENDER_TEXTURE( m_rt6 );
 		INITIALIZE_RENDER_TEXTURE( m_rt4 );
 		INITIALIZE_RENDER_TEXTURE( m_rt5 );
+		INITIALIZE_RENDER_TEXTURE( m_rt6 );
+		INITIALIZE_RENDER_TEXTURE( m_rt7 );
 
 #define INITIALIZE_TEXTURE( p, path )\
 p = new Texture;\
@@ -183,14 +192,16 @@ if( !p->Initialize( device, context, path ) ) return false;
 		ShutdownQuads();
 		ReleaseTextureArray();
 
-		SAFE_SHUTDOWN( m_rt6 );
 		SAFE_SHUTDOWN( m_seafloor_texture );
 		SAFE_SHUTDOWN( m_blue_texture );
+		SAFE_SHUTDOWN( m_rt7 );
+		SAFE_SHUTDOWN( m_rt6 );
 		SAFE_SHUTDOWN( m_rt5 );
 		SAFE_SHUTDOWN( m_rt4 );
 		SAFE_SHUTDOWN( m_rt3 );
 		SAFE_SHUTDOWN( m_rt2 );
 		SAFE_SHUTDOWN( m_rt1 );
+		SAFE_SHUTDOWN( m_multi_light_shader );
 		SAFE_SHUTDOWN( m_fade_shader );
 		SAFE_SHUTDOWN( m_reflection_shader );
 		SAFE_SHUTDOWN( m_transparent_shader );
@@ -203,6 +214,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 		SAFE_SHUTDOWN( m_dual_texture_shader );
 		SAFE_SHUTDOWN( m_cursor );
 		SAFE_SHUTDOWN( m_text );
+		SAFE_SHUTDOWN( m_plane );
 		SAFE_SHUTDOWN( m_floor );
 		SAFE_SHUTDOWN( m_rastertek_model );
 		SAFE_SHUTDOWN( m_light_shader );
@@ -237,7 +249,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 			return false;
 		}
 
-		m_camera->SetPosition( 0.0f, 0.0f, -10.0f );
+		m_camera->SetPosition( 0.0f, 3.0f, -15.0f );
 
 		FrameFade( param.time );
 
@@ -271,7 +283,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 		}
 
 		static bool draw_2d{ true };
-		/// static bool draw_2d{ false };
+		// static bool draw_2d{ false };
 
 #pragma region RENDER TO TEXTURE
 		if( draw_2d )
@@ -281,6 +293,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 			DrawFadeScene( context, dsv, w, v, p );
 			DrawTransparencyScene( context, dsv, w, v, p );
 			DrawReflectScene( context, dsv, w, v, p );
+			DrawMultiLightScene( context, dsv, w, v, p );
 
 			m_directx->SetBackBufferRenderTarget();
 		}
@@ -293,6 +306,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 			if ( !draw_2d )
 			{
 				
+
 			}
 
 			// 2D Draw
@@ -410,6 +424,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 			quad_type::texture,
 			quad_type::texture,
 			quad_type::texture,
+			quad_type::texture,
 		};
 
 		for ( int i = 0; i < QUAD_COUNT; ++i )
@@ -470,6 +485,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 		{ 500, 100 },
 		{ 500, 300 },
 		{ 500, 500 },
+		{ 500, 700 },
 		};
 
 		for ( int i = 0; i < QUAD_COUNT; ++i )
@@ -587,6 +603,16 @@ if( !p->Initialize( device, context, path ) ) return false;
 				}
 				break;
 			}
+
+			case 11:
+			{
+				// multi light
+				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt7->GetShaderResourceView() ) )
+				{
+					return;
+				}
+				break;
+			}
 			}
 		}
 	}
@@ -650,5 +676,42 @@ if( !p->Initialize( device, context, path ) ) return false;
 		m_rt4->ClearRenderTarget( _context, _dsv, 0.0f, 0.0f, 0.0f, 1.0f );
 		m_rastertek_model->Render( _context );
 		m_fade_shader->Render( _context, m_rastertek_model->GetIndexCount(), w, v, p, m_rastertek_model->GetTexture(), m_fade_rate );
+	}
+
+	void Graphics::DrawMultiLightScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p )
+	{
+
+		Light light1;
+		light1.SetPosition( -3.0f, 1.0f, 3.0f );
+		light1.SetDiffuse( 1.0f, 0.0f, 0.0f, 1.0f );
+
+		Light light2;
+		light2.SetPosition( 3.0f, 1.0f, 3.0f );
+		light2.SetDiffuse( 0.0f, 1.0f, 0.0f, 1.0f );
+
+		Light light3;
+		light3.SetPosition( -3.0f, 1.0f, -3.0f );
+		light3.SetDiffuse( 0.0f, 0.0f, 1.0f, 1.0f );
+
+		Light light4;
+		light4.SetPosition( 3.0f, 1.0f, -3.0f );
+		light4.SetDiffuse( 1.0f, 1.0f, 1.0f, 1.0f );
+
+		MultiLightShader::LightPositionBuffer position_buffer;
+		position_buffer.position[ 0 ] = XMFLOAT4( light1.GetPosition().x, light1.GetPosition().y, light1.GetPosition().z, 1.0f );
+		position_buffer.position[ 1 ] = XMFLOAT4( light2.GetPosition().x, light2.GetPosition().y, light2.GetPosition().z, 1.0f );
+		position_buffer.position[ 2 ] = XMFLOAT4( light3.GetPosition().x, light3.GetPosition().y, light3.GetPosition().z, 1.0f );
+		position_buffer.position[ 3 ] = XMFLOAT4( light4.GetPosition().x, light4.GetPosition().y, light4.GetPosition().z, 1.0f );
+
+		MultiLightShader::LightColorBuffer color_buffer;
+		color_buffer.diffuse[ 0 ] = light1.GetDiffuse();
+		color_buffer.diffuse[ 1 ] = light2.GetDiffuse();
+		color_buffer.diffuse[ 2 ] = light3.GetDiffuse();
+		color_buffer.diffuse[ 3 ] = light4.GetDiffuse();
+
+		m_rt7->SetRenderTarget( _context, _dsv );
+		m_rt7->ClearRenderTarget( _context, _dsv, 0.0f, 0.0f, 0.0f, 1.0f );
+		m_plane->Render( _context );
+		m_multi_light_shader->Render( _context, m_plane->GetIndexCount(), _w, _v, _p, m_plane->GetTexture(), position_buffer, color_buffer );
 	}
 }

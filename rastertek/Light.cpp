@@ -76,4 +76,16 @@ namespace wf
 		return m_specular_power;
 	}
 
+	void Light::SetPosition( float _x, float _y, float _z )
+	{
+		m_position.x = _x;
+		m_position.y = _y;
+		m_position.z = _z;
+	}
+
+	XMFLOAT3 Light::GetPosition()
+	{
+		return m_position;
+	}
+
 }

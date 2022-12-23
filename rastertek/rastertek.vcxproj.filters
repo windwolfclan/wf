@@ -138,6 +138,9 @@
     <ClInclude Include="ReflectionShader.h">
       <Filter>ShaderClass</Filter>
     </ClInclude>
+    <ClInclude Include="MultiLightShader.h">
+      <Filter>ShaderClass</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="System.cpp">
@@ -251,6 +254,9 @@
     <ClCompile Include="ReflectionShader.cpp">
       <Filter>ShaderClass</Filter>
     </ClCompile>
+    <ClCompile Include="MultiLightShader.cpp">
+      <Filter>ShaderClass</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="color_vs.hlsl">
@@ -335,6 +341,12 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="reflection_ps.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="multi_light_ps.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="multi_light_vs.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

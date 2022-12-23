@@ -21,7 +21,11 @@ namespace wf
 		XMFLOAT4 GetSpecular() const;
 		float GetSpecularPower() const;
 
+		void SetPosition( float _x, float _y, float _z );
+		XMFLOAT3 GetPosition();
+
 	private:
+		XMFLOAT3 m_position{ 0.0f, 0.0f, 0.0f };
 		XMFLOAT4 m_ambient{ 1.0f, 1.0f, 1.0f, 1.0f };
 		XMFLOAT4 m_diffuse{ 1.0f, 1.0f, 1.0f, 1.0f };
 		XMFLOAT3 m_direction{ 0.0f, 0.0f, 0.0f };

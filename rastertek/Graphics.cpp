@@ -15,6 +15,7 @@
 #include "FogShader.h"
 #include "TranslateShader.h"
 #include "TransparentShader.h"
+#include "FadeShader.h"
 #include "ReflectionShader.h"
 
 namespace wf
@@ -135,6 +136,7 @@ if( !p->Initialize( device, _hwnd ) ) return false;
 		INITIALIZE_WF_SHADER( m_fog_shader, FogShader );
 		INITIALIZE_WF_SHADER( m_translate_shader, TranslateShader );
 		INITIALIZE_WF_SHADER( m_transparent_shader, TransparentShader );
+		INITIALIZE_WF_SHADER( m_fade_shader, FadeShader );
 		INITIALIZE_WF_SHADER( m_reflection_shader, ReflectionShader );
 
 
@@ -146,6 +148,7 @@ if( !p->Initialize( device, _width, _height ) ) return false;
 		INITIALIZE_RENDER_TEXTURE( m_rt1 );
 		INITIALIZE_RENDER_TEXTURE( m_rt2 );
 		INITIALIZE_RENDER_TEXTURE( m_rt3 );
+		INITIALIZE_RENDER_TEXTURE( m_rt6 );
 		INITIALIZE_RENDER_TEXTURE( m_rt4 );
 		INITIALIZE_RENDER_TEXTURE( m_rt5 );
 
@@ -180,6 +183,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 		ShutdownQuads();
 		ReleaseTextureArray();
 
+		SAFE_SHUTDOWN( m_rt6 );
 		SAFE_SHUTDOWN( m_seafloor_texture );
 		SAFE_SHUTDOWN( m_blue_texture );
 		SAFE_SHUTDOWN( m_rt5 );
@@ -187,6 +191,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 		SAFE_SHUTDOWN( m_rt3 );
 		SAFE_SHUTDOWN( m_rt2 );
 		SAFE_SHUTDOWN( m_rt1 );
+		SAFE_SHUTDOWN( m_fade_shader );
 		SAFE_SHUTDOWN( m_reflection_shader );
 		SAFE_SHUTDOWN( m_transparent_shader );
 		SAFE_SHUTDOWN( m_translate_shader );
@@ -234,6 +239,8 @@ if( !p->Initialize( device, context, path ) ) return false;
 
 		m_camera->SetPosition( 0.0f, 0.0f, -10.0f );
 
+		FrameFade( param.time );
+
 		return true;
 	}
 
@@ -244,14 +251,10 @@ if( !p->Initialize( device, context, path ) ) return false;
 		if ( rotation > 360.0f )
 			rotation -= 360.0f;
 
-		float fog_start = 0.0f;
-		float fog_end = 10.0f;
-
 		XMMATRIX w;
 		XMMATRIX v;
 		XMMATRIX p;
 		XMMATRIX o;
-		XMMATRIX r;
 		ID3D11DeviceContext* context = m_directx->GetDeviceContext();
 		ID3D11DepthStencilView* dsv = m_directx->GetDepthStencilView();
 
@@ -267,114 +270,17 @@ if( !p->Initialize( device, context, path ) ) return false;
 			w = XMMatrixRotationY( rotation );
 		}
 
+		static bool draw_2d{ true };
+		/// static bool draw_2d{ false };
+
 #pragma region RENDER TO TEXTURE
+		if( draw_2d )
 		{
-			m_rt1->SetRenderTarget( context, dsv );
-
-			m_rt1->ClearRenderTarget( context, dsv, 0.0f, 1.0f, 0.0f, 1.0f );
-
-			m_rastertek_model->Render( context );
-
-			if ( !m_texture_shader->Render(
-				context,
-				m_rastertek_model->GetIndexCount(),
-				w,
-				v,
-				p,
-				m_rastertek_model->GetTexture()
-			) )
-			{
-				return false;
-			}
-
-			m_rt2->SetRenderTarget( context, dsv );
-
-			m_rt2->ClearRenderTarget( context, dsv, 0.5f, 0.5f, 0.5f, 1.0f );
-
-			m_rastertek_model->Render( context );
-
-			if ( !m_fog_shader->Render(
-				context,
-				m_rastertek_model->GetIndexCount(),
-				w,
-				v,
-				p,
-				m_rastertek_model->GetTexture(),
-				fog_start,
-				fog_end
-			) )
-			{
-				return false;
-			}
-
-			m_directx->TurnOnAlphaBlending();
-			m_rt3->SetRenderTarget( context, dsv );
-			m_rt3->ClearRenderTarget( context, dsv, 0.3f, 0.3f, 1.0f, 1.0f );
-			m_rastertek_model->Render( context );
-
-			if ( !m_transparent_shader->Render(
-				context,
-				m_rastertek_model->GetIndexCount(),
-				w,
-				v,
-				p,
-				m_rastertek_model->GetTexture(),
-				0.5f
-			) )
-			{
-				return false;
-			}
-			m_directx->TurnOffAlphaBlending();
-		
-			m_camera->RenderReflect( -1.5f );
-			m_camera->GetReflectionMatrix( r );
-
-			m_rt4->SetRenderTarget( context, dsv );
-			m_rt4->ClearRenderTarget( context, dsv, 0.0f, 0.0f, 0.0f, 1.0f );
-			m_rastertek_model->Render( context );
-
-			if ( !m_texture_shader->Render(
-				context,
-				m_rastertek_model->GetIndexCount(),
-				w,
-				r,
-				p,
-				m_seafloor_texture->GetTexture()
-			) )
-			{
-				return false;
-			}
-
-			m_rt5->SetRenderTarget( context, dsv );
-			m_rt5->ClearRenderTarget( context, dsv, 0.0f, 0.0f, 0.0f, 1.0f );
-
-			m_rastertek_model->Render( context );
-
-			if ( !m_texture_shader->Render(
-				context,
-				m_rastertek_model->GetIndexCount(),
-				w, v, p,
-				m_seafloor_texture->GetTexture()
-			) )
-			{
-				return false;
-			}
-
-			m_directx->TurnOffAlphaBlending();
-
-			XMMATRIX w2 = XMMatrixTranslation( 0.0f, -1.5f, 0.0f );
-			m_floor->Render( context );
-			if ( !m_reflection_shader->Render(
-				context,
-				m_floor->GetIndexCount(),
-				w2, v, p,
-				m_floor->GetTexture(),
-				m_rt4->GetShaderResourceView(),
-				r
-			) )
-			{
-				return false;
-			}
+			DrawCubeScene( context, dsv, w, v, p);
+			DrawFogScene( context, dsv, w, v, p );
+			DrawFadeScene( context, dsv, w, v, p );
+			DrawTransparencyScene( context, dsv, w, v, p );
+			DrawReflectScene( context, dsv, w, v, p );
 
 			m_directx->SetBackBufferRenderTarget();
 		}
@@ -382,43 +288,11 @@ if( !p->Initialize( device, context, path ) ) return false;
 
 		// render
 		{
-			// static bool draw_2d{ true };
-			static bool draw_2d{ false };
-
 			m_directx->BeginScene( 0.2f, 0.2f, 0.2f, 1.0f );
-
 
 			if ( !draw_2d )
 			{
-				m_directx->TurnOnAlphaBlending();
-
-				m_rastertek_model->Render( context );
-
-				if ( !m_texture_shader->Render(
-					context,
-					m_rastertek_model->GetIndexCount(),
-					w, v, p,
-					m_seafloor_texture->GetTexture()
-				) )
-				{
-					return false;
-				}
-
-				m_directx->TurnOffAlphaBlending();
-
-				XMMATRIX w2 = XMMatrixTranslation( 0.0f, -1.5f, 0.0f );
-				m_floor->Render( context );
-				if ( !m_reflection_shader->Render(
-					context,
-					m_floor->GetIndexCount(),
-					w2, v, p,
-					m_floor->GetTexture(),
-					m_rt4->GetShaderResourceView(),
-					r
-				) )
-				{
-					return false;
-				}
+				
 			}
 
 			// 2D Draw
@@ -535,6 +409,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 			quad_type::texture,
 			quad_type::texture,
 			quad_type::texture,
+			quad_type::texture,
 		};
 
 		for ( int i = 0; i < QUAD_COUNT; ++i )
@@ -563,6 +438,22 @@ if( !p->Initialize( device, context, path ) ) return false;
 
 	}
 
+	void Graphics::FrameFade( float _time )
+	{
+		float duration = 2000.0f;
+
+		if ( m_fade_time > duration )
+		{
+			m_fade_time = 0.0f;
+		}
+		else
+		{
+			m_fade_time += _time;
+
+			m_fade_rate = m_fade_time / duration;
+		}
+	}
+
 	void Graphics::Draw2DResult( XMMATRIX& w, XMMATRIX& v, XMMATRIX& o, float _delta )
 	{
 		ID3D11DeviceContext* context = m_directx->GetDeviceContext();
@@ -578,6 +469,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 		{ 300, 700 },
 		{ 500, 100 },
 		{ 500, 300 },
+		{ 500, 500 },
 		};
 
 		for ( int i = 0; i < QUAD_COUNT; ++i )
@@ -636,7 +528,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 			}
 
 			case 5:
-			{
+			{	// cube
 				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt1->GetShaderResourceView() ) )
 				{
 					return;
@@ -645,7 +537,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 			}
 
 			case 6:
-			{
+			{	// fog
 				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt2->GetShaderResourceView() ) )
 				{
 					return;
@@ -669,7 +561,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 			}
 
 			case 8:
-			{
+			{	// transparency
 				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt3->GetShaderResourceView() ) )
 				{
 					return;
@@ -678,8 +570,18 @@ if( !p->Initialize( device, context, path ) ) return false;
 			}
 
 			case 9:
-			{
+			{	// reflect
 				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt5->GetShaderResourceView() ) )
+				{
+					return;
+				}
+				break;
+			}
+
+			case 10:
+			{
+				// fade
+				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt4->GetShaderResourceView() ) )
 				{
 					return;
 				}
@@ -687,5 +589,66 @@ if( !p->Initialize( device, context, path ) ) return false;
 			}
 			}
 		}
+	}
+
+	void Graphics::DrawCubeScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& w, const XMMATRIX& v, const XMMATRIX& p )
+	{
+		m_rt1->SetRenderTarget( _context, _dsv );
+		m_rt1->ClearRenderTarget( _context, _dsv, 0.0f, 1.0f, 0.0f, 1.0f );
+		m_rastertek_model->Render( _context );
+		m_texture_shader->Render( _context, m_rastertek_model->GetIndexCount(), w, v, p, m_rastertek_model->GetTexture() );
+	}
+
+	void Graphics::DrawFogScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& w, const XMMATRIX& v, const XMMATRIX& p )
+	{
+		float fog_start = 0.0f;
+		float fog_end = 10.0f;
+
+		m_rt2->SetRenderTarget( _context, _dsv );
+		m_rt2->ClearRenderTarget( _context, _dsv, 0.5f, 0.5f, 0.5f, 1.0f );
+		m_rastertek_model->Render( _context );
+		m_fog_shader->Render( _context, m_rastertek_model->GetIndexCount(), w, v, p, m_rastertek_model->GetTexture(), fog_start, fog_end );
+	}
+
+	void Graphics::DrawTransparencyScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p )
+	{
+		m_directx->TurnOnAlphaBlending();
+
+		m_rt3->SetRenderTarget( _context, _dsv );
+		m_rt3->ClearRenderTarget( _context, _dsv, 0.3f, 0.3f, 1.0f, 1.0f );
+		m_rastertek_model->Render( _context );
+		m_transparent_shader->Render( _context, m_rastertek_model->GetIndexCount(), _w, _v, _p, m_rastertek_model->GetTexture(), 0.5f );
+
+		m_directx->TurnOffAlphaBlending();
+	}
+
+	void Graphics::DrawReflectScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p )
+	{
+		XMMATRIX r;
+
+		m_camera->RenderReflect( -1.5f );
+		m_camera->GetReflectionMatrix( r );
+
+		m_rt6->SetRenderTarget( _context, _dsv );
+		m_rt6->ClearRenderTarget( _context, _dsv, 0.0f, 0.0f, 0.0f, 1.0f );
+		m_rastertek_model->Render( _context );
+		m_texture_shader->Render( _context, m_rastertek_model->GetIndexCount(), _w, r, _p, m_seafloor_texture->GetTexture() );
+
+		m_rt5->SetRenderTarget( _context, _dsv );
+		m_rt5->ClearRenderTarget( _context, _dsv, 0.0f, 0.0f, 0.0f, 1.0f );
+		m_rastertek_model->Render( _context );
+		m_texture_shader->Render( _context, m_rastertek_model->GetIndexCount(), _w, _v, _p, m_seafloor_texture->GetTexture() );
+
+		XMMATRIX w2 = XMMatrixTranslation( 0.0f, -1.5f, 0.0f );
+		 m_floor->Render( _context );
+		 m_reflection_shader->Render( _context, m_floor->GetIndexCount(), w2, _v, _p, m_floor->GetTexture(), m_rt6->GetShaderResourceView(), r );
+	}
+
+	void Graphics::DrawFadeScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& w, const XMMATRIX& v, const XMMATRIX& p )
+	{
+		m_rt4->SetRenderTarget( _context, _dsv );
+		m_rt4->ClearRenderTarget( _context, _dsv, 0.0f, 0.0f, 0.0f, 1.0f );
+		m_rastertek_model->Render( _context );
+		m_fade_shader->Render( _context, m_rastertek_model->GetIndexCount(), w, v, p, m_rastertek_model->GetTexture(), m_fade_rate );
 	}
 }

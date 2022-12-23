@@ -25,6 +25,7 @@ namespace wf
 	class FogShader;
 	class TranslateShader;
 	class TransparentShader;
+	class FadeShader;
 	class ReflectionShader;
 
 	class Quad;
@@ -56,7 +57,7 @@ namespace wf
 	constexpr int RENDER_TEXTURE_ARRAY = 5;
 	constexpr int TEXTURE_ARRAY_COUNT = 6;
 
-	constexpr int QUAD_COUNT = 10;
+	constexpr int QUAD_COUNT = 11;
 
 	class Graphics
 	{
@@ -79,7 +80,14 @@ namespace wf
 		bool InitializeQuads( ID3D11Device*& _device );
 		void ShutdownQuads();
 
+		void FrameFade( float _time );
+
 		void Draw2DResult( XMMATRIX& w, XMMATRIX& v, XMMATRIX& o, float _delta );
+		void DrawCubeScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
+		void DrawFogScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
+		void DrawTransparencyScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
+		void DrawReflectScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
+		void DrawFadeScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 
 	private:
 		D3D* m_directx{ nullptr };
@@ -105,11 +113,13 @@ namespace wf
 		FogShader* m_fog_shader{ nullptr };
 		TranslateShader* m_translate_shader{ nullptr };
 		TransparentShader* m_transparent_shader{ nullptr };
+		FadeShader* m_fade_shader{ nullptr };
 		ReflectionShader* m_reflection_shader{ nullptr };
 		
 		RenderTexture* m_rt1{ nullptr };
 		RenderTexture* m_rt2{ nullptr };
 		RenderTexture* m_rt3{ nullptr };
+		RenderTexture* m_rt6{ nullptr };
 		RenderTexture* m_rt4{ nullptr };
 		RenderTexture* m_rt5{ nullptr };
 		std::array<TextureArray*, TEXTURE_ARRAY_COUNT> m_texture_arrays;
@@ -119,6 +129,12 @@ namespace wf
 		Texture* m_seafloor_texture{ nullptr };
 
 		Text* m_text{ nullptr };
+
+		// fade
+		float m_fade_time{ 0.0f };
+		float m_fade_rate{ 0.0f };
+		bool m_fade_finish{ false };
+		
 
 		// mouse cursor
 		Bitmap* m_cursor{ nullptr };

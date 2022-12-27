@@ -10,6 +10,7 @@ namespace wf
 		~Texture();
 
 		bool Initialize( ID3D11Device* _device, ID3D11DeviceContext* _context, const char* _path );
+		bool LoadDDS( ID3D11Device* _device, ID3D11DeviceContext* _context, const wchar_t* _path );
 		void Shutdown();
 		ID3D11ShaderResourceView* GetTexture();
 

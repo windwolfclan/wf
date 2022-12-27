@@ -25,6 +25,9 @@
     <Filter Include="ModelClass">
       <UniqueIdentifier>{28ebf893-2ee9-4b59-abb0-0b2d476e85c9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="DXTK">
+      <UniqueIdentifier>{7ec7634b-176a-48d2-832f-081871b1eefa}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="System.h">
@@ -140,6 +143,30 @@
     </ClInclude>
     <ClInclude Include="MultiLightShader.h">
       <Filter>ShaderClass</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="FireShader.h">
+      <Filter>ShaderClass</Filter>
+    </ClInclude>
+    <ClInclude Include="DXTK\BinaryReader.h">
+      <Filter>DXTK</Filter>
+    </ClInclude>
+    <ClInclude Include="DXTK\DDS.h">
+      <Filter>DXTK</Filter>
+    </ClInclude>
+    <ClInclude Include="DXTK\DDSTextureLoader.h">
+      <Filter>DXTK</Filter>
+    </ClInclude>
+    <ClInclude Include="DXTK\DirectXHelpers.h">
+      <Filter>DXTK</Filter>
+    </ClInclude>
+    <ClInclude Include="DXTK\LoaderHelpers.h">
+      <Filter>DXTK</Filter>
+    </ClInclude>
+    <ClInclude Include="DXTK\PlatformHelpers.h">
+      <Filter>DXTK</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -257,6 +284,18 @@
     <ClCompile Include="MultiLightShader.cpp">
       <Filter>ShaderClass</Filter>
     </ClCompile>
+    <ClCompile Include="Utility.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="FireShader.cpp">
+      <Filter>ShaderClass</Filter>
+    </ClCompile>
+    <ClCompile Include="DXTK\BinaryReader.cpp">
+      <Filter>DXTK</Filter>
+    </ClCompile>
+    <ClCompile Include="DXTK\DDSTextureLoader.cpp">
+      <Filter>DXTK</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="color_vs.hlsl">
@@ -347,6 +386,12 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="multi_light_vs.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="fire_vs.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="fire_ps.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

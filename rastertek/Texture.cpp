@@ -70,6 +70,12 @@ namespace wf
 		return true;
 	}
 
+	bool Texture::LoadDDS( ID3D11Device* _device, ID3D11DeviceContext* _context, const wchar_t* _path )
+	{
+		HRESULT hr = CreateDDSTextureFromFile( _device, _path, nullptr, &m_texture_view );
+		return SUCCEEDED( hr );
+	}
+
 	void Texture::Shutdown()
 	{
 		if ( m_texture_view )

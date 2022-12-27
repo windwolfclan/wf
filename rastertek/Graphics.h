@@ -28,6 +28,7 @@ namespace wf
 	class FadeShader;
 	class ReflectionShader;
 	class MultiLightShader;
+	class FireShader;
 
 	class Quad;
 	class TextureQuad;
@@ -58,7 +59,7 @@ namespace wf
 	constexpr int RENDER_TEXTURE_ARRAY = 5;
 	constexpr int TEXTURE_ARRAY_COUNT = 6;
 
-	constexpr int QUAD_COUNT = 12;
+	constexpr int QUAD_COUNT = 13;
 
 	class Graphics
 	{
@@ -90,6 +91,7 @@ namespace wf
 		void DrawReflectScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 		void DrawFadeScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 		void DrawMultiLightScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
+		void DrawFireScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 
 	private:
 		D3D* m_directx{ nullptr };
@@ -104,6 +106,7 @@ namespace wf
 		RasterTekModel* m_rastertek_model{ nullptr };
 		RasterTekModel* m_floor{ nullptr };
 		RasterTekModel* m_plane{ nullptr };
+		RasterTekModel* m_fire{ nullptr };
 
 		ColorShader* m_color_shader{ nullptr };
 		TextureShader* m_texture_shader{ nullptr };
@@ -119,6 +122,7 @@ namespace wf
 		FadeShader* m_fade_shader{ nullptr };
 		ReflectionShader* m_reflection_shader{ nullptr };
 		MultiLightShader* m_multi_light_shader{ nullptr };
+		FireShader* m_fire_shader{ nullptr };
 		
 		RenderTexture* m_rt1{ nullptr };
 		RenderTexture* m_rt2{ nullptr };
@@ -127,11 +131,15 @@ namespace wf
 		RenderTexture* m_rt5{ nullptr };
 		RenderTexture* m_rt6{ nullptr };
 		RenderTexture* m_rt7{ nullptr };
+		RenderTexture* m_rt8{ nullptr };
 		std::array<TextureArray*, TEXTURE_ARRAY_COUNT> m_texture_arrays;
 		std::array<Quad*, QUAD_COUNT> m_quads;
 
 		Texture* m_blue_texture{ nullptr };
 		Texture* m_seafloor_texture{ nullptr };
+		Texture* m_fire_texture{ nullptr };
+		Texture* m_fire_noise_texture{ nullptr };
+		Texture* m_fire_alpha_texture{ nullptr };
 
 		Text* m_text{ nullptr };
 

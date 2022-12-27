@@ -18,6 +18,7 @@
 #include "FadeShader.h"
 #include "ReflectionShader.h"
 #include "MultiLightShader.h"
+#include "FireShader.h"
 
 namespace wf
 {
@@ -115,6 +116,11 @@ namespace wf
 			return false;
 		}
 
+		m_fire = new RasterTekModel;
+		if ( !m_fire->Initialize( device, context, "./resources/stone.tga", "./resources/quad.txt" ) )
+		{
+			return false;
+		}
 		
 		m_text = new Text;
 		if ( !m_text->Initialize( device, context, _hwnd, _width, _height, view ) )
@@ -146,6 +152,7 @@ if( !p->Initialize( device, _hwnd ) ) return false;
 		INITIALIZE_WF_SHADER( m_fade_shader, FadeShader );
 		INITIALIZE_WF_SHADER( m_reflection_shader, ReflectionShader );
 		INITIALIZE_WF_SHADER( m_multi_light_shader, MultiLightShader );
+		INITIALIZE_WF_SHADER( m_fire_shader, FireShader );
 
 
 
@@ -160,6 +167,7 @@ if( !p->Initialize( device, _width, _height ) ) return false;
 		INITIALIZE_RENDER_TEXTURE( m_rt5 );
 		INITIALIZE_RENDER_TEXTURE( m_rt6 );
 		INITIALIZE_RENDER_TEXTURE( m_rt7 );
+		INITIALIZE_RENDER_TEXTURE( m_rt8 );
 
 #define INITIALIZE_TEXTURE( p, path )\
 p = new Texture;\
@@ -167,6 +175,16 @@ if( !p->Initialize( device, context, path ) ) return false;
 
 		INITIALIZE_TEXTURE( m_blue_texture, "./resources/blue.tga" );
 		INITIALIZE_TEXTURE( m_seafloor_texture, "./resources/seafloor.tga" );
+		/*INITIALIZE_TEXTURE( m_fire_texture, "./resources/fire.tga" );
+		INITIALIZE_TEXTURE( m_fire_alpha_texture, "./resources/fire_alpha.tga" );
+		INITIALIZE_TEXTURE( m_fire_noise_texture, "./resources/fire_noise.tga" );*/
+
+		m_fire_texture = new Texture;
+		if ( !m_fire_texture->LoadDDS( device, context, L"./resources/fire01.dds" ) ) { return false; }
+		m_fire_alpha_texture = new Texture;
+		if ( !m_fire_alpha_texture->LoadDDS( device, context, L"./resources/alpha01.dds" ) ) { return false; }
+		m_fire_noise_texture = new Texture;
+		if ( !m_fire_noise_texture->LoadDDS( device, context, L"./resources/noise01.dds" ) ) { return false; }
 		
 		if ( !InitializeTextureArray( device, context ) )
 		{
@@ -192,8 +210,12 @@ if( !p->Initialize( device, context, path ) ) return false;
 		ShutdownQuads();
 		ReleaseTextureArray();
 
+		SAFE_SHUTDOWN( m_fire_noise_texture );
+		SAFE_SHUTDOWN( m_fire_alpha_texture );
+		SAFE_SHUTDOWN( m_fire_texture );
 		SAFE_SHUTDOWN( m_seafloor_texture );
 		SAFE_SHUTDOWN( m_blue_texture );
+		SAFE_SHUTDOWN( m_rt8 );
 		SAFE_SHUTDOWN( m_rt7 );
 		SAFE_SHUTDOWN( m_rt6 );
 		SAFE_SHUTDOWN( m_rt5 );
@@ -201,6 +223,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 		SAFE_SHUTDOWN( m_rt3 );
 		SAFE_SHUTDOWN( m_rt2 );
 		SAFE_SHUTDOWN( m_rt1 );
+		SAFE_SHUTDOWN( m_fire_shader );
 		SAFE_SHUTDOWN( m_multi_light_shader );
 		SAFE_SHUTDOWN( m_fade_shader );
 		SAFE_SHUTDOWN( m_reflection_shader );
@@ -214,6 +237,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 		SAFE_SHUTDOWN( m_dual_texture_shader );
 		SAFE_SHUTDOWN( m_cursor );
 		SAFE_SHUTDOWN( m_text );
+		SAFE_SHUTDOWN( m_fire );
 		SAFE_SHUTDOWN( m_plane );
 		SAFE_SHUTDOWN( m_floor );
 		SAFE_SHUTDOWN( m_rastertek_model );
@@ -249,7 +273,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 			return false;
 		}
 
-		m_camera->SetPosition( 0.0f, 3.0f, -15.0f );
+		m_camera->SetPosition( 0.0f, 0.0f, -5.0f );
 
 		FrameFade( param.time );
 
@@ -294,6 +318,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 			DrawTransparencyScene( context, dsv, w, v, p );
 			DrawReflectScene( context, dsv, w, v, p );
 			DrawMultiLightScene( context, dsv, w, v, p );
+			DrawFireScene( context, dsv, w, v, p );
 
 			m_directx->SetBackBufferRenderTarget();
 		}
@@ -301,12 +326,11 @@ if( !p->Initialize( device, context, path ) ) return false;
 
 		// render
 		{
-			m_directx->BeginScene( 0.2f, 0.2f, 0.2f, 1.0f );
+			m_directx->BeginScene( 0.0f, 0.0f, 0.0f, 1.0f );
 
 			if ( !draw_2d )
 			{
 				
-
 			}
 
 			// 2D Draw
@@ -425,6 +449,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 			quad_type::texture,
 			quad_type::texture,
 			quad_type::texture,
+			quad_type::texture,
 		};
 
 		for ( int i = 0; i < QUAD_COUNT; ++i )
@@ -486,6 +511,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 		{ 500, 300 },
 		{ 500, 500 },
 		{ 500, 700 },
+		{ 700, 100 },
 		};
 
 		for ( int i = 0; i < QUAD_COUNT; ++i )
@@ -613,6 +639,15 @@ if( !p->Initialize( device, context, path ) ) return false;
 				}
 				break;
 			}
+
+			case 12:
+			{
+				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt8->GetShaderResourceView() ) )
+				{
+					return;
+				}
+				break;
+			}
 			}
 		}
 	}
@@ -680,7 +715,6 @@ if( !p->Initialize( device, context, path ) ) return false;
 
 	void Graphics::DrawMultiLightScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p )
 	{
-
 		Light light1;
 		light1.SetPosition( -3.0f, 1.0f, 3.0f );
 		light1.SetDiffuse( 1.0f, 0.0f, 0.0f, 1.0f );
@@ -709,9 +743,67 @@ if( !p->Initialize( device, context, path ) ) return false;
 		color_buffer.diffuse[ 2 ] = light3.GetDiffuse();
 		color_buffer.diffuse[ 3 ] = light4.GetDiffuse();
 
+		m_camera->SetPosition( 0.0f, 3.0f, -15.0f );
+		m_camera->Render();
+
+		XMMATRIX v;
+		m_camera->GetViewMatrix( v );
+
 		m_rt7->SetRenderTarget( _context, _dsv );
 		m_rt7->ClearRenderTarget( _context, _dsv, 0.0f, 0.0f, 0.0f, 1.0f );
 		m_plane->Render( _context );
-		m_multi_light_shader->Render( _context, m_plane->GetIndexCount(), _w, _v, _p, m_plane->GetTexture(), position_buffer, color_buffer );
+		m_multi_light_shader->Render( _context, m_plane->GetIndexCount(), _w, v, _p, m_plane->GetTexture(), position_buffer, color_buffer );
+
+		m_camera->SetPosition( 0.0f, 0.0f, -5.0f );
+		m_camera->Render();
+	}
+
+	void Graphics::DrawFireScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p )
+	{
+		static float frame_time = 0.0f;
+
+		frame_time += 0.02f;
+		if ( frame_time > 1000.0f )
+		{
+			frame_time = 0.0f;
+		}
+
+		XMFLOAT3 scroll_speed{ 1.3f, 2.1f, 2.3f };
+		XMFLOAT3 scales{ 1.0f, 2.0f, 3.0f };
+		XMFLOAT2 distortion1{ 0.1f, 0.2f };
+		XMFLOAT2 distortion2{ 0.1f, 0.3f };
+		XMFLOAT2 distortion3{ 0.1f, 0.1f };
+		float distortion_scale{ 0.8f };
+		float distortion_bias{ 0.5f };
+
+
+		m_rt8->SetRenderTarget( _context, _dsv );
+		m_rt8->ClearRenderTarget( _context, _dsv, 0.0f, 0.0f, 0.0f, 1.0f );
+
+		XMMATRIX w;
+		m_directx->GetWorldMatrix( w );
+
+		m_directx->TurnOnAlphaBlending();
+
+		m_fire->Render( _context );
+
+		m_fire_shader->Render(
+			_context,
+			m_fire->GetIndexCount(),
+			w, _v, _p,
+			m_fire_texture->GetTexture(),
+			m_fire_noise_texture->GetTexture(),
+			m_fire_alpha_texture->GetTexture(),
+			frame_time,
+			scroll_speed,
+			scales,
+			distortion1,
+			distortion2,
+			distortion3,
+			distortion_scale,
+			distortion_bias
+		);
+
+		m_directx->TurnOffAlphaBlending();
 	}
 }

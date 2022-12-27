@@ -12,6 +12,7 @@
 #include <mmsystem.h>
 #include <fstream>
 #include <array>
+#include <vector>
 #include <string>
 #include <map>
 #include <unordered_map>
@@ -24,6 +25,7 @@
 using namespace DirectX;
 
 #include "ShaderBase.h"
+#include "DXTK/DDSTextureLoader.h"
 
 namespace wf
 {

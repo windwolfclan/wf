@@ -19,7 +19,15 @@ namespace wf
 	{
 	}
 
-	bool FontShader::Render( ID3D11DeviceContext* _context, int _index_count, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView* _srv, XMFLOAT4 _pixel_color )
+	bool FontShader::Render( 
+		ID3D11DeviceContext* _context, 
+		int _index_count, 
+		XMMATRIX _w, 
+		XMMATRIX _v, 
+		XMMATRIX _p, 
+		ID3D11ShaderResourceView* _srv, 
+		XMFLOAT4 _pixel_color 
+	)
 	{
 		if ( !SetShaderParameters( _context, _w, _v, _p, _srv, _pixel_color ) )
 		{
@@ -31,7 +39,14 @@ namespace wf
 		return true;
 	}
 
-	bool FontShader::SetShaderParameters( ID3D11DeviceContext* _context, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView* _srv, XMFLOAT4 _pixel_color )
+	bool FontShader::SetShaderParameters(
+		ID3D11DeviceContext* _context, 
+		XMMATRIX _w,
+		XMMATRIX _v, 
+		XMMATRIX _p, 
+		ID3D11ShaderResourceView* _srv, 
+		XMFLOAT4 _pixel_color 
+	)
 	{
 		{
 			_w = XMMatrixTranspose( _w );

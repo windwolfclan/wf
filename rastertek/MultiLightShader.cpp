@@ -19,7 +19,16 @@ namespace wf
 	{
 	}
 
-	bool MultiLightShader::Render( ID3D11DeviceContext* _context, int _index_count, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView* _srv, LightPositionBuffer& _position, LightColorBuffer& _diffuse )
+	bool MultiLightShader::Render( 
+		ID3D11DeviceContext* _context, 
+		int _index_count, 
+		XMMATRIX _w, 
+		XMMATRIX _v, 
+		XMMATRIX _p, 
+		ID3D11ShaderResourceView* _srv, 
+		LightPositionBuffer& _position, 
+		LightColorBuffer& _diffuse 
+	)
 	{
 		if ( !SetShaderParameters( _context, _w, _v, _p, _srv, _position, _diffuse ) )
 		{
@@ -31,7 +40,15 @@ namespace wf
 		return true;
 	}
 
-	bool MultiLightShader::SetShaderParameters( ID3D11DeviceContext* _context, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView* _srv, LightPositionBuffer& _position, LightColorBuffer& _diffuse )
+	bool MultiLightShader::SetShaderParameters( 
+		ID3D11DeviceContext* _context, 
+		XMMATRIX _w, 
+		XMMATRIX _v, 
+		XMMATRIX _p, 
+		ID3D11ShaderResourceView* _srv, 
+		LightPositionBuffer& _position, 
+		LightColorBuffer& _diffuse 
+	)
 	{
 		{
 			_w = XMMatrixTranspose( _w );

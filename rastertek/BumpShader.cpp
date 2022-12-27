@@ -19,7 +19,16 @@ namespace wf
 	{
 	}
 
-	bool BumpShader::Render( ID3D11DeviceContext* _context, int _index_count, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView** _srv, XMFLOAT4 _diffuse, XMFLOAT3 _light_dir )
+	bool BumpShader::Render(
+		ID3D11DeviceContext* _context, 
+		int _index_count, 
+		XMMATRIX _w, 
+		XMMATRIX _v,
+		XMMATRIX _p,
+		ID3D11ShaderResourceView** _srv,
+		XMFLOAT4 _diffuse, 
+		XMFLOAT3 _light_dir 
+	)
 	{
 		if ( !SetShaderParameters( _context, _w, _v, _p, _srv, _diffuse, _light_dir ) )
 		{
@@ -31,7 +40,15 @@ namespace wf
 		return true;
 	}
 
-	bool BumpShader::SetShaderParameters( ID3D11DeviceContext* _context, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView** _srv, XMFLOAT4 _diffuse, XMFLOAT3 _light_dir )
+	bool BumpShader::SetShaderParameters(
+		ID3D11DeviceContext* _context, 
+		XMMATRIX _w,
+		XMMATRIX _v, 
+		XMMATRIX _p,
+		ID3D11ShaderResourceView** _srv,
+		XMFLOAT4 _diffuse, 
+		XMFLOAT3 _light_dir 
+	)
 	{
 		{
 			_w = XMMatrixTranspose( _w );

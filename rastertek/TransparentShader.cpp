@@ -19,7 +19,15 @@ namespace wf
 	{
 	}
 
-	bool TransparentShader::Render( ID3D11DeviceContext* _context, int _index_count, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView* _srv, float _blend_amount )
+	bool TransparentShader::Render( 
+		ID3D11DeviceContext* _context, 
+		int _index_count,
+		XMMATRIX _w, 
+		XMMATRIX _v, 
+		XMMATRIX _p, 
+		ID3D11ShaderResourceView* _srv, 
+		float _blend_amount 
+	)
 	{
 		if ( !SetShaderParameters( _context, _w, _v, _p, _srv, _blend_amount ) )
 		{
@@ -31,7 +39,14 @@ namespace wf
 		return true;
 	}
 
-	bool TransparentShader::SetShaderParameters( ID3D11DeviceContext* _context, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView* _srv, float _blend_amount )
+	bool TransparentShader::SetShaderParameters( 
+		ID3D11DeviceContext* _context, 
+		XMMATRIX _w, 
+		XMMATRIX _v,
+		XMMATRIX _p, 
+		ID3D11ShaderResourceView* _srv, 
+		float _blend_amount 
+	)
 	{
 		{
 			_w = XMMatrixTranspose( _w );

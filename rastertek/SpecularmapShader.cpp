@@ -19,7 +19,19 @@ namespace wf
 	{
 	}
 
-	bool SpecularShader::Render( ID3D11DeviceContext* _context, int _index_count, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView** _srv, XMFLOAT3 _camera_position, XMFLOAT4 _diffuse, XMFLOAT4 _specular, float _specular_power, XMFLOAT3 _light_dir )
+	bool SpecularShader::Render( 
+		ID3D11DeviceContext* _context, 
+		int _index_count, 
+		XMMATRIX _w, 
+		XMMATRIX _v, 
+		XMMATRIX _p, 
+		ID3D11ShaderResourceView** _srv, 
+		XMFLOAT3 _camera_position, 
+		XMFLOAT4 _diffuse, 
+		XMFLOAT4 _specular, 
+		float _specular_power, 
+		XMFLOAT3 _light_dir 
+	)
 	{
 		if ( !SetShaderParameters( _context, _w, _v, _p, _srv, _camera_position, _diffuse, _specular, _specular_power, _light_dir ) )
 		{
@@ -31,7 +43,18 @@ namespace wf
 		return true;
 	}
 
-	bool SpecularShader::SetShaderParameters( ID3D11DeviceContext* _context, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView** _srv, XMFLOAT3 _camera_position, XMFLOAT4 _diffuse, XMFLOAT4 _specular, float _specular_power, XMFLOAT3 _light_dir )
+	bool SpecularShader::SetShaderParameters( 
+		ID3D11DeviceContext* _context, 
+		XMMATRIX _w, 
+		XMMATRIX _v, 
+		XMMATRIX _p, 
+		ID3D11ShaderResourceView** _srv, 
+		XMFLOAT3 _camera_position, 
+		XMFLOAT4 _diffuse, 
+		XMFLOAT4 _specular, 
+		float _specular_power, 
+		XMFLOAT3 _light_dir 
+	)
 	{
 		{
 			_w = XMMatrixTranspose( _w );

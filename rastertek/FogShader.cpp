@@ -19,7 +19,16 @@ namespace wf
 	{
 	}
 
-	bool FogShader::Render( ID3D11DeviceContext* _context, int _index_count, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView* _srv, float _fog_start, float _fog_end )
+	bool FogShader::Render( 
+		ID3D11DeviceContext* _context, 
+		int _index_count,
+		XMMATRIX _w,
+		XMMATRIX _v, 
+		XMMATRIX _p, 
+		ID3D11ShaderResourceView* _srv,
+		float _fog_start,
+		float _fog_end 
+	)
 	{
 		if ( !SetShaderParameters( _context, _w, _v, _p, _srv, _fog_start, _fog_end ) )
 		{
@@ -31,7 +40,15 @@ namespace wf
 		return true;
 	}
 
-	bool FogShader::SetShaderParameters( ID3D11DeviceContext* _context, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView* _srv, float _fog_start, float _fog_end )
+	bool FogShader::SetShaderParameters( 
+		ID3D11DeviceContext* _context, 
+		XMMATRIX _w, 
+		XMMATRIX _v, 
+		XMMATRIX _p, 
+		ID3D11ShaderResourceView* _srv,
+		float _fog_start, 
+		float _fog_end 
+	)
 	{
 		{
 			_w = XMMatrixTranspose( _w );

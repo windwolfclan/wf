@@ -19,7 +19,16 @@ namespace wf
 	{
 	}
 
-	bool TranslateShader::Render( ID3D11DeviceContext* _context, int _index_count, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView* _srv, float _translate_x, float _translate_y )
+	bool TranslateShader::Render( 
+		ID3D11DeviceContext* _context, 
+		int _index_count, 
+		XMMATRIX _w, 
+		XMMATRIX _v, 
+		XMMATRIX _p, 
+		ID3D11ShaderResourceView* _srv, 
+		float _translate_x, 
+		float _translate_y 
+	)
 	{
 		if ( !SetShaderParameters( _context, _w, _v, _p, _srv, _translate_x, _translate_y ) )
 		{
@@ -31,7 +40,15 @@ namespace wf
 		return true;
 	}
 
-	bool TranslateShader::SetShaderParameters( ID3D11DeviceContext* _context, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView* _srv, float _translate_x, float _translate_y )
+	bool TranslateShader::SetShaderParameters( 
+		ID3D11DeviceContext* _context, 
+		XMMATRIX _w, 
+		XMMATRIX _v, 
+		XMMATRIX _p, 
+		ID3D11ShaderResourceView* _srv, 
+		float _translate_x, 
+		float _translate_y 
+	)
 	{
 		{
 			_w = XMMatrixTranspose( _w );

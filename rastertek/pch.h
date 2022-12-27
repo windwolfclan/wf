@@ -25,6 +25,7 @@
 using namespace DirectX;
 
 #include "ShaderBase.h"
+#include "Utility.h"
 #include "DXTK/DDSTextureLoader.h"
 
 namespace wf

@@ -161,87 +161,33 @@ namespace wf
 
 	bool FireShader::InitializeBuffers( ID3D11Device* _device )
 	{
-		D3D11_BUFFER_DESC buffer_desc;
-		ZeroMemory( &buffer_desc, sizeof( buffer_desc ) );
-		buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
-		buffer_desc.ByteWidth = sizeof( MatrixBufferType );
-		buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-		buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-		buffer_desc.MiscFlags = 0;
-		buffer_desc.StructureByteStride = 0;
+		HRESULT hr{ S_OK };
 
-		HRESULT hr = _device->CreateBuffer( &buffer_desc, nullptr, &m_matrix_buffer );
+		hr = utility::CreateDynamicWriteBuffer( _device, m_matrix_buffer, sizeof( MatrixBufferType ) );
 		if ( FAILED( hr ) )
 		{
 			return false;
 		}
 
-		ZeroMemory( &buffer_desc, sizeof( buffer_desc ) );
-		buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
-		buffer_desc.ByteWidth = sizeof( NoiseBufferType );
-		buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-		buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-		buffer_desc.MiscFlags = 0;
-		buffer_desc.StructureByteStride = 0;
-
-		hr = _device->CreateBuffer( &buffer_desc, nullptr, &m_noise_buffer );
+		hr = utility::CreateDynamicWriteBuffer( _device, m_noise_buffer, sizeof( NoiseBufferType ) );
 		if ( FAILED( hr ) )
 		{
 			return false;
 		}
 
-		ZeroMemory( &buffer_desc, sizeof( buffer_desc ) );
-		buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
-		buffer_desc.ByteWidth = sizeof( DistortionBufferType );
-		buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-		buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-		buffer_desc.MiscFlags = 0;
-		buffer_desc.StructureByteStride = 0;
-
-		hr = _device->CreateBuffer( &buffer_desc, nullptr, &m_distortion_buffer );
+		hr = utility::CreateDynamicWriteBuffer( _device, m_distortion_buffer, sizeof( DistortionBufferType ) );
 		if ( FAILED( hr ) )
 		{
 			return false;
 		}
 
-		D3D11_SAMPLER_DESC sampler_desc{};
-		ZeroMemory( &sampler_desc, sizeof( sampler_desc ) );
-		sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-		sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-		sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-		sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-		sampler_desc.MipLODBias = 0.0f;
-		sampler_desc.MaxAnisotropy = 1;
-		sampler_desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-		sampler_desc.BorderColor[ 0 ] = 0.0f;
-		sampler_desc.BorderColor[ 1 ] = 0.0f;
-		sampler_desc.BorderColor[ 2 ] = 0.0f;
-		sampler_desc.BorderColor[ 3 ] = 0.0f;
-		sampler_desc.MinLOD = 0.0f;
-		sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
-
-		hr = _device->CreateSamplerState( &sampler_desc, &m_sampler_state1 );
+		hr = utility::CreateWrapSampler( _device, m_sampler_state1 );
 		if ( FAILED( hr ) )
 		{
 			return false;
 		}
 
-		ZeroMemory( &sampler_desc, sizeof( sampler_desc ) );
-		sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-		sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-		sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-		sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-		sampler_desc.MipLODBias = 0.0f;
-		sampler_desc.MaxAnisotropy = 1;
-		sampler_desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-		sampler_desc.BorderColor[ 0 ] = 0.0f;
-		sampler_desc.BorderColor[ 1 ] = 0.0f;
-		sampler_desc.BorderColor[ 2 ] = 0.0f;
-		sampler_desc.BorderColor[ 3 ] = 0.0f;
-		sampler_desc.MinLOD = 0.0f;
-		sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
-
-		hr = _device->CreateSamplerState( &sampler_desc, &m_sampler_state2 );
+		hr = utility::CreateClampSampler( _device, m_sampler_state2 );
 		if ( FAILED( hr ) )
 		{
 			return false;

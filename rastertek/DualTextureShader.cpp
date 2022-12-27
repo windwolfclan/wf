@@ -19,7 +19,14 @@ namespace wf
 	{
 	}
 
-	bool DualTextureShader::Render( ID3D11DeviceContext* _context, int _index_count, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView** _srvs )
+	bool DualTextureShader::Render( 
+		ID3D11DeviceContext* _context, 
+		int _index_count, 
+		XMMATRIX _w, 
+		XMMATRIX _v, 
+		XMMATRIX _p, 
+		ID3D11ShaderResourceView** _srvs 
+	)
 	{
 		if ( !SetShaderParameters( _context, _w, _v, _p, _srvs ) )
 		{
@@ -31,7 +38,13 @@ namespace wf
 		return true;
 	}
 
-	bool DualTextureShader::SetShaderParameters( ID3D11DeviceContext* _context, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView** _srvs )
+	bool DualTextureShader::SetShaderParameters( 
+		ID3D11DeviceContext* _context, 
+		XMMATRIX _w, 
+		XMMATRIX _v, 
+		XMMATRIX _p, 
+		ID3D11ShaderResourceView** _srvs 
+	)
 	{
 		_w = XMMatrixTranspose( _w );
 		_v = XMMatrixTranspose( _v );

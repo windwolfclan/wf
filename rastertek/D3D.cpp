@@ -291,16 +291,15 @@ namespace wf
 		}
 
 
-		D3D11_VIEWPORT viewport{};
-		ZeroMemory( &viewport, sizeof( viewport ) );
-		viewport.Width = (float)_width;
-		viewport.Height = (float)_height;
-		viewport.MinDepth = 0.0f;
-		viewport.MaxDepth = 1.0f;
-		viewport.TopLeftX = 0.0f;
-		viewport.TopLeftY = 0.0f;
+		ZeroMemory( &m_viewport, sizeof( m_viewport ) );
+		m_viewport.Width = (float)_width;
+		m_viewport.Height = (float)_height;
+		m_viewport.MinDepth = 0.0f;
+		m_viewport.MaxDepth = 1.0f;
+		m_viewport.TopLeftX = 0.0f;
+		m_viewport.TopLeftY = 0.0f;
 
-		m_device_context->RSSetViewports( 1, &viewport );
+		m_device_context->RSSetViewports( 1, &m_viewport );
 
 		float fov = XM_PIDIV4;
 		float aspect{ (float)_width / (float)_height };
@@ -418,5 +417,10 @@ namespace wf
 	void D3D::SetBackBufferRenderTarget()
 	{
 		m_device_context->OMSetRenderTargets( 1, &m_render_target_view, m_depth_stencil_view );
+	}
+
+	void D3D::ResetViewport()
+	{
+		m_device_context->RSSetViewports( 1, &m_viewport );
 	}
 }

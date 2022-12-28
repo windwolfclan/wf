@@ -61,7 +61,7 @@ namespace wf
 	constexpr int RENDER_TEXTURE_ARRAY = 5;
 	constexpr int TEXTURE_ARRAY_COUNT = 6;
 
-	constexpr int QUAD_COUNT = 13;
+	constexpr int QUAD_COUNT = 14;
 
 	class Graphics
 	{
@@ -138,6 +138,7 @@ namespace wf
 		RenderTexture* m_rt7{ nullptr };
 		RenderTexture* m_rt8{ nullptr };
 		RenderTexture* m_rt9{ nullptr };
+		
 		std::array<TextureArray*, TEXTURE_ARRAY_COUNT> m_texture_arrays;
 		std::array<Quad*, QUAD_COUNT> m_quads;
 
@@ -150,6 +151,17 @@ namespace wf
 		Text* m_text{ nullptr };
 
 		Bitmap* m_blur_bitmap{ nullptr };
+		
+
+		// blur
+		RenderTexture* m_down_sample{ nullptr };
+		RenderTexture* m_up_sample{ nullptr };
+		RenderTexture* m_h_blur{ nullptr };
+		RenderTexture* m_v_blur{ nullptr };
+		RenderTexture* m_blur_render_texture{ nullptr };
+
+		RenderTargetBitmap* m_blur_size_bitmap{ nullptr };
+		RenderTargetBitmap* m_screen_size_bitmap{ nullptr };
 
 		// fade
 		float m_fade_time{ 0.0f };

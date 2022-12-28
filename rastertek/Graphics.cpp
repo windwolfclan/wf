@@ -42,6 +42,9 @@ namespace wf
 		m_width = _width;
 		m_height = _height;
 
+		int half_width = int(_width / 2.0f );
+		int half_height = int( _height / 2.0f );
+
 		m_directx = new D3D;
 
 		if ( !m_directx->Initialize( _width, _height, VSYNC_ENABLED, _hwnd, FULL_SCREEN, SCREEN_DEPTH, SCREEN_NEAR ) )
@@ -100,7 +103,7 @@ namespace wf
 		}
 
 		m_rastertek_model = new RasterTekModel;
-		if ( !m_rastertek_model->Initialize( device, context, "./resources/seafloor.tga", "./resources/cube.txt" ) )
+		if ( !m_rastertek_model->Initialize( device, context, "./resources/stone.tga", "./resources/cube.txt" ) )
 		{
 			return false;
 		}
@@ -136,10 +139,13 @@ namespace wf
 		}
 
 		m_blur_bitmap = new Bitmap;
-		if ( !m_blur_bitmap->Initialize( device, context, _width, _height, "./resources/seafloor.tga", 800, 450 ) )
+		if ( !m_blur_bitmap->Initialize( device, context, 400, 400, "./resources/seafloor.tga", 400, 400 ) )
 		{
 			return false;
 		}
+
+		
+
 
 #define INITIALIZE_WF_SHADER( p, type )\
 p = new type;\
@@ -171,7 +177,7 @@ if( !p->Initialize( device, _width, _height ) ) return false;
 
 #define INITIALIZE_RENDER_TEXTURE_HALF( p )\
 p = new RenderTexture;\
-if( !p->Initialize( device, _width / 2.0f, _height / 2.0f ) ) return false;
+if( !p->Initialize( device, half_width, half_height ) ) return false;
 
 		INITIALIZE_RENDER_TEXTURE( m_rt1 );
 		INITIALIZE_RENDER_TEXTURE( m_rt2 );
@@ -182,23 +188,33 @@ if( !p->Initialize( device, _width / 2.0f, _height / 2.0f ) ) return false;
 		INITIALIZE_RENDER_TEXTURE( m_rt7 );
 		INITIALIZE_RENDER_TEXTURE( m_rt8 );
 		INITIALIZE_RENDER_TEXTURE( m_rt9 );
+		INITIALIZE_RENDER_TEXTURE( m_blur_render_texture );
+		INITIALIZE_RENDER_TEXTURE( m_up_sample );
+		INITIALIZE_RENDER_TEXTURE_HALF( m_down_sample );
+		INITIALIZE_RENDER_TEXTURE_HALF( m_h_blur );
+		INITIALIZE_RENDER_TEXTURE_HALF( m_v_blur );
+
+
+#define INITIALIZE_RENDER_TARGET_BITMAP( p, w, h )\
+p = new RenderTargetBitmap;\
+if( !p->Initialize( device, w, h ) ) return false;
+
+		INITIALIZE_RENDER_TARGET_BITMAP( m_blur_size_bitmap, half_width, half_height );
+		INITIALIZE_RENDER_TARGET_BITMAP( m_screen_size_bitmap, _width, _height );
 
 #define INITIALIZE_TEXTURE( p, path )\
 p = new Texture;\
 if( !p->Initialize( device, context, path ) ) return false;
 
+#define LOAD_DDS_TEXTURE( p, path )\
+p = new Texture;\
+if( !p->LoadDDS( device, context, path ) ) return false;
+
 		INITIALIZE_TEXTURE( m_blue_texture, "./resources/blue.tga" );
 		INITIALIZE_TEXTURE( m_seafloor_texture, "./resources/seafloor.tga" );
-		/*INITIALIZE_TEXTURE( m_fire_texture, "./resources/fire.tga" );
-		INITIALIZE_TEXTURE( m_fire_alpha_texture, "./resources/fire_alpha.tga" );
-		INITIALIZE_TEXTURE( m_fire_noise_texture, "./resources/fire_noise.tga" );*/
-
-		m_fire_texture = new Texture;
-		if ( !m_fire_texture->LoadDDS( device, context, L"./resources/fire01.dds" ) ) { return false; }
-		m_fire_alpha_texture = new Texture;
-		if ( !m_fire_alpha_texture->LoadDDS( device, context, L"./resources/alpha01.dds" ) ) { return false; }
-		m_fire_noise_texture = new Texture;
-		if ( !m_fire_noise_texture->LoadDDS( device, context, L"./resources/noise01.dds" ) ) { return false; }
+		LOAD_DDS_TEXTURE( m_fire_texture, L"./resources/fire01.dds" );
+		LOAD_DDS_TEXTURE( m_fire_alpha_texture, L"./resources/alpha01.dds" );
+		LOAD_DDS_TEXTURE( m_fire_noise_texture, L"./resources/noise01.dds" );
 		
 		if ( !InitializeTextureArray( device, context ) )
 		{
@@ -223,12 +239,24 @@ if( !p->Initialize( device, context, path ) ) return false;
 	{
 		ShutdownQuads();
 		ReleaseTextureArray();
-
+		
+		// Texture
 		SAFE_SHUTDOWN( m_fire_noise_texture );
 		SAFE_SHUTDOWN( m_fire_alpha_texture );
 		SAFE_SHUTDOWN( m_fire_texture );
 		SAFE_SHUTDOWN( m_seafloor_texture );
 		SAFE_SHUTDOWN( m_blue_texture );
+
+		// RednerTargetBitmap
+		SAFE_SHUTDOWN( m_screen_size_bitmap );
+		SAFE_SHUTDOWN( m_blur_size_bitmap );
+
+		// RenderTexture
+		SAFE_SHUTDOWN( m_v_blur );
+		SAFE_SHUTDOWN( m_h_blur );
+		SAFE_SHUTDOWN( m_down_sample );
+		SAFE_SHUTDOWN( m_up_sample );
+		SAFE_SHUTDOWN( m_blur_render_texture );
 		SAFE_SHUTDOWN( m_rt9 );
 		SAFE_SHUTDOWN( m_rt8 );
 		SAFE_SHUTDOWN( m_rt7 );
@@ -238,6 +266,8 @@ if( !p->Initialize( device, context, path ) ) return false;
 		SAFE_SHUTDOWN( m_rt3 );
 		SAFE_SHUTDOWN( m_rt2 );
 		SAFE_SHUTDOWN( m_rt1 );
+
+		// Shader
 		SAFE_SHUTDOWN( m_vertical_blur_shader );
 		SAFE_SHUTDOWN( m_horizontal_blur_shader );
 		SAFE_SHUTDOWN( m_fire_shader );
@@ -252,6 +282,8 @@ if( !p->Initialize( device, context, path ) ) return false;
 		SAFE_SHUTDOWN( m_alphamap_shader );
 		SAFE_SHUTDOWN( m_lightmap_shader );
 		SAFE_SHUTDOWN( m_dual_texture_shader );
+
+		// 
 		SAFE_SHUTDOWN( m_blur_bitmap );
 		SAFE_SHUTDOWN( m_cursor );
 		SAFE_SHUTDOWN( m_text );
@@ -337,6 +369,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 			DrawReflectScene( context, dsv, w, v, p );
 			DrawMultiLightScene( context, dsv, w, v, p );
 			DrawFireScene( context, dsv, w, v, p );
+			DrawBlurScene( context, dsv, w, v, p );
 
 			m_directx->SetBackBufferRenderTarget();
 		}
@@ -468,6 +501,8 @@ if( !p->Initialize( device, context, path ) ) return false;
 			quad_type::texture,
 			quad_type::texture,
 			quad_type::texture,
+			quad_type::texture,
+			quad_type::texture,
 		};
 
 		for ( int i = 0; i < QUAD_COUNT; ++i )
@@ -530,6 +565,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 		{ 500, 500 },
 		{ 500, 700 },
 		{ 700, 100 },
+		{ 700, 300 },
 		};
 
 		for ( int i = 0; i < QUAD_COUNT; ++i )
@@ -660,7 +696,18 @@ if( !p->Initialize( device, context, path ) ) return false;
 
 			case 12:
 			{
+				// fire
 				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt8->GetShaderResourceView() ) )
+				{
+					return;
+				}
+				break;
+			}
+
+			case 13:
+			{
+				// blur
+				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_up_sample->GetShaderResourceView() ) )
 				{
 					return;
 				}
@@ -672,8 +719,8 @@ if( !p->Initialize( device, context, path ) ) return false;
 
 	void Graphics::DrawCubeScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& w, const XMMATRIX& v, const XMMATRIX& p )
 	{
-		m_rt1->SetRenderTarget( _context, _dsv );
-		m_rt1->ClearRenderTarget( _context, _dsv, 0.0f, 1.0f, 0.0f, 1.0f );
+		m_rt1->SetRenderTarget( _context );
+		m_rt1->ClearRenderTarget( _context, 0.0f, 1.0f, 0.0f, 1.0f );
 		m_rastertek_model->Render( _context );
 		m_texture_shader->Render( _context, m_rastertek_model->GetIndexCount(), w, v, p, m_rastertek_model->GetTexture() );
 	}
@@ -683,8 +730,8 @@ if( !p->Initialize( device, context, path ) ) return false;
 		float fog_start = 0.0f;
 		float fog_end = 10.0f;
 
-		m_rt2->SetRenderTarget( _context, _dsv );
-		m_rt2->ClearRenderTarget( _context, _dsv, 0.5f, 0.5f, 0.5f, 1.0f );
+		m_rt2->SetRenderTarget( _context );
+		m_rt2->ClearRenderTarget( _context, 0.5f, 0.5f, 0.5f, 1.0f );
 		m_rastertek_model->Render( _context );
 		m_fog_shader->Render( _context, m_rastertek_model->GetIndexCount(), w, v, p, m_rastertek_model->GetTexture(), fog_start, fog_end );
 	}
@@ -693,8 +740,8 @@ if( !p->Initialize( device, context, path ) ) return false;
 	{
 		m_directx->TurnOnAlphaBlending();
 
-		m_rt3->SetRenderTarget( _context, _dsv );
-		m_rt3->ClearRenderTarget( _context, _dsv, 0.3f, 0.3f, 1.0f, 1.0f );
+		m_rt3->SetRenderTarget( _context );
+		m_rt3->ClearRenderTarget( _context, 0.3f, 0.3f, 1.0f, 1.0f );
 		m_rastertek_model->Render( _context );
 		m_transparent_shader->Render( _context, m_rastertek_model->GetIndexCount(), _w, _v, _p, m_rastertek_model->GetTexture(), 0.5f );
 
@@ -708,13 +755,13 @@ if( !p->Initialize( device, context, path ) ) return false;
 		m_camera->RenderReflect( -1.5f );
 		m_camera->GetReflectionMatrix( r );
 
-		m_rt6->SetRenderTarget( _context, _dsv );
-		m_rt6->ClearRenderTarget( _context, _dsv, 0.0f, 0.0f, 0.0f, 1.0f );
+		m_rt6->SetRenderTarget( _context );
+		m_rt6->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
 		m_rastertek_model->Render( _context );
 		m_texture_shader->Render( _context, m_rastertek_model->GetIndexCount(), _w, r, _p, m_seafloor_texture->GetTexture() );
 
-		m_rt5->SetRenderTarget( _context, _dsv );
-		m_rt5->ClearRenderTarget( _context, _dsv, 0.0f, 0.0f, 0.0f, 1.0f );
+		m_rt5->SetRenderTarget( _context );
+		m_rt5->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
 		m_rastertek_model->Render( _context );
 		m_texture_shader->Render( _context, m_rastertek_model->GetIndexCount(), _w, _v, _p, m_seafloor_texture->GetTexture() );
 
@@ -725,8 +772,8 @@ if( !p->Initialize( device, context, path ) ) return false;
 
 	void Graphics::DrawFadeScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& w, const XMMATRIX& v, const XMMATRIX& p )
 	{
-		m_rt4->SetRenderTarget( _context, _dsv );
-		m_rt4->ClearRenderTarget( _context, _dsv, 0.0f, 0.0f, 0.0f, 1.0f );
+		m_rt4->SetRenderTarget( _context );
+		m_rt4->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
 		m_rastertek_model->Render( _context );
 		m_fade_shader->Render( _context, m_rastertek_model->GetIndexCount(), w, v, p, m_rastertek_model->GetTexture(), m_fade_rate );
 	}
@@ -767,8 +814,8 @@ if( !p->Initialize( device, context, path ) ) return false;
 		XMMATRIX v;
 		m_camera->GetViewMatrix( v );
 
-		m_rt7->SetRenderTarget( _context, _dsv );
-		m_rt7->ClearRenderTarget( _context, _dsv, 0.0f, 0.0f, 0.0f, 1.0f );
+		m_rt7->SetRenderTarget( _context );
+		m_rt7->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
 		m_plane->Render( _context );
 		m_multi_light_shader->Render( _context, m_plane->GetIndexCount(), _w, v, _p, m_plane->GetTexture(), position_buffer, color_buffer );
 
@@ -795,8 +842,8 @@ if( !p->Initialize( device, context, path ) ) return false;
 		float distortion_bias{ 0.5f };
 
 
-		m_rt8->SetRenderTarget( _context, _dsv );
-		m_rt8->ClearRenderTarget( _context, _dsv, 0.0f, 0.0f, 0.0f, 1.0f );
+		m_rt8->SetRenderTarget( _context );
+		m_rt8->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
 
 		XMMATRIX w;
 		m_directx->GetWorldMatrix( w );
@@ -828,47 +875,94 @@ if( !p->Initialize( device, context, path ) ) return false;
 	void Graphics::DrawBlurScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p )
 	{
 		m_directx->TurnOnAlphaBlending();
-
-	
 		
-		std::vector<float> weights = utility::CreateGaussianKernel( 15 );
+		std::vector<float> weights = utility::CreateGaussianKernel( 23 );
 
 		XMMATRIX w;
+		XMMATRIX p;
 		XMMATRIX o;
+		XMFLOAT2 resolution;
 		m_directx->GetWorldMatrix( w );
-		m_directx->GetOrthoMatrix( o );
 
-		/*m_rt9->SetRenderTarget( _context, _dsv );
-		m_rt9->ClearRenderTarget( _context, _dsv, 0.0f, 0.0f, 0.0f, 1.0f );
+		// RenderSceneToTexture
+		{
+			m_blur_render_texture->SetRenderTarget( _context );
+			m_blur_render_texture->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
 
-		m_rastertek_model->Render( _context );
-		m_vertical_blur_shader->Render(
-			_context,
-			m_rastertek_model->GetIndexCount(),
-			w, _v, _p,
-			m_rastertek_model->GetTexture(),
-			XMFLOAT2( 1600, 900 ),
-			15,
-			weights
-		);
+			p = m_blur_render_texture->GetProjectionMatrix();
 
-		m_directx->SetBackBufferRenderTarget();*/
+			m_rastertek_model->Render( _context );
+			m_texture_shader->Render( _context, m_rastertek_model->GetIndexCount(), _w, _v, _p, m_rastertek_model->GetTexture() );
 
-		m_blur_bitmap->Render( _context, 400, 200 );
+			m_directx->SetBackBufferRenderTarget();
+			m_directx->ResetViewport();
+		}
 		
-		// m_rastertek_model->Render( _context );
-		
-		m_vertical_blur_shader->Render(
-			_context,
-			m_rastertek_model->GetIndexCount(),
-			w, _v, o,
-			m_blur_bitmap->GetTexture(),
-			XMFLOAT2( 800, 450 ),
-			15,
-			weights
-		);
-		
-		// m_texture_shader->Render( _context, m_rastertek_model->GetIndexCount(), w, _v, _p, m_rastertek_model->GetTexture() );
+		m_directx->TurnOffZBuffer();
+
+		// DownSampleTexture
+		{
+			m_down_sample->SetRenderTarget( _context );
+			m_down_sample->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
+			o = m_down_sample->GetOrthoMatrix();
+
+			m_blur_size_bitmap->Render( _context );
+			m_texture_shader->Render( _context, m_blur_size_bitmap->GetIndexCount(), w, _v, o, m_blur_render_texture->GetShaderResourceView() );
+
+			m_directx->SetBackBufferRenderTarget();
+			m_directx->ResetViewport();
+		}
+
+		// RenderHorizontalBlurToTexture
+		{
+			m_h_blur->SetRenderTarget( _context );
+			m_h_blur->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
+			o = m_h_blur->GetOrthoMatrix();
+			resolution.x = (float)m_h_blur->GetWidth();
+			resolution.y = (float)m_h_blur->GetHeight();
+
+			m_blur_size_bitmap->Render( _context );
+			m_horizontal_blur_shader->Render( _context, m_blur_size_bitmap->GetIndexCount(), w, _v, o, m_down_sample->GetShaderResourceView(), resolution, 23, weights );
+
+			m_directx->SetBackBufferRenderTarget();
+			m_directx->ResetViewport();
+		}
+
+		// RenderVerticalBlurToTexture
+		{
+			m_v_blur->SetRenderTarget( _context );
+			m_v_blur->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
+			o = m_v_blur->GetOrthoMatrix();
+			resolution.x = (float)m_v_blur->GetWidth();
+			resolution.y = (float)m_v_blur->GetHeight();
+
+			m_blur_size_bitmap->Render( _context );
+			m_vertical_blur_shader->Render( _context, m_blur_size_bitmap->GetIndexCount(), w, _v, o, m_h_blur->GetShaderResourceView(), resolution, 23, weights );
+
+			m_directx->SetBackBufferRenderTarget();
+			m_directx->ResetViewport();
+		}
+
+		// UpSampleTexture
+		{
+			m_up_sample->SetRenderTarget( _context );
+			m_up_sample->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
+			o = m_up_sample->GetOrthoMatrix();
+			m_screen_size_bitmap->Render( _context );
+			m_texture_shader->Render( _context, m_screen_size_bitmap->GetIndexCount(), w, _v, o, m_v_blur->GetShaderResourceView() );
+
+			m_directx->SetBackBufferRenderTarget();
+			m_directx->ResetViewport();
+		}
+
+		// Render2DTextureScene
+		{
+			m_directx->GetOrthoMatrix( o );
+			m_screen_size_bitmap->Render( _context );
+			m_texture_shader->Render( _context, m_screen_size_bitmap->GetIndexCount(), w, _v, o, m_up_sample->GetShaderResourceView() );
+		}
+
+		m_directx->TurnOnZBuffer();
 
 		m_directx->TurnOffAlphaBlending();
 	}

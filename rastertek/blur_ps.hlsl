@@ -11,15 +11,19 @@ cbuffer BlurBuffer : register( b0 )
 	float4 weights2;
 	float4 weights3;
 	float4 weights4;
+	float4 weights5;
+	float4 weights6;
 }
 
 float3 blur_x( float2 center )
 {
-	float weights[ 16 ] = {
+	float weights[ 24 ] = {
 		weights1.x, weights1.y, weights1.z, weights1.w,
 		weights2.x, weights2.y, weights2.z, weights2.w,
 		weights3.x, weights3.y, weights3.z, weights3.w,
 		weights4.x, weights4.y, weights4.z, weights4.w,
+		weights5.x, weights5.y, weights5.z, weights5.w,
+		weights6.x, weights6.y, weights6.z, weights6.w,
 	};
 
 	float2 resolution_rcp = float2( 1.0f, 1.0f ) / resolution;
@@ -38,11 +42,13 @@ float3 blur_x( float2 center )
 
 float3 blur_y( float2 center )
 {
-	float weights[ 16 ] = {
+	float weights[ 24 ] = {
 		weights1.x, weights1.y, weights1.z, weights1.w,
 		weights2.x, weights2.y, weights2.z, weights2.w,
 		weights3.x, weights3.y, weights3.z, weights3.w,
 		weights4.x, weights4.y, weights4.z, weights4.w,
+		weights5.x, weights5.y, weights5.z, weights5.w,
+		weights6.x, weights6.y, weights6.z, weights6.w,
 	};
 
 	float2 resolution_rcp = float2( 1.0f, 1.0f ) / resolution;

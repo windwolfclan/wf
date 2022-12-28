@@ -51,4 +51,30 @@ namespace wf
 
 		std::array<VertexType, 6> m_vertices{};
 	};
+
+	class RenderTargetBitmap
+	{
+		using VertexType = PositionTextureVertex;
+	public:
+		RenderTargetBitmap();
+		RenderTargetBitmap( const RenderTargetBitmap& );
+		~RenderTargetBitmap();
+
+		bool Initialize( ID3D11Device* _device, int _width, int _height );
+		void Shutdown();
+		void Render( ID3D11DeviceContext* _context );
+
+		int GetIndexCount();
+
+	private:
+		bool InitializeBuffers( ID3D11Device* _device , int _width, int _height );
+		void ShutdownBuffers();
+		void RenderBuffers( ID3D11DeviceContext* _context );
+
+	private:
+		ID3D11Buffer* m_vertex_buffer{ nullptr };
+		ID3D11Buffer* m_index_buffer{ nullptr };
+		int m_vertex_count{ 0 };
+		int m_index_count{ 0 };
+	};
 }

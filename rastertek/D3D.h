@@ -35,6 +35,7 @@ namespace wf
 
 		ID3D11DepthStencilView* GetDepthStencilView();
 		void SetBackBufferRenderTarget();
+		void ResetViewport();
 
 	private:
 		bool m_vsync{ false };
@@ -57,6 +58,7 @@ namespace wf
 		ID3D11BlendState* m_alpha_enable_blend_state{ nullptr };
 		ID3D11BlendState* m_alpha_disable_blend_state{ nullptr };
 
+		D3D11_VIEWPORT m_viewport;
 		XMMATRIX m_projection_matrix{};
 		XMMATRIX m_world_matrix{};
 		XMMATRIX m_ortho_matrix{};

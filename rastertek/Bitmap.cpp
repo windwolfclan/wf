@@ -216,4 +216,150 @@ namespace wf
 	{
 		SAFE_SHUTDOWN( m_texture );
 	}
+
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////////
+	RenderTargetBitmap::RenderTargetBitmap()
+	{
+	}
+
+	RenderTargetBitmap::RenderTargetBitmap( const RenderTargetBitmap& )
+	{
+	}
+
+	RenderTargetBitmap::~RenderTargetBitmap()
+	{
+	}
+
+	bool RenderTargetBitmap::Initialize( ID3D11Device* _device, int _width, int _height )
+	{
+		return InitializeBuffers( _device, _width, _height );
+	}
+
+	void RenderTargetBitmap::Shutdown()
+	{
+		ShutdownBuffers();
+	}
+
+	void RenderTargetBitmap::Render( ID3D11DeviceContext* _context )
+	{
+		RenderBuffers( _context );
+	}
+
+	int RenderTargetBitmap::GetIndexCount()
+	{
+		return m_index_count;
+	}
+
+	bool RenderTargetBitmap::InitializeBuffers( ID3D11Device* _device, int _width, int _height )
+	{
+		float l = (float)( _width / 2.0f ) * -1.0f;
+		float t = (float)( _height / 2.0f );
+		float r = l + (float)_width;
+		float b = t - (float)_height;
+
+		m_vertex_count = 6;
+		m_index_count = 6;
+
+		VertexType* vertices = new VertexType[ m_vertex_count ];
+		UINT* indices = new UINT[ m_index_count ];
+		if ( !vertices || !indices )
+		{
+			SAFE_DELETE_ARRAY( indices );
+			SAFE_DELETE_ARRAY( vertices );
+			return false;
+		}
+
+		vertices[ 0 ].pos = XMFLOAT3( l, t, 0.0f );
+		vertices[ 0 ].tex = XMFLOAT2( 0.0f, 0.0f );
+
+		vertices[ 1 ].pos = XMFLOAT3( r, b, 0.0f );
+		vertices[ 1 ].tex = XMFLOAT2( 1.0f, 1.0f );
+
+		vertices[ 2 ].pos = XMFLOAT3( l, b, 0.0f );
+		vertices[ 2 ].tex = XMFLOAT2( 0.0f, 1.0f );
+
+		vertices[ 3 ].pos = XMFLOAT3( l, t, 0.0f );
+		vertices[ 3 ].tex = XMFLOAT2( 0.0f, 0.0f );
+
+		vertices[ 4 ].pos = XMFLOAT3( r, t, 0.0f );
+		vertices[ 4 ].tex = XMFLOAT2( 1.0f, 0.0f );
+
+		vertices[ 5 ].pos = XMFLOAT3( r, b, 0.0f );
+		vertices[ 5 ].tex = XMFLOAT2( 1.0f, 1.0f );
+
+		for ( int i = 0; i < m_index_count; ++i )
+		{
+			indices[ i ] = i;
+		}
+
+		D3D11_BUFFER_DESC buffer_desc{};
+		ZeroMemory( &buffer_desc, sizeof( buffer_desc ) );
+		buffer_desc.Usage = D3D11_USAGE_DEFAULT;
+		buffer_desc.ByteWidth = sizeof( VertexType ) * m_vertex_count;
+		buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+		buffer_desc.CPUAccessFlags = 0;
+		buffer_desc.MiscFlags = 0;
+		buffer_desc.StructureByteStride = 0;
+
+		D3D11_SUBRESOURCE_DATA data{};
+		ZeroMemory( &data, sizeof( data ) );
+		data.pSysMem = vertices;
+		data.SysMemPitch = 0;
+		data.SysMemSlicePitch = 0;
+
+		HRESULT hr = _device->CreateBuffer( &buffer_desc, &data, &m_vertex_buffer );
+		if ( FAILED( hr ) )
+		{
+			SAFE_DELETE_ARRAY( indices );
+			SAFE_DELETE_ARRAY( vertices );
+			return false;
+		}
+
+		ZeroMemory( &buffer_desc, sizeof( buffer_desc ) );
+		buffer_desc.Usage = D3D11_USAGE_DEFAULT;
+		buffer_desc.ByteWidth = sizeof( UINT ) * m_index_count;
+		buffer_desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+		buffer_desc.CPUAccessFlags = 0;
+		buffer_desc.MiscFlags = 0;
+		buffer_desc.StructureByteStride = 0;
+
+		ZeroMemory( &data, sizeof( data ) );
+		data.pSysMem = indices;
+		data.SysMemPitch = 0;
+		data.SysMemSlicePitch = 0;
+
+		hr = _device->CreateBuffer( &buffer_desc, &data, &m_index_buffer );
+		if ( FAILED( hr ) )
+		{
+			SAFE_DELETE_ARRAY( indices );
+			SAFE_DELETE_ARRAY( vertices );
+			return false;
+		}
+
+		SAFE_DELETE_ARRAY( indices );
+		SAFE_DELETE_ARRAY( vertices );
+
+		return true;
+	}
+
+	void RenderTargetBitmap::ShutdownBuffers()
+	{
+		SAFE_RELEASE( m_index_buffer );
+		SAFE_RELEASE( m_vertex_buffer );
+	}
+
+	void RenderTargetBitmap::RenderBuffers( ID3D11DeviceContext* _context )
+	{
+		UINT stride{ sizeof( VertexType ) };
+		UINT offset{ 0 };
+
+		_context->IASetVertexBuffers( 0, 1, &m_vertex_buffer, &stride, &offset );
+
+		_context->IASetIndexBuffer( m_index_buffer, DXGI_FORMAT_R32_UINT, 0 );
+
+		_context->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
+	}
+
+
 }

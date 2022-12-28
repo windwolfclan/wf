@@ -22,6 +22,8 @@ namespace wf
 			XMFLOAT4 weights2;
 			XMFLOAT4 weights3;
 			XMFLOAT4 weights4;
+			XMFLOAT4 weights5;
+			XMFLOAT4 weights6;
 		};
 
 	public:

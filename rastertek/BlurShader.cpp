@@ -79,7 +79,9 @@ namespace wf
 				data->weights1 = XMFLOAT4( _weights[ 0 ], _weights[ 1 ], _weights[ 2 ], _weights[ 3 ] );
 				data->weights2 = XMFLOAT4( _weights[ 4 ], _weights[ 5 ], _weights[ 6 ], _weights[ 7 ] );
 				data->weights3 = XMFLOAT4( _weights[ 8 ], _weights[ 9 ], _weights[ 10 ], _weights[ 11 ] );
-				data->weights4 = XMFLOAT4( _weights[ 12 ], _weights[ 13 ], _weights[ 14 ], 0.0f );
+				data->weights4 = XMFLOAT4( _weights[ 12 ], _weights[ 13 ], _weights[ 14 ], _weights[ 15 ] );
+				data->weights5 = XMFLOAT4( _weights[ 16 ], _weights[ 17 ], _weights[ 18 ], _weights[ 19 ] );
+				data->weights6 = XMFLOAT4( _weights[ 20 ], _weights[ 21 ], _weights[ 22 ], 0.0f );
 
 				_context->Unmap( m_blur_buffer, 0 );
 			}

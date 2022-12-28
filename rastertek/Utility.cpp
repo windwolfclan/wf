@@ -69,7 +69,7 @@ namespace wf
 			std::vector<float> kernel;
 			kernel.resize( length, 0.0 );
 
-			const double sigma{ 1.0 };
+			const double sigma{ 1.5 };
 			const double s{ 2.0 * sigma * sigma };
 			double sum{ 0.0 };
 

@@ -168,6 +168,9 @@
     <ClInclude Include="DXTK\PlatformHelpers.h">
       <Filter>DXTK</Filter>
     </ClInclude>
+    <ClInclude Include="BlurShader.h">
+      <Filter>ShaderClass</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="System.cpp">
@@ -296,6 +299,9 @@
     <ClCompile Include="DXTK\DDSTextureLoader.cpp">
       <Filter>DXTK</Filter>
     </ClCompile>
+    <ClCompile Include="BlurShader.cpp">
+      <Filter>ShaderClass</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="color_vs.hlsl">
@@ -394,10 +400,21 @@
     <FxCompile Include="fire_ps.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
+    <FxCompile Include="blur_vs.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="blur_ps.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="rastertek.rc">
       <Filter>리소스 파일</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="blur.hlsli">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

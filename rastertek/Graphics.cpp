@@ -19,6 +19,7 @@
 #include "ReflectionShader.h"
 #include "MultiLightShader.h"
 #include "FireShader.h"
+#include "BlurShader.h"
 
 namespace wf
 {
@@ -99,7 +100,7 @@ namespace wf
 		}
 
 		m_rastertek_model = new RasterTekModel;
-		if ( !m_rastertek_model->Initialize( device, context, "./resources/StoneFloorTexture.tga", "./resources/cube.txt" ) )
+		if ( !m_rastertek_model->Initialize( device, context, "./resources/seafloor.tga", "./resources/cube.txt" ) )
 		{
 			return false;
 		}
@@ -134,6 +135,12 @@ namespace wf
 			return false;
 		}
 
+		m_blur_bitmap = new Bitmap;
+		if ( !m_blur_bitmap->Initialize( device, context, _width, _height, "./resources/seafloor.tga", 800, 450 ) )
+		{
+			return false;
+		}
+
 #define INITIALIZE_WF_SHADER( p, type )\
 p = new type;\
 if( !p->Initialize( device, _hwnd ) ) return false;
@@ -153,12 +160,18 @@ if( !p->Initialize( device, _hwnd ) ) return false;
 		INITIALIZE_WF_SHADER( m_reflection_shader, ReflectionShader );
 		INITIALIZE_WF_SHADER( m_multi_light_shader, MultiLightShader );
 		INITIALIZE_WF_SHADER( m_fire_shader, FireShader );
+		INITIALIZE_WF_SHADER( m_horizontal_blur_shader, HorizontalBlurShader );
+		INITIALIZE_WF_SHADER( m_vertical_blur_shader, VerticalBlurShader );
 
 
 
 #define INITIALIZE_RENDER_TEXTURE( p )\
 p = new RenderTexture;\
 if( !p->Initialize( device, _width, _height ) ) return false;
+
+#define INITIALIZE_RENDER_TEXTURE_HALF( p )\
+p = new RenderTexture;\
+if( !p->Initialize( device, _width / 2.0f, _height / 2.0f ) ) return false;
 
 		INITIALIZE_RENDER_TEXTURE( m_rt1 );
 		INITIALIZE_RENDER_TEXTURE( m_rt2 );
@@ -168,6 +181,7 @@ if( !p->Initialize( device, _width, _height ) ) return false;
 		INITIALIZE_RENDER_TEXTURE( m_rt6 );
 		INITIALIZE_RENDER_TEXTURE( m_rt7 );
 		INITIALIZE_RENDER_TEXTURE( m_rt8 );
+		INITIALIZE_RENDER_TEXTURE( m_rt9 );
 
 #define INITIALIZE_TEXTURE( p, path )\
 p = new Texture;\
@@ -215,6 +229,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 		SAFE_SHUTDOWN( m_fire_texture );
 		SAFE_SHUTDOWN( m_seafloor_texture );
 		SAFE_SHUTDOWN( m_blue_texture );
+		SAFE_SHUTDOWN( m_rt9 );
 		SAFE_SHUTDOWN( m_rt8 );
 		SAFE_SHUTDOWN( m_rt7 );
 		SAFE_SHUTDOWN( m_rt6 );
@@ -223,6 +238,8 @@ if( !p->Initialize( device, context, path ) ) return false;
 		SAFE_SHUTDOWN( m_rt3 );
 		SAFE_SHUTDOWN( m_rt2 );
 		SAFE_SHUTDOWN( m_rt1 );
+		SAFE_SHUTDOWN( m_vertical_blur_shader );
+		SAFE_SHUTDOWN( m_horizontal_blur_shader );
 		SAFE_SHUTDOWN( m_fire_shader );
 		SAFE_SHUTDOWN( m_multi_light_shader );
 		SAFE_SHUTDOWN( m_fade_shader );
@@ -235,6 +252,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 		SAFE_SHUTDOWN( m_alphamap_shader );
 		SAFE_SHUTDOWN( m_lightmap_shader );
 		SAFE_SHUTDOWN( m_dual_texture_shader );
+		SAFE_SHUTDOWN( m_blur_bitmap );
 		SAFE_SHUTDOWN( m_cursor );
 		SAFE_SHUTDOWN( m_text );
 		SAFE_SHUTDOWN( m_fire );
@@ -330,7 +348,7 @@ if( !p->Initialize( device, context, path ) ) return false;
 
 			if ( !draw_2d )
 			{
-				
+				DrawBlurScene( context, dsv, w, v, p );
 			}
 
 			// 2D Draw
@@ -803,6 +821,54 @@ if( !p->Initialize( device, context, path ) ) return false;
 			distortion_scale,
 			distortion_bias
 		);
+
+		m_directx->TurnOffAlphaBlending();
+	}
+
+	void Graphics::DrawBlurScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p )
+	{
+		m_directx->TurnOnAlphaBlending();
+
+	
+		
+		std::vector<float> weights = utility::CreateGaussianKernel( 15 );
+
+		XMMATRIX w;
+		XMMATRIX o;
+		m_directx->GetWorldMatrix( w );
+		m_directx->GetOrthoMatrix( o );
+
+		/*m_rt9->SetRenderTarget( _context, _dsv );
+		m_rt9->ClearRenderTarget( _context, _dsv, 0.0f, 0.0f, 0.0f, 1.0f );
+
+		m_rastertek_model->Render( _context );
+		m_vertical_blur_shader->Render(
+			_context,
+			m_rastertek_model->GetIndexCount(),
+			w, _v, _p,
+			m_rastertek_model->GetTexture(),
+			XMFLOAT2( 1600, 900 ),
+			15,
+			weights
+		);
+
+		m_directx->SetBackBufferRenderTarget();*/
+
+		m_blur_bitmap->Render( _context, 400, 200 );
+		
+		// m_rastertek_model->Render( _context );
+		
+		m_vertical_blur_shader->Render(
+			_context,
+			m_rastertek_model->GetIndexCount(),
+			w, _v, o,
+			m_blur_bitmap->GetTexture(),
+			XMFLOAT2( 800, 450 ),
+			15,
+			weights
+		);
+		
+		// m_texture_shader->Render( _context, m_rastertek_model->GetIndexCount(), w, _v, _p, m_rastertek_model->GetTexture() );
 
 		m_directx->TurnOffAlphaBlending();
 	}

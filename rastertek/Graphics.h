@@ -29,6 +29,8 @@ namespace wf
 	class ReflectionShader;
 	class MultiLightShader;
 	class FireShader;
+	class HorizontalBlurShader;
+	class VerticalBlurShader;
 
 	class Quad;
 	class TextureQuad;
@@ -92,6 +94,7 @@ namespace wf
 		void DrawFadeScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 		void DrawMultiLightScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 		void DrawFireScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
+		void DrawBlurScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 
 	private:
 		D3D* m_directx{ nullptr };
@@ -123,6 +126,8 @@ namespace wf
 		ReflectionShader* m_reflection_shader{ nullptr };
 		MultiLightShader* m_multi_light_shader{ nullptr };
 		FireShader* m_fire_shader{ nullptr };
+		HorizontalBlurShader* m_horizontal_blur_shader{ nullptr };
+		VerticalBlurShader* m_vertical_blur_shader{ nullptr };
 		
 		RenderTexture* m_rt1{ nullptr };
 		RenderTexture* m_rt2{ nullptr };
@@ -132,6 +137,7 @@ namespace wf
 		RenderTexture* m_rt6{ nullptr };
 		RenderTexture* m_rt7{ nullptr };
 		RenderTexture* m_rt8{ nullptr };
+		RenderTexture* m_rt9{ nullptr };
 		std::array<TextureArray*, TEXTURE_ARRAY_COUNT> m_texture_arrays;
 		std::array<Quad*, QUAD_COUNT> m_quads;
 
@@ -142,6 +148,8 @@ namespace wf
 		Texture* m_fire_alpha_texture{ nullptr };
 
 		Text* m_text{ nullptr };
+
+		Bitmap* m_blur_bitmap{ nullptr };
 
 		// fade
 		float m_fade_time{ 0.0f };

@@ -78,13 +78,13 @@ namespace wf
 			{
 				double r = sqrt( i * i );
 
-				kernel[ i + half ] = ( exp( -( r * r ) / s ) ) / ( XM_PI * s );
+				kernel[ i + half ] = static_cast<float>( ( exp( -( r * r ) / s ) ) / ( XM_PI * s ) );
 				sum += kernel[ i + half ];
 			}
 
 			for ( size_t i = 0; i < length; ++i )
 			{
-				kernel[ i ] /= sum;
+				kernel[ i ] /= static_cast<float>( sum );
 			}
 
 			return kernel;

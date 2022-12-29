@@ -29,3 +29,21 @@ VS_OUTPUT ColorVertexShader( VS_INPUT input )
 
 	return output;
 }
+
+
+struct HS_INPUT
+{
+	float3 pos : POSITION;
+	float4 color : COLOR;
+};
+
+HS_INPUT color_vs2( VS_INPUT input )
+{
+	HS_INPUT output;
+
+	output.pos = input.pos;
+	
+	output.color = input.color;
+
+	return output;
+}

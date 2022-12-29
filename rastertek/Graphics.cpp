@@ -152,6 +152,7 @@ p = new type;\
 if( !p->Initialize( device, _hwnd ) ) return false;
 
 		INITIALIZE_WF_SHADER( m_color_shader, ColorShader );
+		INITIALIZE_WF_SHADER( m_tessellation_color_shader, TessellationColorShader );
 		INITIALIZE_WF_SHADER( m_texture_shader, TextureShader );
 		INITIALIZE_WF_SHADER( m_light_shader, LightShader );
 		INITIALIZE_WF_SHADER( m_dual_texture_shader, DualTextureShader );
@@ -188,6 +189,7 @@ if( !p->Initialize( device, half_width, half_height ) ) return false;
 		INITIALIZE_RENDER_TEXTURE( m_rt7 );
 		INITIALIZE_RENDER_TEXTURE( m_rt8 );
 		INITIALIZE_RENDER_TEXTURE( m_rt9 );
+		INITIALIZE_RENDER_TEXTURE( m_rt10 );
 		INITIALIZE_RENDER_TEXTURE( m_blur_render_texture );
 		INITIALIZE_RENDER_TEXTURE( m_up_sample );
 		INITIALIZE_RENDER_TEXTURE_HALF( m_down_sample );
@@ -257,6 +259,7 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		SAFE_SHUTDOWN( m_down_sample );
 		SAFE_SHUTDOWN( m_up_sample );
 		SAFE_SHUTDOWN( m_blur_render_texture );
+		SAFE_SHUTDOWN( m_rt10 );
 		SAFE_SHUTDOWN( m_rt9 );
 		SAFE_SHUTDOWN( m_rt8 );
 		SAFE_SHUTDOWN( m_rt7 );
@@ -295,6 +298,7 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		SAFE_SHUTDOWN( m_light_model );
 		SAFE_SHUTDOWN( m_texture_shader );
 		SAFE_SHUTDOWN( m_texture_model );
+		SAFE_SHUTDOWN( m_tessellation_color_shader );
 		SAFE_SHUTDOWN( m_color_shader );
 		SAFE_SHUTDOWN( m_color_model );
 		SAFE_SHUTDOWN( m_model_loader );
@@ -370,6 +374,7 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 			DrawMultiLightScene( context, dsv, w, v, p );
 			DrawFireScene( context, dsv, w, v, p );
 			DrawBlurScene( context, dsv, w, v, p );
+			DrawTessellationScene( context, dsv, w, v, p );
 
 			m_directx->SetBackBufferRenderTarget();
 		}
@@ -381,7 +386,7 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 
 			if ( !draw_2d )
 			{
-				DrawBlurScene( context, dsv, w, v, p );
+				
 			}
 
 			// 2D Draw
@@ -503,6 +508,9 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 			quad_type::texture,
 			quad_type::texture,
 			quad_type::texture,
+			quad_type::texture,
+			quad_type::texture,
+			quad_type::texture,
 		};
 
 		for ( int i = 0; i < QUAD_COUNT; ++i )
@@ -566,6 +574,7 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		{ 500, 700 },
 		{ 700, 100 },
 		{ 700, 300 },
+		{ 700, 500 },
 		};
 
 		for ( int i = 0; i < QUAD_COUNT; ++i )
@@ -711,6 +720,17 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 				{
 					return;
 				}
+				break;
+			}
+			
+			case 14:
+			{
+				// tessellation
+				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt10->GetShaderResourceView() ) )
+				{
+					return;
+				}
+
 				break;
 			}
 			}
@@ -965,5 +985,21 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		m_directx->TurnOnZBuffer();
 
 		m_directx->TurnOffAlphaBlending();
+	}
+
+	void Graphics::DrawTessellationScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p )
+	{
+		XMMATRIX w;
+		m_directx->GetWorldMatrix( w );
+
+		m_rt10->SetRenderTarget( _context );
+		m_rt10->ClearRenderTarget( _context, 0.4f, 0.4f, 0.4f, 1.0f );
+
+		m_directx->SetRasterizerStateWireframe();
+
+		m_color_model->RenderTessellation( _context );
+		m_tessellation_color_shader->RenderTessellation( _context, m_color_model->GetIndexCount(), w, _v, _p, 6.0f );
+
+		m_directx->SetRasterizerStateSolid();
 	}
 }

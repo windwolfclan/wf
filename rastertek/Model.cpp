@@ -36,6 +36,11 @@ namespace wf
         RenderBuffers( _context );
     }
 
+    void ColorModel::RenderTessellation( ID3D11DeviceContext* _context )
+    {
+        RenderTessellationBuffers( _context );
+    }
+
     int ColorModel::GetIndexCount() const
     {
         return m_index_count;
@@ -150,6 +155,16 @@ namespace wf
         _context->IASetIndexBuffer( m_index_buffer, DXGI_FORMAT_R32_UINT, 0 );
         _context->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
 
+    }
+
+    void ColorModel::RenderTessellationBuffers( ID3D11DeviceContext* _context )
+    {
+        UINT stride{ sizeof( VertexType ) };
+        UINT offset{ 0 };
+
+        _context->IASetVertexBuffers( 0, 1, &m_vertex_buffer, &stride, &offset );
+        _context->IASetIndexBuffer( m_index_buffer, DXGI_FORMAT_R32_UINT, 0 );
+        _context->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST );
     }
 
 #pragma endregion

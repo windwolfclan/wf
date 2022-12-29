@@ -15,6 +15,7 @@ namespace wf
 	class Texture;
 
 	class ColorShader;
+	class TessellationColorShader;
 	class TextureShader;
 	class LightShader;
 	class DualTextureShader;
@@ -61,7 +62,7 @@ namespace wf
 	constexpr int RENDER_TEXTURE_ARRAY = 5;
 	constexpr int TEXTURE_ARRAY_COUNT = 6;
 
-	constexpr int QUAD_COUNT = 14;
+	constexpr int QUAD_COUNT = 15;
 
 	class Graphics
 	{
@@ -95,6 +96,7 @@ namespace wf
 		void DrawMultiLightScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 		void DrawFireScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 		void DrawBlurScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
+		void DrawTessellationScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 
 	private:
 		D3D* m_directx{ nullptr };
@@ -112,6 +114,7 @@ namespace wf
 		RasterTekModel* m_fire{ nullptr };
 
 		ColorShader* m_color_shader{ nullptr };
+		TessellationColorShader* m_tessellation_color_shader{ nullptr };
 		TextureShader* m_texture_shader{ nullptr };
 		LightShader* m_light_shader{ nullptr };
 		DualTextureShader* m_dual_texture_shader{ nullptr };
@@ -138,6 +141,7 @@ namespace wf
 		RenderTexture* m_rt7{ nullptr };
 		RenderTexture* m_rt8{ nullptr };
 		RenderTexture* m_rt9{ nullptr };
+		RenderTexture* m_rt10{ nullptr };
 		
 		std::array<TextureArray*, TEXTURE_ARRAY_COUNT> m_texture_arrays;
 		std::array<Quad*, QUAD_COUNT> m_quads;

@@ -37,6 +37,9 @@ namespace wf
 		void SetBackBufferRenderTarget();
 		void ResetViewport();
 
+		void SetRasterizerStateSolid();
+		void SetRasterizerStateWireframe();
+
 	private:
 		bool m_vsync{ false };
 		
@@ -54,6 +57,7 @@ namespace wf
 		ID3D11DepthStencilState* m_depth_stencil_state{ nullptr };
 		ID3D11DepthStencilView* m_depth_stencil_view{ nullptr };
 		ID3D11RasterizerState* m_raster_state{ nullptr };
+		ID3D11RasterizerState* m_wire_frame{ nullptr };
 		ID3D11DepthStencilState* m_depth_disabled_stencil_state{ nullptr };
 		ID3D11BlendState* m_alpha_enable_blend_state{ nullptr };
 		ID3D11BlendState* m_alpha_disable_blend_state{ nullptr };

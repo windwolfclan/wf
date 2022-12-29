@@ -262,6 +262,14 @@ namespace wf
 			return false;
 		}
 
+		rasterizer_desc.FillMode = D3D11_FILL_WIREFRAME;
+
+		hr = m_device->CreateRasterizerState( &rasterizer_desc, &m_wire_frame );
+		if ( FAILED( hr ) )
+		{
+			return false;
+		}
+
 		m_device_context->RSSetState( m_raster_state );
 
 		D3D11_BLEND_DESC blend_desc{};
@@ -320,6 +328,7 @@ namespace wf
 
 		SAFE_RELEASE( m_alpha_disable_blend_state );
 		SAFE_RELEASE( m_alpha_enable_blend_state );
+		SAFE_RELEASE( m_wire_frame );
 		SAFE_RELEASE( m_raster_state );
 		SAFE_RELEASE( m_depth_stencil_view );
 		SAFE_RELEASE( m_depth_disabled_stencil_state );
@@ -417,6 +426,16 @@ namespace wf
 	void D3D::SetBackBufferRenderTarget()
 	{
 		m_device_context->OMSetRenderTargets( 1, &m_render_target_view, m_depth_stencil_view );
+	}
+
+	void D3D::SetRasterizerStateSolid()
+	{
+		m_device_context->RSSetState( m_raster_state );
+	}
+
+	void D3D::SetRasterizerStateWireframe()
+	{
+		m_device_context->RSSetState( m_wire_frame );
 	}
 
 	void D3D::ResetViewport()

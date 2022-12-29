@@ -45,6 +45,7 @@ namespace wf
 		bool Initialize( ID3D11Device* _device );
 		void Shutdown();
 		void Render( ID3D11DeviceContext* _context );
+		void RenderTessellation( ID3D11DeviceContext* _context );
 
 		int GetIndexCount() const;
 
@@ -52,6 +53,7 @@ namespace wf
 		bool InitializeBuffers( ID3D11Device* _device );
 		void ShutdownBuffers();
 		void RenderBuffers( ID3D11DeviceContext* _context );
+		void RenderTessellationBuffers( ID3D11DeviceContext* _context );
 
 	private:
 		ID3D11Buffer* m_vertex_buffer{ nullptr };

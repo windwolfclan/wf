@@ -406,6 +406,12 @@
     <FxCompile Include="blur_ps.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
+    <FxCompile Include="color_hs.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="color_ds.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="rastertek.rc">

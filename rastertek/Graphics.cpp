@@ -20,6 +20,7 @@
 #include "MultiLightShader.h"
 #include "FireShader.h"
 #include "BlurShader.h"
+#include "WaterShader.h"
 
 namespace wf
 {
@@ -169,7 +170,7 @@ if( !p->Initialize( device, _hwnd ) ) return false;
 		INITIALIZE_WF_SHADER( m_fire_shader, FireShader );
 		INITIALIZE_WF_SHADER( m_horizontal_blur_shader, HorizontalBlurShader );
 		INITIALIZE_WF_SHADER( m_vertical_blur_shader, VerticalBlurShader );
-
+		INITIALIZE_WF_SHADER( m_water_shader, WaterShader );
 
 
 #define INITIALIZE_RENDER_TEXTURE( p )\
@@ -271,6 +272,7 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		SAFE_SHUTDOWN( m_rt1 );
 
 		// Shader
+		SAFE_SHUTDOWN( m_water_shader );
 		SAFE_SHUTDOWN( m_vertical_blur_shader );
 		SAFE_SHUTDOWN( m_horizontal_blur_shader );
 		SAFE_SHUTDOWN( m_fire_shader );
@@ -360,8 +362,8 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 			w = XMMatrixRotationY( rotation );
 		}
 
-		static bool draw_2d{ true };
-		// static bool draw_2d{ false };
+		// static bool draw_2d{ true };
+		static bool draw_2d{ false };
 
 #pragma region RENDER TO TEXTURE
 		if( draw_2d )

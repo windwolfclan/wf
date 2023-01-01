@@ -32,6 +32,7 @@ namespace wf
 	class FireShader;
 	class HorizontalBlurShader;
 	class VerticalBlurShader;
+	class WaterShader;
 
 	class Quad;
 	class TextureQuad;
@@ -131,6 +132,7 @@ namespace wf
 		FireShader* m_fire_shader{ nullptr };
 		HorizontalBlurShader* m_horizontal_blur_shader{ nullptr };
 		VerticalBlurShader* m_vertical_blur_shader{ nullptr };
+		WaterShader* m_water_shader{ nullptr };
 		
 		RenderTexture* m_rt1{ nullptr };
 		RenderTexture* m_rt2{ nullptr };

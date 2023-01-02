@@ -125,6 +125,12 @@ namespace wf
 		_context->PSSetSamplers( 0, 1, &m_sampler_state );
 
 		_context->DrawIndexed( _index_count, 0, 0 );
+
+
+		ID3D11ShaderResourceView* null_view{ nullptr };
+		_context->PSSetShaderResources( 0, 1, &null_view );
+		_context->PSSetShaderResources( 1, 1, &null_view );
+		_context->PSSetShaderResources( 2, 1, &null_view );
 	}
 
 	bool WaterShader::InitializeLayout( ID3D11Device* _device, ID3D10Blob*& _blob )

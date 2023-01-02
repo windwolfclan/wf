@@ -21,6 +21,7 @@
 #include "FireShader.h"
 #include "BlurShader.h"
 #include "WaterShader.h"
+#include "RefractShader.h"
 
 namespace wf
 {
@@ -103,24 +104,6 @@ namespace wf
 			return false;
 		}
 
-		m_rastertek_model = new RasterTekModel;
-		if ( !m_rastertek_model->Initialize( device, context, "./resources/stone.tga", "./resources/cube.txt" ) )
-		{
-			return false;
-		}
-
-		m_floor = new RasterTekModel;
-		if ( !m_floor->Initialize( device, context, "./resources/blue.tga", "./resources/floor.txt" ) )
-		{
-			return false;
-		}
-
-		m_plane = new RasterTekModel;
-		if ( !m_plane->Initialize( device, context, "./resources/stone.tga", "./resources/plane01.txt" ) )
-		{
-			return false;
-		}
-
 		m_fire = new RasterTekModel;
 		if ( !m_fire->Initialize( device, context, "./resources/stone.tga", "./resources/quad.txt" ) )
 		{
@@ -145,57 +128,28 @@ namespace wf
 			return false;
 		}
 
+#define INITIALIZE_RASTERTEK_MODEL( p, tga, txt )\
+p = new RasterTekModel;\
+if( !p->Initialize( device, context, tga, txt ) ) return false;
+
+		INITIALIZE_RASTERTEK_MODEL( m_rastertek_model, "./resources/stone.tga", "./resources/cube.txt" );
+		INITIALIZE_RASTERTEK_MODEL( m_floor, "./resources/stone.tga", "./resources/floor.txt" );
+		INITIALIZE_RASTERTEK_MODEL( m_plane, "./resources/stone.tga", "./resources/plane01.txt" );
+		INITIALIZE_RASTERTEK_MODEL( m_water_ground, "./resources/water_ground.tga", "./resources/ground.txt" );
+		INITIALIZE_RASTERTEK_MODEL( m_water_bath, "./resources/water_bath.tga", "./resources/bath.txt" );
+		INITIALIZE_RASTERTEK_MODEL( m_water_wall, "./resources/water_wall.tga", "./resources/wall.txt" );
+		INITIALIZE_RASTERTEK_MODEL( m_water, "./resources/water.tga", "./resources/water.txt" );
+
 		
+		if ( !InitializeShader( device, _hwnd ) )
+		{
+			return false;
+		}
 
-
-#define INITIALIZE_WF_SHADER( p, type )\
-p = new type;\
-if( !p->Initialize( device, _hwnd ) ) return false;
-
-		INITIALIZE_WF_SHADER( m_color_shader, ColorShader );
-		INITIALIZE_WF_SHADER( m_tessellation_color_shader, TessellationColorShader );
-		INITIALIZE_WF_SHADER( m_texture_shader, TextureShader );
-		INITIALIZE_WF_SHADER( m_light_shader, LightShader );
-		INITIALIZE_WF_SHADER( m_dual_texture_shader, DualTextureShader );
-		INITIALIZE_WF_SHADER( m_lightmap_shader, LightmapShader );
-		INITIALIZE_WF_SHADER( m_alphamap_shader, AlphamapShader );
-		INITIALIZE_WF_SHADER( m_bump_shader, BumpShader );
-		INITIALIZE_WF_SHADER( m_specular_shader, SpecularShader );
-		INITIALIZE_WF_SHADER( m_fog_shader, FogShader );
-		INITIALIZE_WF_SHADER( m_translate_shader, TranslateShader );
-		INITIALIZE_WF_SHADER( m_transparent_shader, TransparentShader );
-		INITIALIZE_WF_SHADER( m_fade_shader, FadeShader );
-		INITIALIZE_WF_SHADER( m_reflection_shader, ReflectionShader );
-		INITIALIZE_WF_SHADER( m_multi_light_shader, MultiLightShader );
-		INITIALIZE_WF_SHADER( m_fire_shader, FireShader );
-		INITIALIZE_WF_SHADER( m_horizontal_blur_shader, HorizontalBlurShader );
-		INITIALIZE_WF_SHADER( m_vertical_blur_shader, VerticalBlurShader );
-		INITIALIZE_WF_SHADER( m_water_shader, WaterShader );
-
-
-#define INITIALIZE_RENDER_TEXTURE( p )\
-p = new RenderTexture;\
-if( !p->Initialize( device, _width, _height ) ) return false;
-
-#define INITIALIZE_RENDER_TEXTURE_HALF( p )\
-p = new RenderTexture;\
-if( !p->Initialize( device, half_width, half_height ) ) return false;
-
-		INITIALIZE_RENDER_TEXTURE( m_rt1 );
-		INITIALIZE_RENDER_TEXTURE( m_rt2 );
-		INITIALIZE_RENDER_TEXTURE( m_rt3 );
-		INITIALIZE_RENDER_TEXTURE( m_rt4 );
-		INITIALIZE_RENDER_TEXTURE( m_rt5 );
-		INITIALIZE_RENDER_TEXTURE( m_rt6 );
-		INITIALIZE_RENDER_TEXTURE( m_rt7 );
-		INITIALIZE_RENDER_TEXTURE( m_rt8 );
-		INITIALIZE_RENDER_TEXTURE( m_rt9 );
-		INITIALIZE_RENDER_TEXTURE( m_rt10 );
-		INITIALIZE_RENDER_TEXTURE( m_blur_render_texture );
-		INITIALIZE_RENDER_TEXTURE( m_up_sample );
-		INITIALIZE_RENDER_TEXTURE_HALF( m_down_sample );
-		INITIALIZE_RENDER_TEXTURE_HALF( m_h_blur );
-		INITIALIZE_RENDER_TEXTURE_HALF( m_v_blur );
+		if ( !InitializeRenderTexture( device, _width, _height ) )
+		{
+			return false;
+		}
 
 
 #define INITIALIZE_RENDER_TARGET_BITMAP( p, w, h )\
@@ -235,6 +189,12 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		m_light.SetSpecular( 0.0f, 1.0f, 1.0f, 1.0f );
 		m_light.SetSpecularPower( 1.0f );
 
+		m_water_light.SetAmbient( 0.15f, 0.15f, 0.15f, 1.0f );
+		m_water_light.SetDiffuse( 1.0f, 1.0f, 1.0f, 1.0f );
+		m_water_light.SetDirection( 0.0f, -1.0f, 0.5f );
+		m_water_height = 2.75f;
+		m_water_translation = 0.0f;
+
 		return true;
 	}
 
@@ -255,44 +215,19 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		SAFE_SHUTDOWN( m_blur_size_bitmap );
 
 		// RenderTexture
-		SAFE_SHUTDOWN( m_v_blur );
-		SAFE_SHUTDOWN( m_h_blur );
-		SAFE_SHUTDOWN( m_down_sample );
-		SAFE_SHUTDOWN( m_up_sample );
-		SAFE_SHUTDOWN( m_blur_render_texture );
-		SAFE_SHUTDOWN( m_rt10 );
-		SAFE_SHUTDOWN( m_rt9 );
-		SAFE_SHUTDOWN( m_rt8 );
-		SAFE_SHUTDOWN( m_rt7 );
-		SAFE_SHUTDOWN( m_rt6 );
-		SAFE_SHUTDOWN( m_rt5 );
-		SAFE_SHUTDOWN( m_rt4 );
-		SAFE_SHUTDOWN( m_rt3 );
-		SAFE_SHUTDOWN( m_rt2 );
-		SAFE_SHUTDOWN( m_rt1 );
-
-		// Shader
-		SAFE_SHUTDOWN( m_water_shader );
-		SAFE_SHUTDOWN( m_vertical_blur_shader );
-		SAFE_SHUTDOWN( m_horizontal_blur_shader );
-		SAFE_SHUTDOWN( m_fire_shader );
-		SAFE_SHUTDOWN( m_multi_light_shader );
-		SAFE_SHUTDOWN( m_fade_shader );
-		SAFE_SHUTDOWN( m_reflection_shader );
-		SAFE_SHUTDOWN( m_transparent_shader );
-		SAFE_SHUTDOWN( m_translate_shader );
-		SAFE_SHUTDOWN( m_fog_shader );
-		SAFE_SHUTDOWN( m_specular_shader );
-		SAFE_SHUTDOWN( m_bump_shader );
-		SAFE_SHUTDOWN( m_alphamap_shader );
-		SAFE_SHUTDOWN( m_lightmap_shader );
-		SAFE_SHUTDOWN( m_dual_texture_shader );
+		ShutdownRenderTexture();
+		
+		ShutdownShader();
 
 		// 
 		SAFE_SHUTDOWN( m_blur_bitmap );
 		SAFE_SHUTDOWN( m_cursor );
 		SAFE_SHUTDOWN( m_text );
 		SAFE_SHUTDOWN( m_fire );
+		SAFE_SHUTDOWN( m_water_ground );
+		SAFE_SHUTDOWN( m_water_bath );
+		SAFE_SHUTDOWN( m_water_wall );
+		SAFE_SHUTDOWN( m_water );
 		SAFE_SHUTDOWN( m_plane );
 		SAFE_SHUTDOWN( m_floor );
 		SAFE_SHUTDOWN( m_rastertek_model );
@@ -333,6 +268,12 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 
 		FrameFade( param.time );
 
+		m_water_translation += 0.001f;
+		if ( m_water_translation > 1.0f )
+		{
+			m_water_translation -= 1.0f;
+		}
+
 		return true;
 	}
 
@@ -362,8 +303,8 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 			w = XMMatrixRotationY( rotation );
 		}
 
-		// static bool draw_2d{ true };
-		static bool draw_2d{ false };
+		static bool draw_2d{ true };
+		// static bool draw_2d{ false };
 
 #pragma region RENDER TO TEXTURE
 		if( draw_2d )
@@ -377,6 +318,7 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 			DrawFireScene( context, dsv, w, v, p );
 			DrawBlurScene( context, dsv, w, v, p );
 			DrawTessellationScene( context, dsv, w, v, p );
+			DrawWaterScene( context, dsv, w, v, p );
 
 			m_directx->SetBackBufferRenderTarget();
 		}
@@ -384,11 +326,11 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 
 		// render
 		{
-			m_directx->BeginScene( 0.0f, 0.0f, 0.0f, 1.0f );
+			draw_2d ? m_directx->BeginScene( 0.0f, 0.0f, 1.0f, 1.0f ) : m_directx->BeginScene( 0.0f, 0.0f, 0.0f, 1.0f );
 
 			if ( !draw_2d )
 			{
-				
+
 			}
 
 			// 2D Draw
@@ -513,6 +455,10 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 			quad_type::texture,
 			quad_type::texture,
 			quad_type::texture,
+			quad_type::texture,
+			quad_type::texture,
+			quad_type::texture,
+			quad_type::texture,
 		};
 
 		for ( int i = 0; i < QUAD_COUNT; ++i )
@@ -539,6 +485,114 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 			SAFE_SHUTDOWN( m_quads[ i ] );
 		}
 
+	}
+
+	bool Graphics::InitializeRenderTexture( ID3D11Device*& _device, int _width, int _height )
+	{
+		int half_width = int( _width / 2.0f );
+		int half_height = int( _height / 2.0f );
+
+#define INITIALIZE_RENDER_TEXTURE( p )\
+p = new RenderTexture;\
+if( !p->Initialize( _device, _width, _height ) ) return false;
+
+#define INITIALIZE_RENDER_TEXTURE_HALF( p )\
+p = new RenderTexture;\
+if( !p->Initialize( _device, half_width, half_height ) ) return false;
+
+		INITIALIZE_RENDER_TEXTURE( m_rt1 );
+		INITIALIZE_RENDER_TEXTURE( m_rt2 );
+		INITIALIZE_RENDER_TEXTURE( m_rt3 );
+		INITIALIZE_RENDER_TEXTURE( m_rt4 );
+		INITIALIZE_RENDER_TEXTURE( m_rt5 );
+		INITIALIZE_RENDER_TEXTURE( m_rt6 );
+		INITIALIZE_RENDER_TEXTURE( m_rt7 );
+		INITIALIZE_RENDER_TEXTURE( m_rt8 );
+		INITIALIZE_RENDER_TEXTURE( m_rt9 );
+		INITIALIZE_RENDER_TEXTURE( m_rt10 );
+		INITIALIZE_RENDER_TEXTURE( m_rt11 );
+		INITIALIZE_RENDER_TEXTURE( m_blur_render_texture );
+		INITIALIZE_RENDER_TEXTURE( m_up_sample );
+		INITIALIZE_RENDER_TEXTURE( m_water_refract_texture );
+		INITIALIZE_RENDER_TEXTURE( m_water_reflect_texture );
+		INITIALIZE_RENDER_TEXTURE_HALF( m_down_sample );
+		INITIALIZE_RENDER_TEXTURE_HALF( m_h_blur );
+		INITIALIZE_RENDER_TEXTURE_HALF( m_v_blur );
+
+
+		return true;
+	}
+
+	void Graphics::ShutdownRenderTexture()
+	{
+		SAFE_SHUTDOWN( m_water_refract_texture );
+		SAFE_SHUTDOWN( m_water_reflect_texture );
+		SAFE_SHUTDOWN( m_v_blur );
+		SAFE_SHUTDOWN( m_h_blur );
+		SAFE_SHUTDOWN( m_down_sample );
+		SAFE_SHUTDOWN( m_up_sample );
+		SAFE_SHUTDOWN( m_blur_render_texture );
+		SAFE_SHUTDOWN( m_rt11 );
+		SAFE_SHUTDOWN( m_rt10 );
+		SAFE_SHUTDOWN( m_rt9 );
+		SAFE_SHUTDOWN( m_rt8 );
+		SAFE_SHUTDOWN( m_rt7 );
+		SAFE_SHUTDOWN( m_rt6 );
+		SAFE_SHUTDOWN( m_rt5 );
+		SAFE_SHUTDOWN( m_rt4 );
+		SAFE_SHUTDOWN( m_rt3 );
+		SAFE_SHUTDOWN( m_rt2 );
+		SAFE_SHUTDOWN( m_rt1 );
+	}
+
+	bool Graphics::InitializeShader( ID3D11Device*& _device, HWND _hwnd )
+	{
+#define INITIALIZE_WF_SHADER( p, type )\
+p = new type;\
+if( !p->Initialize( _device, _hwnd ) ) return false;
+
+		INITIALIZE_WF_SHADER( m_color_shader, ColorShader );
+		INITIALIZE_WF_SHADER( m_tessellation_color_shader, TessellationColorShader );
+		INITIALIZE_WF_SHADER( m_texture_shader, TextureShader );
+		INITIALIZE_WF_SHADER( m_light_shader, LightShader );
+		INITIALIZE_WF_SHADER( m_dual_texture_shader, DualTextureShader );
+		INITIALIZE_WF_SHADER( m_lightmap_shader, LightmapShader );
+		INITIALIZE_WF_SHADER( m_alphamap_shader, AlphamapShader );
+		INITIALIZE_WF_SHADER( m_bump_shader, BumpShader );
+		INITIALIZE_WF_SHADER( m_specular_shader, SpecularShader );
+		INITIALIZE_WF_SHADER( m_fog_shader, FogShader );
+		INITIALIZE_WF_SHADER( m_translate_shader, TranslateShader );
+		INITIALIZE_WF_SHADER( m_transparent_shader, TransparentShader );
+		INITIALIZE_WF_SHADER( m_fade_shader, FadeShader );
+		INITIALIZE_WF_SHADER( m_reflection_shader, ReflectionShader );
+		INITIALIZE_WF_SHADER( m_multi_light_shader, MultiLightShader );
+		INITIALIZE_WF_SHADER( m_fire_shader, FireShader );
+		INITIALIZE_WF_SHADER( m_horizontal_blur_shader, HorizontalBlurShader );
+		INITIALIZE_WF_SHADER( m_vertical_blur_shader, VerticalBlurShader );
+		INITIALIZE_WF_SHADER( m_water_shader, WaterShader );
+		INITIALIZE_WF_SHADER( m_refract_shader, RefractShader );
+
+		return true;
+	}
+
+	void Graphics::ShutdownShader()
+	{
+		SAFE_SHUTDOWN( m_refract_shader );
+		SAFE_SHUTDOWN( m_water_shader );
+		SAFE_SHUTDOWN( m_vertical_blur_shader );
+		SAFE_SHUTDOWN( m_horizontal_blur_shader );
+		SAFE_SHUTDOWN( m_fire_shader );
+		SAFE_SHUTDOWN( m_multi_light_shader );
+		SAFE_SHUTDOWN( m_fade_shader );
+		SAFE_SHUTDOWN( m_reflection_shader );
+		SAFE_SHUTDOWN( m_transparent_shader );
+		SAFE_SHUTDOWN( m_translate_shader );
+		SAFE_SHUTDOWN( m_fog_shader );
+		SAFE_SHUTDOWN( m_specular_shader );
+		SAFE_SHUTDOWN( m_bump_shader );
+		SAFE_SHUTDOWN( m_alphamap_shader );
+		SAFE_SHUTDOWN( m_lightmap_shader );
+		SAFE_SHUTDOWN( m_dual_texture_shader );
 	}
 
 	void Graphics::FrameFade( float _time )
@@ -577,6 +631,7 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		{ 700, 100 },
 		{ 700, 300 },
 		{ 700, 500 },
+		{ 700, 700 },
 		};
 
 		for ( int i = 0; i < QUAD_COUNT; ++i )
@@ -735,6 +790,18 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 
 				break;
 			}
+
+			case 15:
+			{
+				// water
+				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt11->GetShaderResourceView() ) )
+				{
+					return;
+				}
+
+				break;
+			}
+
 			}
 		}
 	}
@@ -995,7 +1062,7 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		m_directx->GetWorldMatrix( w );
 
 		m_rt10->SetRenderTarget( _context );
-		m_rt10->ClearRenderTarget( _context, 0.4f, 0.4f, 0.4f, 1.0f );
+		m_rt10->ClearRenderTarget( _context, 0.1f, 0.1f, 0.1f, 1.0f );
 
 		m_directx->SetRasterizerStateWireframe();
 
@@ -1003,5 +1070,85 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		m_tessellation_color_shader->RenderTessellation( _context, m_color_model->GetIndexCount(), w, _v, _p, 6.0f );
 
 		m_directx->SetRasterizerStateSolid();
+	}
+
+	void Graphics::DrawWaterScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p )
+	{
+		XMMATRIX w;
+		XMMATRIX v;
+
+		m_directx->GetWorldMatrix( w );
+		m_camera->SetPosition( -10.0f, 6.0f, -10.0f );
+		m_camera->SetRotation( 0.0f, 45.0f, 0.0f );
+		m_camera->Render();
+		m_camera->GetViewMatrix( v );
+
+		// render refract
+		{
+			XMFLOAT4 clip_plane{ 0.0f, -1.0f, 0.0f, m_water_height + 0.1f };
+
+			m_water_refract_texture->SetRenderTarget( _context );
+			m_water_refract_texture->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
+
+			XMMATRIX t = XMMatrixTranslation( 0.0f, 2.0f, 0.0f );
+
+			m_water_bath->Render( _context );
+			m_refract_shader->Render( _context, m_water_bath->GetIndexCount(), t, v, _p, m_water_bath->GetTexture(), m_water_light.GetDirection(), m_water_light.GetAmbient(), m_water_light.GetDiffuse(), clip_plane );
+			m_directx->SetBackBufferRenderTarget();
+		}
+
+		// render reflect
+		{
+			XMMATRIX r;
+
+			m_water_reflect_texture->SetRenderTarget( _context );
+			m_water_reflect_texture->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
+
+			m_camera->RenderReflect( m_water_height );
+			m_camera->GetReflectionMatrix( r );
+
+			XMMATRIX t = XMMatrixTranslation( 0.0f, 6.0f, 8.0f );
+
+			m_water_wall->Render( _context );
+			m_light_shader->Render( _context, m_water_wall->GetIndexCount(), t, r, _p, m_water_wall->GetTexture(), m_water_light.GetAmbient(), m_water_light.GetDiffuse(), 1.0f, m_water_light.GetSpecular(), m_camera->GetPosition(), m_water_light.GetDirection() );
+
+			m_directx->SetBackBufferRenderTarget();
+		}
+
+		// render scene
+		{
+			XMMATRIX t;
+			XMMATRIX r;
+
+			m_rt11->SetRenderTarget( _context );
+			m_rt11->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
+
+			t = XMMatrixTranslation( 0.0f, 1.0f, 0.0f );
+			m_water_ground->Render( _context );
+			m_light_shader->Render( _context, m_water_ground->GetIndexCount(), t, v, _p, m_water_ground->GetTexture(), m_water_light.GetAmbient(), m_water_light.GetDiffuse(), 1.0f, m_water_light.GetSpecular(), m_camera->GetPosition(), m_water_light.GetDirection() );
+
+			t = XMMatrixTranslation( 0.0f, 6.0f, 8.0f );
+			m_water_wall->Render( _context );
+			m_light_shader->Render( _context, m_water_wall->GetIndexCount(), t, v, _p, m_water_wall->GetTexture(), m_water_light.GetAmbient(), m_water_light.GetDiffuse(), 1.0f, m_water_light.GetSpecular(), m_camera->GetPosition(), m_water_light.GetDirection() );
+
+			t = XMMatrixTranslation( 0.0f, 2.0f, 0.0f );
+			m_water_bath->Render( _context );
+			m_light_shader->Render( _context, m_water_bath->GetIndexCount(), t, v, _p, m_water_bath->GetTexture(), m_water_light.GetAmbient(), m_water_light.GetDiffuse(), 1.0f, m_water_light.GetSpecular(), m_camera->GetPosition(), m_water_light.GetDirection() );
+
+			m_camera->GetReflectionMatrix( r );
+			t = XMMatrixTranslation( 0.0f, m_water_height, 0.0f );
+			m_water_shader->Render( _context, m_water->GetIndexCount(), t, v, _p, r,
+				m_water_reflect_texture->GetShaderResourceView(),
+				m_water_refract_texture->GetShaderResourceView(),
+				m_water->GetTexture(),
+				m_water_translation, 0.01f );
+		}
+
+		m_camera->SetPosition( 0.0f, 0.0f, -5.0f );
+		m_camera->SetRotation( 0.0f, 0.0f, 0.0f );
+		m_camera->Render();
+		m_camera->GetViewMatrix( v );
+
+		m_directx->SetBackBufferRenderTarget();
 	}
 }

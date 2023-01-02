@@ -33,6 +33,7 @@ namespace wf
 	class HorizontalBlurShader;
 	class VerticalBlurShader;
 	class WaterShader;
+	class RefractShader;
 
 	class Quad;
 	class TextureQuad;
@@ -63,7 +64,7 @@ namespace wf
 	constexpr int RENDER_TEXTURE_ARRAY = 5;
 	constexpr int TEXTURE_ARRAY_COUNT = 6;
 
-	constexpr int QUAD_COUNT = 15;
+	constexpr int QUAD_COUNT = 16;
 
 	class Graphics
 	{
@@ -85,6 +86,10 @@ namespace wf
 
 		bool InitializeQuads( ID3D11Device*& _device );
 		void ShutdownQuads();
+		bool InitializeRenderTexture( ID3D11Device*& _device, int _width, int _height );
+		void ShutdownRenderTexture();
+		bool InitializeShader( ID3D11Device*& _device, HWND _hwnd );
+		void ShutdownShader();
 
 		void FrameFade( float _time );
 
@@ -98,6 +103,7 @@ namespace wf
 		void DrawFireScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 		void DrawBlurScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 		void DrawTessellationScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
+		void DrawWaterScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 
 	private:
 		D3D* m_directx{ nullptr };
@@ -133,6 +139,7 @@ namespace wf
 		HorizontalBlurShader* m_horizontal_blur_shader{ nullptr };
 		VerticalBlurShader* m_vertical_blur_shader{ nullptr };
 		WaterShader* m_water_shader{ nullptr };
+		RefractShader* m_refract_shader{ nullptr };
 		
 		RenderTexture* m_rt1{ nullptr };
 		RenderTexture* m_rt2{ nullptr };
@@ -144,10 +151,12 @@ namespace wf
 		RenderTexture* m_rt8{ nullptr };
 		RenderTexture* m_rt9{ nullptr };
 		RenderTexture* m_rt10{ nullptr };
+		RenderTexture* m_rt11{ nullptr };
 		
 		std::array<TextureArray*, TEXTURE_ARRAY_COUNT> m_texture_arrays;
 		std::array<Quad*, QUAD_COUNT> m_quads;
 
+		// fire
 		Texture* m_blue_texture{ nullptr };
 		Texture* m_seafloor_texture{ nullptr };
 		Texture* m_fire_texture{ nullptr };
@@ -157,7 +166,17 @@ namespace wf
 		Text* m_text{ nullptr };
 
 		Bitmap* m_blur_bitmap{ nullptr };
-		
+
+		// water
+		RasterTekModel* m_water_ground{ nullptr };
+		RasterTekModel* m_water_wall{ nullptr };
+		RasterTekModel* m_water_bath{ nullptr };
+		RasterTekModel* m_water{ nullptr };
+		Light m_water_light;
+		RenderTexture* m_water_refract_texture{ nullptr };
+		RenderTexture* m_water_reflect_texture{ nullptr };
+		float m_water_height{};
+		float m_water_translation{};
 
 		// blur
 		RenderTexture* m_down_sample{ nullptr };

@@ -177,6 +177,9 @@
     <ClInclude Include="RefractShader.h">
       <Filter>ShaderClass</Filter>
     </ClInclude>
+    <ClInclude Include="DepthShader.h">
+      <Filter>ShaderClass</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="System.cpp">
@@ -314,6 +317,9 @@
     <ClCompile Include="RefractShader.cpp">
       <Filter>ShaderClass</Filter>
     </ClCompile>
+    <ClCompile Include="DepthShader.cpp">
+      <Filter>ShaderClass</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="color_vs.hlsl">
@@ -434,6 +440,12 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="refract_ps.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="depth_vs.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="depth_ps.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

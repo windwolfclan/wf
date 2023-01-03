@@ -22,6 +22,7 @@
 #include "BlurShader.h"
 #include "WaterShader.h"
 #include "RefractShader.h"
+#include "DepthShader.h"
 
 namespace wf
 {
@@ -300,11 +301,11 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 			m_directx->GetProjectionMatrix( p );
 			m_directx->GetOrthoMatrix( o );
 
-			w = XMMatrixRotationY( rotation );
+			// w = XMMatrixRotationY( rotation );
 		}
 
-		static bool draw_2d{ true };
-		// static bool draw_2d{ false };
+		// static bool draw_2d{ true };
+		static bool draw_2d{ false };
 
 #pragma region RENDER TO TEXTURE
 		if( draw_2d )
@@ -330,7 +331,12 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 
 			if ( !draw_2d )
 			{
+				m_camera->SetPosition(0.0f, 2.0f, -10.0f);
+				m_camera->Render();
+				m_camera->GetViewMatrix(v);
 
+				m_floor->Render(context);
+				m_depth_shader->Render(context, m_floor->GetIndexCount(), w, v, p);
 			}
 
 			// 2D Draw
@@ -344,6 +350,10 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 
 			// text
 			m_directx->TurnOnAlphaBlending();
+
+			m_camera->SetPosition(0.0f, 0.0f, -5.0f);
+			m_camera->Render();
+			m_camera->GetViewMatrix(v);
 
 			if ( !m_text->Render( context, w, o ) )
 			{
@@ -571,12 +581,14 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 		INITIALIZE_WF_SHADER( m_vertical_blur_shader, VerticalBlurShader );
 		INITIALIZE_WF_SHADER( m_water_shader, WaterShader );
 		INITIALIZE_WF_SHADER( m_refract_shader, RefractShader );
+		INITIALIZE_WF_SHADER(m_depth_shader, DepthShader);
 
 		return true;
 	}
 
 	void Graphics::ShutdownShader()
 	{
+		SAFE_SHUTDOWN(m_depth_shader);
 		SAFE_SHUTDOWN( m_refract_shader );
 		SAFE_SHUTDOWN( m_water_shader );
 		SAFE_SHUTDOWN( m_vertical_blur_shader );

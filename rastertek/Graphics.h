@@ -34,6 +34,7 @@ namespace wf
 	class VerticalBlurShader;
 	class WaterShader;
 	class RefractShader;
+	class DepthShader;
 
 	class Quad;
 	class TextureQuad;
@@ -45,7 +46,7 @@ namespace wf
 	const bool FULL_SCREEN = false;
 	const bool VSYNC_ENABLED = true;
 	const float SCREEN_DEPTH = 1000.0f;
-	const float SCREEN_NEAR = 0.1f;
+	const float SCREEN_NEAR = 1.0f;
 
 	struct FrameParam
 	{
@@ -140,6 +141,7 @@ namespace wf
 		VerticalBlurShader* m_vertical_blur_shader{ nullptr };
 		WaterShader* m_water_shader{ nullptr };
 		RefractShader* m_refract_shader{ nullptr };
+		DepthShader* m_depth_shader{ nullptr };
 		
 		RenderTexture* m_rt1{ nullptr };
 		RenderTexture* m_rt2{ nullptr };

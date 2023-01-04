@@ -35,6 +35,7 @@ namespace wf
 	class WaterShader;
 	class RefractShader;
 	class DepthShader;
+	class GlassShader;
 
 	class Quad;
 	class TextureQuad;
@@ -65,7 +66,7 @@ namespace wf
 	constexpr int RENDER_TEXTURE_ARRAY = 5;
 	constexpr int TEXTURE_ARRAY_COUNT = 6;
 
-	constexpr int QUAD_COUNT = 16;
+	constexpr int QUAD_COUNT = 17;
 
 	class Graphics
 	{
@@ -105,6 +106,7 @@ namespace wf
 		void DrawBlurScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 		void DrawTessellationScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 		void DrawWaterScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
+		void DrawDepthScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 
 	private:
 		D3D* m_directx{ nullptr };
@@ -142,6 +144,7 @@ namespace wf
 		WaterShader* m_water_shader{ nullptr };
 		RefractShader* m_refract_shader{ nullptr };
 		DepthShader* m_depth_shader{ nullptr };
+		GlassShader* m_glass_shader{ nullptr };
 		
 		RenderTexture* m_rt1{ nullptr };
 		RenderTexture* m_rt2{ nullptr };
@@ -154,6 +157,7 @@ namespace wf
 		RenderTexture* m_rt9{ nullptr };
 		RenderTexture* m_rt10{ nullptr };
 		RenderTexture* m_rt11{ nullptr };
+		RenderTexture* m_rt12{ nullptr };
 		
 		std::array<TextureArray*, TEXTURE_ARRAY_COUNT> m_texture_arrays;
 		std::array<Quad*, QUAD_COUNT> m_quads;
@@ -164,6 +168,8 @@ namespace wf
 		Texture* m_fire_texture{ nullptr };
 		Texture* m_fire_noise_texture{ nullptr };
 		Texture* m_fire_alpha_texture{ nullptr };
+		Texture* m_glass_texture{ nullptr };
+		Texture* m_glass_bump_texture{ nullptr };
 
 		Text* m_text{ nullptr };
 
@@ -189,6 +195,7 @@ namespace wf
 
 		RenderTargetBitmap* m_blur_size_bitmap{ nullptr };
 		RenderTargetBitmap* m_screen_size_bitmap{ nullptr };
+		RenderTargetBitmap* m_glass_bitmap{ nullptr };
 
 		// fade
 		float m_fade_time{ 0.0f };

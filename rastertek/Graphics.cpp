@@ -23,6 +23,7 @@
 #include "WaterShader.h"
 #include "RefractShader.h"
 #include "DepthShader.h"
+#include "GlassShader.h"
 
 namespace wf
 {
@@ -133,7 +134,7 @@ namespace wf
 p = new RasterTekModel;\
 if( !p->Initialize( device, context, tga, txt ) ) return false;
 
-		INITIALIZE_RASTERTEK_MODEL( m_rastertek_model, "./resources/stone.tga", "./resources/cube.txt" );
+		INITIALIZE_RASTERTEK_MODEL( m_rastertek_model, "./resources/seafloor.tga", "./resources/cube.txt" );
 		INITIALIZE_RASTERTEK_MODEL( m_floor, "./resources/stone.tga", "./resources/floor.txt" );
 		INITIALIZE_RASTERTEK_MODEL( m_plane, "./resources/stone.tga", "./resources/plane01.txt" );
 		INITIALIZE_RASTERTEK_MODEL( m_water_ground, "./resources/water_ground.tga", "./resources/ground.txt" );
@@ -159,6 +160,7 @@ if( !p->Initialize( device, w, h ) ) return false;
 
 		INITIALIZE_RENDER_TARGET_BITMAP( m_blur_size_bitmap, half_width, half_height );
 		INITIALIZE_RENDER_TARGET_BITMAP( m_screen_size_bitmap, _width, _height );
+		INITIALIZE_RENDER_TARGET_BITMAP( m_glass_bitmap, _width, _height );
 
 #define INITIALIZE_TEXTURE( p, path )\
 p = new Texture;\
@@ -173,6 +175,8 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		LOAD_DDS_TEXTURE( m_fire_texture, L"./resources/fire01.dds" );
 		LOAD_DDS_TEXTURE( m_fire_alpha_texture, L"./resources/alpha01.dds" );
 		LOAD_DDS_TEXTURE( m_fire_noise_texture, L"./resources/noise01.dds" );
+		INITIALIZE_TEXTURE( m_glass_texture, "./resources/glass.tga" );
+		INITIALIZE_TEXTURE( m_glass_bump_texture, "./resources/glass_bump.tga" );
 		
 		if ( !InitializeTextureArray( device, context ) )
 		{
@@ -205,6 +209,8 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		ReleaseTextureArray();
 		
 		// Texture
+		SAFE_SHUTDOWN( m_glass_bump_texture );
+		SAFE_SHUTDOWN( m_glass_texture );
 		SAFE_SHUTDOWN( m_fire_noise_texture );
 		SAFE_SHUTDOWN( m_fire_alpha_texture );
 		SAFE_SHUTDOWN( m_fire_texture );
@@ -212,6 +218,7 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		SAFE_SHUTDOWN( m_blue_texture );
 
 		// RednerTargetBitmap
+		SAFE_SHUTDOWN( m_glass_bitmap );
 		SAFE_SHUTDOWN( m_screen_size_bitmap );
 		SAFE_SHUTDOWN( m_blur_size_bitmap );
 
@@ -320,6 +327,7 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 			DrawBlurScene( context, dsv, w, v, p );
 			DrawTessellationScene( context, dsv, w, v, p );
 			DrawWaterScene( context, dsv, w, v, p );
+			DrawDepthScene( context, dsv, w, v, p );
 
 			m_directx->SetBackBufferRenderTarget();
 		}
@@ -331,12 +339,15 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 
 			if ( !draw_2d )
 			{
-				m_camera->SetPosition(0.0f, 2.0f, -10.0f);
-				m_camera->Render();
-				m_camera->GetViewMatrix(v);
+				XMMATRIX t = XMMatrixTranslation( 0.0f, 0.0f, -1.5f );
+				m_rastertek_model->Render( context );
+				m_glass_shader->Render( context, m_glass_bitmap->GetIndexCount(), t, v, p,
+					m_seafloor_texture->GetTexture(),
+					m_glass_bump_texture->GetTexture(),
+					m_glass_texture->GetTexture(),
+					0.01f 
+				);
 
-				m_floor->Render(context);
-				m_depth_shader->Render(context, m_floor->GetIndexCount(), w, v, p);
 			}
 
 			// 2D Draw
@@ -521,6 +532,7 @@ if( !p->Initialize( _device, half_width, half_height ) ) return false;
 		INITIALIZE_RENDER_TEXTURE( m_rt9 );
 		INITIALIZE_RENDER_TEXTURE( m_rt10 );
 		INITIALIZE_RENDER_TEXTURE( m_rt11 );
+		INITIALIZE_RENDER_TEXTURE( m_rt12 );
 		INITIALIZE_RENDER_TEXTURE( m_blur_render_texture );
 		INITIALIZE_RENDER_TEXTURE( m_up_sample );
 		INITIALIZE_RENDER_TEXTURE( m_water_refract_texture );
@@ -542,6 +554,7 @@ if( !p->Initialize( _device, half_width, half_height ) ) return false;
 		SAFE_SHUTDOWN( m_down_sample );
 		SAFE_SHUTDOWN( m_up_sample );
 		SAFE_SHUTDOWN( m_blur_render_texture );
+		SAFE_SHUTDOWN( m_rt12 );
 		SAFE_SHUTDOWN( m_rt11 );
 		SAFE_SHUTDOWN( m_rt10 );
 		SAFE_SHUTDOWN( m_rt9 );
@@ -581,14 +594,16 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 		INITIALIZE_WF_SHADER( m_vertical_blur_shader, VerticalBlurShader );
 		INITIALIZE_WF_SHADER( m_water_shader, WaterShader );
 		INITIALIZE_WF_SHADER( m_refract_shader, RefractShader );
-		INITIALIZE_WF_SHADER(m_depth_shader, DepthShader);
+		INITIALIZE_WF_SHADER( m_depth_shader, DepthShader );
+		INITIALIZE_WF_SHADER( m_glass_shader, GlassShader );
 
 		return true;
 	}
 
 	void Graphics::ShutdownShader()
 	{
-		SAFE_SHUTDOWN(m_depth_shader);
+		SAFE_SHUTDOWN( m_glass_shader );
+		SAFE_SHUTDOWN( m_depth_shader );
 		SAFE_SHUTDOWN( m_refract_shader );
 		SAFE_SHUTDOWN( m_water_shader );
 		SAFE_SHUTDOWN( m_vertical_blur_shader );
@@ -644,6 +659,7 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 		{ 700, 300 },
 		{ 700, 500 },
 		{ 700, 700 },
+		{ 900, 100 },
 		};
 
 		for ( int i = 0; i < QUAD_COUNT; ++i )
@@ -807,6 +823,17 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 			{
 				// water
 				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt11->GetShaderResourceView() ) )
+				{
+					return;
+				}
+
+				break;
+			}
+
+			case 16:
+			{
+				// depth
+				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt12->GetShaderResourceView() ) )
 				{
 					return;
 				}
@@ -1160,6 +1187,26 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 		m_camera->SetRotation( 0.0f, 0.0f, 0.0f );
 		m_camera->Render();
 		m_camera->GetViewMatrix( v );
+
+		m_directx->SetBackBufferRenderTarget();
+	}
+
+	void Graphics::DrawDepthScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p )
+	{
+		m_rt12->SetRenderTarget( _context );
+		m_rt12->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
+
+
+		XMMATRIX w;
+		m_directx->GetWorldMatrix( w );
+
+		XMMATRIX v;
+		m_camera->SetPosition( 0.0f, 2.0f, -10.0f );
+		m_camera->Render();
+		m_camera->GetViewMatrix( v );
+
+		m_floor->Render( _context );
+		m_depth_shader->Render( _context, m_floor->GetIndexCount(), w, v, _p );
 
 		m_directx->SetBackBufferRenderTarget();
 	}

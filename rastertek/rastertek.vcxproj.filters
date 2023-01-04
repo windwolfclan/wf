@@ -180,6 +180,9 @@
     <ClInclude Include="DepthShader.h">
       <Filter>ShaderClass</Filter>
     </ClInclude>
+    <ClInclude Include="GlassShader.h">
+      <Filter>ShaderClass</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="System.cpp">
@@ -320,6 +323,9 @@
     <ClCompile Include="DepthShader.cpp">
       <Filter>ShaderClass</Filter>
     </ClCompile>
+    <ClCompile Include="GlassShader.cpp">
+      <Filter>ShaderClass</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="color_vs.hlsl">
@@ -446,6 +452,12 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="depth_ps.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="glass_vs.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="glass_ps.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

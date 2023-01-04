@@ -177,6 +177,8 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		LOAD_DDS_TEXTURE( m_fire_noise_texture, L"./resources/noise01.dds" );
 		INITIALIZE_TEXTURE( m_glass_texture, "./resources/glass.tga" );
 		INITIALIZE_TEXTURE( m_glass_bump_texture, "./resources/glass_bump.tga" );
+		INITIALIZE_TEXTURE( m_ice_texture, "./resources/ice.tga" );
+		INITIALIZE_TEXTURE( m_ice_bump_texture, "./resources/ice_bump.tga" );
 		
 		if ( !InitializeTextureArray( device, context ) )
 		{
@@ -209,6 +211,8 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		ReleaseTextureArray();
 		
 		// Texture
+		SAFE_SHUTDOWN( m_ice_bump_texture );
+		SAFE_SHUTDOWN( m_ice_texture );
 		SAFE_SHUTDOWN( m_glass_bump_texture );
 		SAFE_SHUTDOWN( m_glass_texture );
 		SAFE_SHUTDOWN( m_fire_noise_texture );
@@ -296,6 +300,7 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		XMMATRIX v;
 		XMMATRIX p;
 		XMMATRIX o;
+		XMMATRIX rotate;
 		ID3D11DeviceContext* context = m_directx->GetDeviceContext();
 		ID3D11DepthStencilView* dsv = m_directx->GetDepthStencilView();
 
@@ -308,11 +313,11 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 			m_directx->GetProjectionMatrix( p );
 			m_directx->GetOrthoMatrix( o );
 
-			// w = XMMatrixRotationY( rotation );
+			rotate = XMMatrixRotationY( rotation );
 		}
 
-		// static bool draw_2d{ true };
-		static bool draw_2d{ false };
+		static bool draw_2d{ true };
+		// static bool draw_2d{ false };
 
 #pragma region RENDER TO TEXTURE
 		if( draw_2d )
@@ -328,6 +333,8 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 			DrawTessellationScene( context, dsv, w, v, p );
 			DrawWaterScene( context, dsv, w, v, p );
 			DrawDepthScene( context, dsv, w, v, p );
+			DrawGlassScene( context, dsv, w, v, p );
+			DrawIceScene( context, dsv, w, v, p );
 
 			m_directx->SetBackBufferRenderTarget();
 		}
@@ -339,14 +346,7 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 
 			if ( !draw_2d )
 			{
-				XMMATRIX t = XMMatrixTranslation( 0.0f, 0.0f, -1.5f );
-				m_rastertek_model->Render( context );
-				m_glass_shader->Render( context, m_glass_bitmap->GetIndexCount(), t, v, p,
-					m_seafloor_texture->GetTexture(),
-					m_glass_bump_texture->GetTexture(),
-					m_glass_texture->GetTexture(),
-					0.01f 
-				);
+				
 
 			}
 
@@ -480,6 +480,13 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 			quad_type::texture,
 			quad_type::texture,
 			quad_type::texture,
+			quad_type::texture,
+			quad_type::texture,
+			quad_type::texture,
+			quad_type::texture,
+			quad_type::texture,
+			quad_type::texture,
+			quad_type::texture,
 		};
 
 		for ( int i = 0; i < QUAD_COUNT; ++i )
@@ -533,10 +540,13 @@ if( !p->Initialize( _device, half_width, half_height ) ) return false;
 		INITIALIZE_RENDER_TEXTURE( m_rt10 );
 		INITIALIZE_RENDER_TEXTURE( m_rt11 );
 		INITIALIZE_RENDER_TEXTURE( m_rt12 );
+		INITIALIZE_RENDER_TEXTURE( m_rt13 );
+		INITIALIZE_RENDER_TEXTURE( m_rt14 );
 		INITIALIZE_RENDER_TEXTURE( m_blur_render_texture );
 		INITIALIZE_RENDER_TEXTURE( m_up_sample );
 		INITIALIZE_RENDER_TEXTURE( m_water_refract_texture );
 		INITIALIZE_RENDER_TEXTURE( m_water_reflect_texture );
+		INITIALIZE_RENDER_TEXTURE( m_glass_render_texture );
 		INITIALIZE_RENDER_TEXTURE_HALF( m_down_sample );
 		INITIALIZE_RENDER_TEXTURE_HALF( m_h_blur );
 		INITIALIZE_RENDER_TEXTURE_HALF( m_v_blur );
@@ -547,6 +557,7 @@ if( !p->Initialize( _device, half_width, half_height ) ) return false;
 
 	void Graphics::ShutdownRenderTexture()
 	{
+		SAFE_SHUTDOWN( m_glass_render_texture );
 		SAFE_SHUTDOWN( m_water_refract_texture );
 		SAFE_SHUTDOWN( m_water_reflect_texture );
 		SAFE_SHUTDOWN( m_v_blur );
@@ -554,6 +565,8 @@ if( !p->Initialize( _device, half_width, half_height ) ) return false;
 		SAFE_SHUTDOWN( m_down_sample );
 		SAFE_SHUTDOWN( m_up_sample );
 		SAFE_SHUTDOWN( m_blur_render_texture );
+		SAFE_SHUTDOWN( m_rt14 );
+		SAFE_SHUTDOWN( m_rt13 );
 		SAFE_SHUTDOWN( m_rt12 );
 		SAFE_SHUTDOWN( m_rt11 );
 		SAFE_SHUTDOWN( m_rt10 );
@@ -660,6 +673,8 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 		{ 700, 500 },
 		{ 700, 700 },
 		{ 900, 100 },
+		{ 900, 300 },
+		{ 900, 500 },
 		};
 
 		for ( int i = 0; i < QUAD_COUNT; ++i )
@@ -771,73 +786,62 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 			case 10:
 			{
 				// fade
-				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt4->GetShaderResourceView() ) )
-				{
-					return;
-				}
-				break;
+				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt4->GetShaderResourceView() ) ) { return; }
 			}
 
 			case 11:
 			{
 				// multi light
-				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt7->GetShaderResourceView() ) )
-				{
-					return;
-				}
+				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt7->GetShaderResourceView() ) ) { return; }
 				break;
 			}
 
 			case 12:
 			{
 				// fire
-				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt8->GetShaderResourceView() ) )
-				{
-					return;
-				}
+				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt8->GetShaderResourceView() ) ) { return; }
 				break;
 			}
 
 			case 13:
 			{
 				// blur
-				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_up_sample->GetShaderResourceView() ) )
-				{
-					return;
-				}
+				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_up_sample->GetShaderResourceView() ) ) { return; }
 				break;
 			}
 			
 			case 14:
 			{
 				// tessellation
-				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt10->GetShaderResourceView() ) )
-				{
-					return;
-				}
-
+				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt10->GetShaderResourceView() ) ) { return; }
 				break;
 			}
 
 			case 15:
 			{
 				// water
-				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt11->GetShaderResourceView() ) )
-				{
-					return;
-				}
-
+				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt11->GetShaderResourceView() ) ) { return; }
 				break;
 			}
 
 			case 16:
 			{
 				// depth
-				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt12->GetShaderResourceView() ) )
-				{
-					return;
-				}
+				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt12->GetShaderResourceView() ) ) { return; }
+				break;
+			}
 
+			case 17:
+			{
+				// glass
+				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt13->GetShaderResourceView() ) ) { return; }
+				break;
+			}
+
+			case 18:
+			{
+				// glass
+				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt14->GetShaderResourceView() ) ) { return; }
 				break;
 			}
 
@@ -1207,6 +1211,72 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 
 		m_floor->Render( _context );
 		m_depth_shader->Render( _context, m_floor->GetIndexCount(), w, v, _p );
+
+		m_directx->SetBackBufferRenderTarget();
+	}
+
+	void Graphics::DrawGlassScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p )
+	{
+		XMMATRIX v;
+
+		m_camera->SetPosition( 0.0f, 0.0f, -5.0f );
+		m_camera->Render();
+
+		m_camera->GetViewMatrix( v );
+
+		m_glass_render_texture->SetRenderTarget( _context );
+		m_glass_render_texture->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
+
+		m_rastertek_model->Render( _context );
+		m_texture_shader->Render( _context, m_rastertek_model->GetIndexCount(), _w, v, _p, m_rastertek_model->GetTexture() );
+
+		m_rt13->SetRenderTarget( _context );
+		m_rt13->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
+
+		m_rastertek_model->Render( _context );
+		m_texture_shader->Render( _context, m_rastertek_model->GetIndexCount(), _w, v, _p, m_rastertek_model->GetTexture() );
+
+		XMMATRIX t = XMMatrixTranslation( 0.0f, 0.0f, -1.5f );
+		m_rastertek_model->Render( _context );
+		m_glass_shader->Render( _context, m_glass_bitmap->GetIndexCount(), t, v, _p,
+			m_glass_texture->GetTexture(),
+			m_glass_bump_texture->GetTexture(),
+			m_glass_render_texture->GetShaderResourceView(),
+			0.01f
+		);
+
+		m_directx->SetBackBufferRenderTarget();
+	}
+
+	void Graphics::DrawIceScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p )
+	{
+		XMMATRIX v;
+
+		m_camera->SetPosition( 0.0f, 0.0f, -5.0f );
+		m_camera->Render();
+
+		m_camera->GetViewMatrix( v );
+
+		m_glass_render_texture->SetRenderTarget( _context );
+		m_glass_render_texture->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
+
+		m_rastertek_model->Render( _context );
+		m_texture_shader->Render( _context, m_rastertek_model->GetIndexCount(), _w, v, _p, m_rastertek_model->GetTexture() );
+
+		m_rt14->SetRenderTarget( _context );
+		m_rt14->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
+
+		m_rastertek_model->Render( _context );
+		m_texture_shader->Render( _context, m_rastertek_model->GetIndexCount(), _w, v, _p, m_rastertek_model->GetTexture() );
+
+		XMMATRIX t = XMMatrixTranslation( 0.0f, 0.0f, -1.5f );
+		m_rastertek_model->Render( _context );
+		m_glass_shader->Render( _context, m_glass_bitmap->GetIndexCount(), t, v, _p,
+			m_ice_texture->GetTexture(),
+			m_ice_bump_texture->GetTexture(),
+			m_glass_render_texture->GetShaderResourceView(),
+			0.1f
+		);
 
 		m_directx->SetBackBufferRenderTarget();
 	}

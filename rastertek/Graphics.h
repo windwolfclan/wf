@@ -66,7 +66,7 @@ namespace wf
 	constexpr int RENDER_TEXTURE_ARRAY = 5;
 	constexpr int TEXTURE_ARRAY_COUNT = 6;
 
-	constexpr int QUAD_COUNT = 17;
+	constexpr int QUAD_COUNT = 19;
 
 	class Graphics
 	{
@@ -107,6 +107,8 @@ namespace wf
 		void DrawTessellationScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 		void DrawWaterScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 		void DrawDepthScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
+		void DrawGlassScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
+		void DrawIceScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 
 	private:
 		D3D* m_directx{ nullptr };
@@ -158,6 +160,8 @@ namespace wf
 		RenderTexture* m_rt10{ nullptr };
 		RenderTexture* m_rt11{ nullptr };
 		RenderTexture* m_rt12{ nullptr };
+		RenderTexture* m_rt13{ nullptr };
+		RenderTexture* m_rt14{ nullptr };
 		
 		std::array<TextureArray*, TEXTURE_ARRAY_COUNT> m_texture_arrays;
 		std::array<Quad*, QUAD_COUNT> m_quads;
@@ -170,6 +174,8 @@ namespace wf
 		Texture* m_fire_alpha_texture{ nullptr };
 		Texture* m_glass_texture{ nullptr };
 		Texture* m_glass_bump_texture{ nullptr };
+		Texture* m_ice_texture{ nullptr };
+		Texture* m_ice_bump_texture{ nullptr };
 
 		Text* m_text{ nullptr };
 
@@ -192,6 +198,9 @@ namespace wf
 		RenderTexture* m_h_blur{ nullptr };
 		RenderTexture* m_v_blur{ nullptr };
 		RenderTexture* m_blur_render_texture{ nullptr };
+
+		// glass and ice
+		RenderTexture* m_glass_render_texture{ nullptr };
 
 		RenderTargetBitmap* m_blur_size_bitmap{ nullptr };
 		RenderTargetBitmap* m_screen_size_bitmap{ nullptr };

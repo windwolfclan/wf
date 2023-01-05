@@ -36,6 +36,7 @@ namespace wf
 	class RefractShader;
 	class DepthShader;
 	class GlassShader;
+	class InstanceTextureShader;
 
 	class Quad;
 	class TextureQuad;
@@ -66,7 +67,7 @@ namespace wf
 	constexpr int RENDER_TEXTURE_ARRAY = 5;
 	constexpr int TEXTURE_ARRAY_COUNT = 6;
 
-	constexpr int QUAD_COUNT = 19;
+	constexpr int QUAD_COUNT = 20;
 
 	class Graphics
 	{
@@ -109,6 +110,7 @@ namespace wf
 		void DrawDepthScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 		void DrawGlassScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 		void DrawIceScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
+		void DrawInstanceScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 
 	private:
 		D3D* m_directx{ nullptr };
@@ -124,6 +126,7 @@ namespace wf
 		RasterTekModel* m_floor{ nullptr };
 		RasterTekModel* m_plane{ nullptr };
 		RasterTekModel* m_fire{ nullptr };
+		InstanceModel* m_triangles{ nullptr };
 
 		ColorShader* m_color_shader{ nullptr };
 		TessellationColorShader* m_tessellation_color_shader{ nullptr };
@@ -147,6 +150,7 @@ namespace wf
 		RefractShader* m_refract_shader{ nullptr };
 		DepthShader* m_depth_shader{ nullptr };
 		GlassShader* m_glass_shader{ nullptr };
+		InstanceTextureShader* m_instance_texture_shader{ nullptr };
 		
 		RenderTexture* m_rt1{ nullptr };
 		RenderTexture* m_rt2{ nullptr };
@@ -162,6 +166,7 @@ namespace wf
 		RenderTexture* m_rt12{ nullptr };
 		RenderTexture* m_rt13{ nullptr };
 		RenderTexture* m_rt14{ nullptr };
+		RenderTexture* m_rt15{ nullptr };
 		
 		std::array<TextureArray*, TEXTURE_ARRAY_COUNT> m_texture_arrays;
 		std::array<Quad*, QUAD_COUNT> m_quads;

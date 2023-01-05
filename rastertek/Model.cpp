@@ -775,4 +775,179 @@ namespace wf
         }
     }
 #pragma endregion
+
+#pragma region INSTANCE MODEL
+
+    InstanceModel::InstanceModel()
+    {
+    }
+
+    InstanceModel::InstanceModel( const InstanceModel& )
+    {
+    }
+
+    InstanceModel::~InstanceModel()
+    {
+    }
+
+
+    bool InstanceModel::Initialize( ID3D11Device* _device, ID3D11DeviceContext* _context, const char* _path )
+    {
+        if ( !InitializeBuffers( _device ) )
+        {
+            return false;
+        }
+
+        if ( !LoadTexture( _device, _context, _path ) )
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    void InstanceModel::Shutdown()
+    {
+        ReleaseTexture();
+
+        ShutdownBuffers();
+    }
+
+    void InstanceModel::Render( ID3D11DeviceContext* _context )
+    {
+        RenderBuffers( _context );
+    }
+
+    int InstanceModel::GetVertexCount() const
+    {
+        return m_vertex_count;
+    }
+
+    int InstanceModel::GetInstanceCount() const
+    {
+        return m_instance_count;
+    }
+
+    ID3D11ShaderResourceView* InstanceModel::GetTexture()
+    {
+        return m_texture->GetTexture();;
+    }
+
+    bool InstanceModel::InitializeBuffers( ID3D11Device* _device )
+    {
+        m_vertex_count = 3;
+        m_instance_count = 4;
+
+        VertexType* vertices = new VertexType[ m_vertex_count ];
+        InstanceType* instancies = new InstanceType[ m_instance_count ];
+        if ( !vertices || !instancies )
+        {
+            SAFE_DELETE_ARRAY( instancies );
+            SAFE_DELETE_ARRAY( vertices );
+        }
+
+        vertices[ 0 ].pos = XMFLOAT3( -1.0f, -1.0f, 0.0f );
+        vertices[ 1 ].pos = XMFLOAT3(  0.0f,  1.0f, 0.0f );
+        vertices[ 2 ].pos = XMFLOAT3(  1.0f, -1.0f, 0.0f );
+        vertices[ 0 ].tex = XMFLOAT2( 0.0f, 1.0f );
+        vertices[ 1 ].tex = XMFLOAT2( 0.5f, 0.0f );
+        vertices[ 2 ].tex = XMFLOAT2( 1.0f, 1.0f );
+
+        instancies[ 0 ].pos = XMFLOAT3( -1.5f, -1.5f, 5.0f );
+        instancies[ 1 ].pos = XMFLOAT3( -1.5f,  1.5f, 5.0f );
+        instancies[ 2 ].pos = XMFLOAT3(  1.5f, -1.5f, 5.0f );
+        instancies[ 3 ].pos = XMFLOAT3(  1.5f,  1.5f, 5.0f );
+
+        D3D11_BUFFER_DESC desc;
+        D3D11_SUBRESOURCE_DATA data;
+
+        ZeroMemory( &desc, sizeof( desc ) );
+        desc.Usage = D3D11_USAGE_DEFAULT;
+        desc.ByteWidth = sizeof( VertexType ) * m_vertex_count;
+        desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+        desc.CPUAccessFlags = 0;
+        desc.MiscFlags = 0;
+        desc.StructureByteStride = 0;
+
+        ZeroMemory( &data, sizeof( data ) );
+        data.pSysMem = vertices;
+        data.SysMemPitch = 0;
+        data.SysMemSlicePitch = 0;
+
+        HRESULT hr = _device->CreateBuffer( &desc, &data, &m_vertex_buffer );
+        if ( FAILED( hr ) )
+        {
+            SAFE_DELETE_ARRAY( instancies );
+            SAFE_DELETE_ARRAY( vertices );
+            return false;
+        }
+
+        ZeroMemory( &desc, sizeof( desc ) );
+        desc.Usage = D3D11_USAGE_DEFAULT;
+        desc.ByteWidth = sizeof( InstanceType ) * m_instance_count;
+        desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+        desc.CPUAccessFlags = 0;
+        desc.MiscFlags = 0;
+        desc.StructureByteStride = 0;
+
+        ZeroMemory( &data, sizeof( data ) );
+        data.pSysMem = instancies;
+        data.SysMemPitch = 0;
+        data.SysMemSlicePitch = 0;
+
+        hr = _device->CreateBuffer( &desc, &data, &m_instance_buffer );
+        if ( FAILED( hr ) )
+        {
+            SAFE_DELETE_ARRAY( instancies );
+            SAFE_DELETE_ARRAY( vertices );
+            return false;
+        }
+
+        SAFE_DELETE_ARRAY( instancies );
+        SAFE_DELETE_ARRAY( vertices );
+
+        return true;
+    }
+
+    void InstanceModel::ShutdownBuffers()
+    {
+        SAFE_RELEASE( m_instance_buffer );
+        SAFE_RELEASE( m_vertex_buffer );
+    }
+
+    void InstanceModel::RenderBuffers( ID3D11DeviceContext* _context )
+    {
+        UINT strides[ 2 ]{ sizeof( VertexType ), sizeof( InstanceType ) };
+        UINT offsets[ 2 ]{ 0, 0 };
+
+        ID3D11Buffer* buffers[ 2 ]{ m_vertex_buffer, m_instance_buffer };
+
+        _context->IASetVertexBuffers( 0, 2, buffers, strides, offsets );
+
+        _context->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
+
+    }
+
+    bool InstanceModel::LoadTexture( ID3D11Device* _device, ID3D11DeviceContext* _context, const  char* _path )
+    {
+        m_texture = new Texture();
+
+        if ( !m_texture->Initialize( _device, _context, _path ) )
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    void InstanceModel::ReleaseTexture()
+    {
+        if ( m_texture )
+        {
+            m_texture->Shutdown();
+            delete m_texture;
+            m_texture = nullptr;
+        }
+    }
+#pragma endregion
 }

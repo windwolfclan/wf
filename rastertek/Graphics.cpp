@@ -111,6 +111,12 @@ namespace wf
 		{
 			return false;
 		}
+
+		m_triangles = new InstanceModel;
+		if ( !m_triangles->Initialize( device, context, "./resources/ice.tga" ) )
+		{
+			return false;
+		}
 		
 		m_text = new Text;
 		if ( !m_text->Initialize( device, context, _hwnd, _width, _height, view ) )
@@ -242,6 +248,7 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		SAFE_SHUTDOWN( m_water );
 		SAFE_SHUTDOWN( m_plane );
 		SAFE_SHUTDOWN( m_floor );
+		SAFE_SHUTDOWN( m_triangles );
 		SAFE_SHUTDOWN( m_rastertek_model );
 		SAFE_SHUTDOWN( m_light_shader );
 		SAFE_SHUTDOWN( m_light_model );
@@ -335,6 +342,7 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 			DrawDepthScene( context, dsv, w, v, p );
 			DrawGlassScene( context, dsv, w, v, p );
 			DrawIceScene( context, dsv, w, v, p );
+			DrawInstanceScene( context, dsv, w, v, p );
 
 			m_directx->SetBackBufferRenderTarget();
 		}
@@ -542,6 +550,7 @@ if( !p->Initialize( _device, half_width, half_height ) ) return false;
 		INITIALIZE_RENDER_TEXTURE( m_rt12 );
 		INITIALIZE_RENDER_TEXTURE( m_rt13 );
 		INITIALIZE_RENDER_TEXTURE( m_rt14 );
+		INITIALIZE_RENDER_TEXTURE( m_rt15 );
 		INITIALIZE_RENDER_TEXTURE( m_blur_render_texture );
 		INITIALIZE_RENDER_TEXTURE( m_up_sample );
 		INITIALIZE_RENDER_TEXTURE( m_water_refract_texture );
@@ -565,6 +574,7 @@ if( !p->Initialize( _device, half_width, half_height ) ) return false;
 		SAFE_SHUTDOWN( m_down_sample );
 		SAFE_SHUTDOWN( m_up_sample );
 		SAFE_SHUTDOWN( m_blur_render_texture );
+		SAFE_SHUTDOWN( m_rt15 );
 		SAFE_SHUTDOWN( m_rt14 );
 		SAFE_SHUTDOWN( m_rt13 );
 		SAFE_SHUTDOWN( m_rt12 );
@@ -609,12 +619,14 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 		INITIALIZE_WF_SHADER( m_refract_shader, RefractShader );
 		INITIALIZE_WF_SHADER( m_depth_shader, DepthShader );
 		INITIALIZE_WF_SHADER( m_glass_shader, GlassShader );
+		INITIALIZE_WF_SHADER( m_instance_texture_shader, InstanceTextureShader );
 
 		return true;
 	}
 
 	void Graphics::ShutdownShader()
 	{
+		SAFE_SHUTDOWN( m_instance_texture_shader );
 		SAFE_SHUTDOWN( m_glass_shader );
 		SAFE_SHUTDOWN( m_depth_shader );
 		SAFE_SHUTDOWN( m_refract_shader );
@@ -675,6 +687,7 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 		{ 900, 100 },
 		{ 900, 300 },
 		{ 900, 500 },
+		{ 900, 700 },
 		};
 
 		for ( int i = 0; i < QUAD_COUNT; ++i )
@@ -845,6 +858,12 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 				break;
 			}
 
+			case 19:
+			{
+				// instance
+				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt15->GetShaderResourceView() ) ) { return; }
+				break;
+			}
 			}
 		}
 	}
@@ -1277,6 +1296,17 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 			m_glass_render_texture->GetShaderResourceView(),
 			0.1f
 		);
+
+		m_directx->SetBackBufferRenderTarget();
+	}
+
+	void Graphics::DrawInstanceScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p )
+	{
+		m_rt15->SetRenderTarget( _context );
+		m_rt15->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
+
+		m_triangles->Render( _context );
+		m_instance_texture_shader->Render( _context, m_triangles->GetVertexCount(), m_triangles->GetInstanceCount(), _w, _v, _p, m_triangles->GetTexture() );
 
 		m_directx->SetBackBufferRenderTarget();
 	}

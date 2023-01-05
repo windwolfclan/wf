@@ -193,4 +193,48 @@ namespace wf
 		Texture* m_texture{ nullptr };
 		VertexData* m_vertex_data{ nullptr };
 	};
+
+	class InstanceModel
+	{
+	private:
+		struct VertexType
+		{
+			XMFLOAT3 pos{ 0.0f, 0.0f, 0.0f };
+			XMFLOAT2 tex{ 0.0f, 0.0f };
+		};
+
+		struct InstanceType
+		{
+			XMFLOAT3 pos{ 0.0f, 0.0f, 0.0f };
+		};
+
+	public:
+		InstanceModel();
+		InstanceModel( const InstanceModel& );
+		~InstanceModel();
+
+		bool Initialize( ID3D11Device* _device, ID3D11DeviceContext* _context, const char* _path );
+		void Shutdown();
+		void Render( ID3D11DeviceContext* _context );
+
+		int GetVertexCount() const;
+		int GetInstanceCount() const;
+		ID3D11ShaderResourceView* GetTexture();
+
+	private:
+		bool InitializeBuffers( ID3D11Device* _device );
+		void ShutdownBuffers();
+		void RenderBuffers( ID3D11DeviceContext* _context );
+
+		bool LoadTexture( ID3D11Device* _device, ID3D11DeviceContext* _context, const char* _path );
+		void ReleaseTexture();
+
+	private:
+		ID3D11Buffer* m_vertex_buffer{ nullptr };
+		ID3D11Buffer* m_instance_buffer{ nullptr };
+		int m_vertex_count{ 0 };
+		int m_instance_count{ 0 };
+
+		Texture* m_texture{ nullptr };
+	};
 }

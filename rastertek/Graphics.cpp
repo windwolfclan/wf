@@ -187,6 +187,7 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		INITIALIZE_TEXTURE( m_ice_texture, "./resources/ice.tga" );
 		INITIALIZE_TEXTURE( m_ice_bump_texture, "./resources/ice_bump.tga" );
 		LOAD_DDS_TEXTURE( m_dx11_texture, L"./resources/dx11.dds" );
+		LOAD_DDS_TEXTURE( m_grate_texture, L"./resources/grate.dds" );
 		
 		if ( !InitializeTextureArray( device, context ) )
 		{
@@ -207,6 +208,10 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		m_projection_light.SetAmbient( 0.15f, 0.15f, 0.15f, 1.0f );
 		m_projection_light.SetDiffuse( 1.0f, 1.0f, 1.0f, 1.0f );
 		m_projection_light.SetDirection( 0.0f, -0.75f, 0.5f );
+
+		m_projection_light2.SetAmbient( 0.15f, 0.15f, 0.15f, 1.0f );
+		m_projection_light2.SetDiffuse( 1.0f, 1.0f, 1.0f, 1.0f );
+		m_projection_light2.SetPosition( 2.0f, 5.0f, -2.0f );
 
 		m_water_light.SetAmbient( 0.15f, 0.15f, 0.15f, 1.0f );
 		m_water_light.SetDiffuse( 1.0f, 1.0f, 1.0f, 1.0f );
@@ -230,6 +235,7 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		ReleaseTextureArray();
 		
 		// Texture
+		SAFE_SHUTDOWN( m_grate_texture );
 		SAFE_SHUTDOWN( m_dx11_texture );
 		SAFE_SHUTDOWN( m_ice_bump_texture );
 		SAFE_SHUTDOWN( m_ice_texture );
@@ -338,8 +344,8 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 			rotate = XMMatrixRotationY( rotation );
 		}
 
-		// static bool draw_2d{ true };
-		static bool draw_2d{ false };
+		static bool draw_2d{ true };
+		/// static bool draw_2d{ false };
 
 #pragma region RENDER TO TEXTURE
 		if( draw_2d )
@@ -358,6 +364,8 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 			DrawGlassScene( context, dsv, w, v, p );
 			DrawIceScene( context, dsv, w, v, p );
 			DrawInstanceScene( context, dsv, w, v, p );
+			DrawProjectiveTextureScene( context, dsv, w, v, p );
+			DrawLightProjectiveTextureScene( context, dsv, w, v, p );
 
 			m_directx->SetBackBufferRenderTarget();
 		}
@@ -371,39 +379,40 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 			{
 				XMMATRIX v2 = m_viewpoint.GetViewMatrix();
 				XMMATRIX p2 = m_viewpoint.GetProjectionMatrix();
+				XMMATRIX t;
 
-				XMMATRIX t = XMMatrixTranslation( 0.0f, 1.0f, 0.0f );
-
+				t = XMMatrixTranslation( 0.0f, 1.0f, 0.0f );
 				m_floor->Render( context );
-				m_projection_shader->Render(
-					context,
-					m_floor->GetIndexCount(),
+				m_light_projection_shader->Render(
+					context, m_floor->GetIndexCount(),
 					t, v, p,
 					m_floor->GetTexture(),
-					m_projection_light.GetAmbient(),
-					m_projection_light.GetDiffuse(),
-					m_projection_light.GetDirection(),
+					m_projection_light2.GetAmbient(),
+					m_projection_light2.GetDiffuse(),
+					m_projection_light2.GetPosition(),
 					v2, p2,
-					m_dx11_texture->GetTexture()
+					m_grate_texture->GetTexture()
 				);
 
 				t = XMMatrixTranslation( 0.0f, 2.0f, 0.0f );
-
 				m_rastertek_model->Render( context );
-				m_projection_shader->Render(
-					context,
-					m_rastertek_model->GetIndexCount(),
+				m_light_projection_shader->Render(
+					context, m_rastertek_model->GetIndexCount(),
 					t, v, p,
-					m_water_ground->GetTexture(),
-					m_projection_light.GetAmbient(),
-					m_projection_light.GetDiffuse(),
-					m_projection_light.GetDirection(),
+					m_rastertek_model->GetTexture(),
+					m_projection_light2.GetAmbient(),
+					m_projection_light2.GetDiffuse(),
+					m_projection_light2.GetPosition(),
 					v2, p2,
-					m_dx11_texture->GetTexture()
+					m_grate_texture->GetTexture()
 				);
-
-				// m_texture_shader->Render( context, m_rastertek_model->GetIndexCount(), rotate * t, v, p, m_rastertek_model->GetTexture() );
 			}
+
+
+			m_camera->SetPosition( 0.0f, 0.0f, -5.0f );
+			m_camera->SetRotation( 0.0f, 0.0f, 0.0f );
+			m_camera->Render();
+			m_camera->GetViewMatrix( v );
 
 			// 2D Draw
 			m_directx->GetWorldMatrix( w );
@@ -416,10 +425,6 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 
 			// text
 			m_directx->TurnOnAlphaBlending();
-
-			m_camera->SetPosition(0.0f, 0.0f, -5.0f);
-			m_camera->Render();
-			m_camera->GetViewMatrix(v);
 
 			if ( !m_text->Render( context, w, o ) )
 			{
@@ -542,6 +547,9 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 			quad_type::texture,
 			quad_type::texture,
 			quad_type::texture,
+			quad_type::texture,
+			quad_type::texture,
+			quad_type::texture,
 		};
 
 		for ( int i = 0; i < QUAD_COUNT; ++i )
@@ -598,6 +606,8 @@ if( !p->Initialize( _device, half_width, half_height ) ) return false;
 		INITIALIZE_RENDER_TEXTURE( m_rt13 );
 		INITIALIZE_RENDER_TEXTURE( m_rt14 );
 		INITIALIZE_RENDER_TEXTURE( m_rt15 );
+		INITIALIZE_RENDER_TEXTURE( m_rt16 );
+		INITIALIZE_RENDER_TEXTURE( m_rt17 );
 		INITIALIZE_RENDER_TEXTURE( m_blur_render_texture );
 		INITIALIZE_RENDER_TEXTURE( m_up_sample );
 		INITIALIZE_RENDER_TEXTURE( m_water_refract_texture );
@@ -621,6 +631,8 @@ if( !p->Initialize( _device, half_width, half_height ) ) return false;
 		SAFE_SHUTDOWN( m_down_sample );
 		SAFE_SHUTDOWN( m_up_sample );
 		SAFE_SHUTDOWN( m_blur_render_texture );
+		SAFE_SHUTDOWN( m_rt17 );
+		SAFE_SHUTDOWN( m_rt16 );
 		SAFE_SHUTDOWN( m_rt15 );
 		SAFE_SHUTDOWN( m_rt14 );
 		SAFE_SHUTDOWN( m_rt13 );
@@ -668,12 +680,14 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 		INITIALIZE_WF_SHADER( m_glass_shader, GlassShader );
 		INITIALIZE_WF_SHADER( m_instance_texture_shader, InstanceTextureShader );
 		INITIALIZE_WF_SHADER( m_projection_shader, ProjectionShader );
+		INITIALIZE_WF_SHADER( m_light_projection_shader, LightProjectionShader );
 
 		return true;
 	}
 
 	void Graphics::ShutdownShader()
 	{
+		SAFE_SHUTDOWN( m_light_projection_shader );
 		SAFE_SHUTDOWN( m_projection_shader );
 		SAFE_SHUTDOWN( m_instance_texture_shader );
 		SAFE_SHUTDOWN( m_glass_shader );
@@ -737,6 +751,8 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 		{ 900, 300 },
 		{ 900, 500 },
 		{ 900, 700 },
+		{ 1100, 100 },
+		{ 1100, 300 },
 		};
 
 		for ( int i = 0; i < QUAD_COUNT; ++i )
@@ -913,6 +929,21 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt15->GetShaderResourceView() ) ) { return; }
 				break;
 			}
+
+			case 20:
+			{
+				// projective texture
+				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt16->GetShaderResourceView() ) ) { return; }
+				break;
+			}
+
+			case 21:
+			{
+				// light projective texture
+				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt17->GetShaderResourceView() ) ) { return; }
+				break;
+			}
+
 			}
 		}
 	}
@@ -1358,5 +1389,103 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 		m_instance_texture_shader->Render( _context, m_triangles->GetVertexCount(), m_triangles->GetInstanceCount(), _w, _v, _p, m_triangles->GetTexture() );
 
 		m_directx->SetBackBufferRenderTarget();
+	}
+
+	void Graphics::DrawProjectiveTextureScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p )
+	{
+		XMMATRIX v;
+		m_camera->SetPosition( 0.0f, 7.0f, -10.0f );
+		m_camera->SetRotation( 35.0f, 0.0f, 0.0f );
+		m_camera->Render();
+		m_camera->GetViewMatrix( v );
+
+		m_rt16->SetRenderTarget( _context );
+		m_rt16->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
+		XMMATRIX v2 = m_viewpoint.GetViewMatrix();
+		XMMATRIX p2 = m_viewpoint.GetProjectionMatrix();
+
+		XMMATRIX t = XMMatrixTranslation( 0.0f, 1.0f, 0.0f );
+
+		m_floor->Render( _context );
+		m_projection_shader->Render(
+			_context,
+			m_floor->GetIndexCount(),
+			t, v, _p,
+			m_floor->GetTexture(),
+			m_projection_light.GetAmbient(),
+			m_projection_light.GetDiffuse(),
+			m_projection_light.GetDirection(),
+			v2, p2,
+			m_dx11_texture->GetTexture()
+		);
+
+		t = XMMatrixTranslation( 0.0f, 2.0f, 0.0f );
+
+		m_rastertek_model->Render( _context );
+		m_projection_shader->Render(
+			_context,
+			m_rastertek_model->GetIndexCount(),
+			t, v, _p,
+			m_water_ground->GetTexture(),
+			m_projection_light.GetAmbient(),
+			m_projection_light.GetDiffuse(),
+			m_projection_light.GetDirection(),
+			v2, p2,
+			m_dx11_texture->GetTexture()
+		);
+
+		m_directx->SetBackBufferRenderTarget();
+
+		m_camera->SetPosition( 0.0f, 0.0f, 0.0f );
+		m_camera->SetRotation( 0.0f, 0.0f, 0.0f );
+		m_camera->Render();
+	}
+
+	void Graphics::DrawLightProjectiveTextureScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p )
+	{
+		m_rt17->SetRenderTarget( _context );
+		m_rt17->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
+
+		XMMATRIX v;
+		m_camera->SetPosition( 0.0f, 7.0f, -10.0f );
+		m_camera->SetRotation( 35.0f, 0.0f, 0.0f );
+		m_camera->Render();
+		m_camera->GetViewMatrix( v );
+
+		XMMATRIX v2 = m_viewpoint.GetViewMatrix();
+		XMMATRIX p2 = m_viewpoint.GetProjectionMatrix();
+		XMMATRIX t;
+
+		t = XMMatrixTranslation( 0.0f, 1.0f, 0.0f );
+		m_floor->Render( _context );
+		m_light_projection_shader->Render(
+			_context, m_floor->GetIndexCount(),
+			t, _v, _p,
+			m_floor->GetTexture(),
+			m_projection_light2.GetAmbient(),
+			m_projection_light2.GetDiffuse(),
+			m_projection_light2.GetPosition(),
+			v2, p2,
+			m_grate_texture->GetTexture()
+		);
+
+		t = XMMatrixTranslation( 0.0f, 2.0f, 0.0f );
+		m_rastertek_model->Render( _context );
+		m_light_projection_shader->Render(
+			_context, m_rastertek_model->GetIndexCount(),
+			t, _v, _p,
+			m_rastertek_model->GetTexture(),
+			m_projection_light2.GetAmbient(),
+			m_projection_light2.GetDiffuse(),
+			m_projection_light2.GetPosition(),
+			v2, p2,
+			m_grate_texture->GetTexture()
+		);
+
+		m_directx->SetBackBufferRenderTarget();
+
+		m_camera->SetPosition( 0.0f, 0.0f, 0.0f );
+		m_camera->SetRotation( 0.0f, 0.0f, 0.0f );
+		m_camera->Render();
 	}
 }

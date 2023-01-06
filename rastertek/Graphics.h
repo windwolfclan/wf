@@ -39,6 +39,7 @@ namespace wf
 	class GlassShader;
 	class InstanceTextureShader;
 	class ProjectionShader;
+	class LightProjectionShader;
 
 	class Quad;
 	class TextureQuad;
@@ -69,7 +70,7 @@ namespace wf
 	constexpr int RENDER_TEXTURE_ARRAY = 5;
 	constexpr int TEXTURE_ARRAY_COUNT = 6;
 
-	constexpr int QUAD_COUNT = 20;
+	constexpr int QUAD_COUNT = 22;
 
 	class Graphics
 	{
@@ -113,6 +114,8 @@ namespace wf
 		void DrawGlassScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 		void DrawIceScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 		void DrawInstanceScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
+		void DrawProjectiveTextureScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
+		void DrawLightProjectiveTextureScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 
 	private:
 		D3D* m_directx{ nullptr };
@@ -154,6 +157,7 @@ namespace wf
 		GlassShader* m_glass_shader{ nullptr };
 		InstanceTextureShader* m_instance_texture_shader{ nullptr };
 		ProjectionShader* m_projection_shader{ nullptr };
+		LightProjectionShader* m_light_projection_shader{ nullptr };
 		
 		RenderTexture* m_rt1{ nullptr };
 		RenderTexture* m_rt2{ nullptr };
@@ -170,6 +174,8 @@ namespace wf
 		RenderTexture* m_rt13{ nullptr };
 		RenderTexture* m_rt14{ nullptr };
 		RenderTexture* m_rt15{ nullptr };
+		RenderTexture* m_rt16{ nullptr };
+		RenderTexture* m_rt17{ nullptr };
 		
 		std::array<TextureArray*, TEXTURE_ARRAY_COUNT> m_texture_arrays;
 		std::array<Quad*, QUAD_COUNT> m_quads;
@@ -185,6 +191,7 @@ namespace wf
 		Texture* m_ice_texture{ nullptr };
 		Texture* m_ice_bump_texture{ nullptr };
 		Texture* m_dx11_texture{ nullptr };
+		Texture* m_grate_texture{ nullptr };
 
 		Text* m_text{ nullptr };
 
@@ -222,6 +229,9 @@ namespace wf
 
 		// Projection
 		Light m_projection_light;
+
+		// LightProjection
+		Light m_projection_light2;
 
 		// mouse cursor
 		Bitmap* m_cursor{ nullptr };

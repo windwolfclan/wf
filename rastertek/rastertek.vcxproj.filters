@@ -183,6 +183,12 @@
     <ClInclude Include="GlassShader.h">
       <Filter>ShaderClass</Filter>
     </ClInclude>
+    <ClInclude Include="ProjectionShader.h">
+      <Filter>ShaderClass</Filter>
+    </ClInclude>
+    <ClInclude Include="Viewpoint.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="System.cpp">
@@ -326,6 +332,12 @@
     <ClCompile Include="GlassShader.cpp">
       <Filter>ShaderClass</Filter>
     </ClCompile>
+    <ClCompile Include="ProjectionShader.cpp">
+      <Filter>ShaderClass</Filter>
+    </ClCompile>
+    <ClCompile Include="Viewpoint.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="color_vs.hlsl">
@@ -458,6 +470,12 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="glass_ps.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="projection_vs.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="projection_ps.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

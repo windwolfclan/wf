@@ -9,6 +9,7 @@
 #include "TextureArray.h"
 #include "ModelLoader.h"
 #include "RenderTexture.h"
+#include "Viewpoint.h"
 
 namespace wf
 {
@@ -37,6 +38,7 @@ namespace wf
 	class DepthShader;
 	class GlassShader;
 	class InstanceTextureShader;
+	class ProjectionShader;
 
 	class Quad;
 	class TextureQuad;
@@ -151,6 +153,7 @@ namespace wf
 		DepthShader* m_depth_shader{ nullptr };
 		GlassShader* m_glass_shader{ nullptr };
 		InstanceTextureShader* m_instance_texture_shader{ nullptr };
+		ProjectionShader* m_projection_shader{ nullptr };
 		
 		RenderTexture* m_rt1{ nullptr };
 		RenderTexture* m_rt2{ nullptr };
@@ -181,6 +184,7 @@ namespace wf
 		Texture* m_glass_bump_texture{ nullptr };
 		Texture* m_ice_texture{ nullptr };
 		Texture* m_ice_bump_texture{ nullptr };
+		Texture* m_dx11_texture{ nullptr };
 
 		Text* m_text{ nullptr };
 
@@ -215,7 +219,9 @@ namespace wf
 		float m_fade_time{ 0.0f };
 		float m_fade_rate{ 0.0f };
 		bool m_fade_finish{ false };
-		
+
+		// Projection
+		Light m_projection_light;
 
 		// mouse cursor
 		Bitmap* m_cursor{ nullptr };
@@ -223,5 +229,7 @@ namespace wf
 		int m_mouse_y{ 0 };
 		int m_width{ 0 };
 		int m_height{ 0 };
+
+		Viewpoint m_viewpoint;
 	};
 }

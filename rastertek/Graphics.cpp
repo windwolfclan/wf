@@ -24,6 +24,7 @@
 #include "RefractShader.h"
 #include "DepthShader.h"
 #include "GlassShader.h"
+#include "ProjectionShader.h"
 
 namespace wf
 {
@@ -185,6 +186,7 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		INITIALIZE_TEXTURE( m_glass_bump_texture, "./resources/glass_bump.tga" );
 		INITIALIZE_TEXTURE( m_ice_texture, "./resources/ice.tga" );
 		INITIALIZE_TEXTURE( m_ice_bump_texture, "./resources/ice_bump.tga" );
+		LOAD_DDS_TEXTURE( m_dx11_texture, L"./resources/dx11.dds" );
 		
 		if ( !InitializeTextureArray( device, context ) )
 		{
@@ -202,11 +204,22 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		m_light.SetSpecular( 0.0f, 1.0f, 1.0f, 1.0f );
 		m_light.SetSpecularPower( 1.0f );
 
+		m_projection_light.SetAmbient( 0.15f, 0.15f, 0.15f, 1.0f );
+		m_projection_light.SetDiffuse( 1.0f, 1.0f, 1.0f, 1.0f );
+		m_projection_light.SetDirection( 0.0f, -0.75f, 0.5f );
+
 		m_water_light.SetAmbient( 0.15f, 0.15f, 0.15f, 1.0f );
 		m_water_light.SetDiffuse( 1.0f, 1.0f, 1.0f, 1.0f );
 		m_water_light.SetDirection( 0.0f, -1.0f, 0.5f );
 		m_water_height = 2.75f;
 		m_water_translation = 0.0f;
+
+		m_viewpoint.SetPosition( 2.0f, 5.0f, -2.0f );
+		m_viewpoint.SetLookAt( 0.0f, 0.0f, 0.0f );
+		m_viewpoint.SetProjectionParameters( XM_PIDIV2, 1.0f, 0.1f, 100.0f );
+		m_viewpoint.GenerateViewMatrix();
+		m_viewpoint.GenerateProjectionMatrix();
+
 
 		return true;
 	}
@@ -217,6 +230,7 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		ReleaseTextureArray();
 		
 		// Texture
+		SAFE_SHUTDOWN( m_dx11_texture );
 		SAFE_SHUTDOWN( m_ice_bump_texture );
 		SAFE_SHUTDOWN( m_ice_texture );
 		SAFE_SHUTDOWN( m_glass_bump_texture );
@@ -283,7 +297,8 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 			return false;
 		}
 
-		m_camera->SetPosition( 0.0f, 0.0f, -5.0f );
+		m_camera->SetPosition( 0.0f, 7.0f, -10.0f );
+		m_camera->SetRotation( 35.0f, 0.0f, 0.0f );
 
 		FrameFade( param.time );
 
@@ -323,8 +338,8 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 			rotate = XMMatrixRotationY( rotation );
 		}
 
-		static bool draw_2d{ true };
-		// static bool draw_2d{ false };
+		// static bool draw_2d{ true };
+		static bool draw_2d{ false };
 
 #pragma region RENDER TO TEXTURE
 		if( draw_2d )
@@ -354,8 +369,40 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 
 			if ( !draw_2d )
 			{
-				
+				XMMATRIX v2 = m_viewpoint.GetViewMatrix();
+				XMMATRIX p2 = m_viewpoint.GetProjectionMatrix();
 
+				XMMATRIX t = XMMatrixTranslation( 0.0f, 1.0f, 0.0f );
+
+				m_floor->Render( context );
+				m_projection_shader->Render(
+					context,
+					m_floor->GetIndexCount(),
+					t, v, p,
+					m_floor->GetTexture(),
+					m_projection_light.GetAmbient(),
+					m_projection_light.GetDiffuse(),
+					m_projection_light.GetDirection(),
+					v2, p2,
+					m_dx11_texture->GetTexture()
+				);
+
+				t = XMMatrixTranslation( 0.0f, 2.0f, 0.0f );
+
+				m_rastertek_model->Render( context );
+				m_projection_shader->Render(
+					context,
+					m_rastertek_model->GetIndexCount(),
+					t, v, p,
+					m_water_ground->GetTexture(),
+					m_projection_light.GetAmbient(),
+					m_projection_light.GetDiffuse(),
+					m_projection_light.GetDirection(),
+					v2, p2,
+					m_dx11_texture->GetTexture()
+				);
+
+				// m_texture_shader->Render( context, m_rastertek_model->GetIndexCount(), rotate * t, v, p, m_rastertek_model->GetTexture() );
 			}
 
 			// 2D Draw
@@ -620,12 +667,14 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 		INITIALIZE_WF_SHADER( m_depth_shader, DepthShader );
 		INITIALIZE_WF_SHADER( m_glass_shader, GlassShader );
 		INITIALIZE_WF_SHADER( m_instance_texture_shader, InstanceTextureShader );
+		INITIALIZE_WF_SHADER( m_projection_shader, ProjectionShader );
 
 		return true;
 	}
 
 	void Graphics::ShutdownShader()
 	{
+		SAFE_SHUTDOWN( m_projection_shader );
 		SAFE_SHUTDOWN( m_instance_texture_shader );
 		SAFE_SHUTDOWN( m_glass_shader );
 		SAFE_SHUTDOWN( m_depth_shader );

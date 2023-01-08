@@ -195,6 +195,12 @@
     <ClInclude Include="ShadowShader.h">
       <Filter>ShaderClass</Filter>
     </ClInclude>
+    <ClInclude Include="GlowmapShader.h">
+      <Filter>ShaderClass</Filter>
+    </ClInclude>
+    <ClInclude Include="GlowShader.h">
+      <Filter>ShaderClass</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="System.cpp">
@@ -347,6 +353,12 @@
     <ClCompile Include="ShadowShader.cpp">
       <Filter>ShaderClass</Filter>
     </ClCompile>
+    <ClCompile Include="GlowmapShader.cpp">
+      <Filter>ShaderClass</Filter>
+    </ClCompile>
+    <ClCompile Include="GlowShader.cpp">
+      <Filter>ShaderClass</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="color_vs.hlsl">
@@ -491,6 +503,18 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="shadow_ps.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="glowmap_vs.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="glowmap_ps.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="glow_vs.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="glow_ps.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

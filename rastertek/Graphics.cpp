@@ -26,6 +26,8 @@
 #include "GlassShader.h"
 #include "ProjectionShader.h"
 #include "ShadowShader.h"
+#include "GlowmapShader.h"
+#include "GlowShader.h"
 
 namespace wf
 {
@@ -138,6 +140,13 @@ namespace wf
 			return false;
 		}
 
+		m_glow_bitmap = new Bitmap;
+		if ( !m_glow_bitmap->Initialize( device, context, _width, _height, "./resources/glowmap.tga", 256, 32 ) )
+		{
+			return false;
+		}
+
+
 #define INITIALIZE_RASTERTEK_MODEL( p, tga, txt )\
 p = new RasterTekModel;\
 if( !p->Initialize( device, context, tga, txt ) ) return false;
@@ -190,6 +199,8 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		INITIALIZE_TEXTURE( m_ice_bump_texture, "./resources/ice_bump.tga" );
 		LOAD_DDS_TEXTURE( m_dx11_texture, L"./resources/dx11.dds" );
 		LOAD_DDS_TEXTURE( m_grate_texture, L"./resources/grate.dds" );
+		LOAD_DDS_TEXTURE( m_glow_texture, L"./resources/glow.dds" );
+		LOAD_DDS_TEXTURE( m_glowmap_texture, L"./resources/glowmap.dds" );
 		
 		if ( !InitializeTextureArray( device, context ) )
 		{
@@ -242,6 +253,8 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		ReleaseTextureArray();
 		
 		// Texture
+		SAFE_SHUTDOWN( m_glowmap_texture );
+		SAFE_SHUTDOWN( m_glow_texture );
 		SAFE_SHUTDOWN( m_grate_texture );
 		SAFE_SHUTDOWN( m_dx11_texture );
 		SAFE_SHUTDOWN( m_ice_bump_texture );
@@ -265,6 +278,7 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		ShutdownShader();
 
 		// 
+		SAFE_SHUTDOWN( m_glow_bitmap );
 		SAFE_SHUTDOWN( m_blur_bitmap );
 		SAFE_SHUTDOWN( m_cursor );
 		SAFE_SHUTDOWN( m_text );
@@ -311,8 +325,8 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 			return false;
 		}
 
-		m_camera->SetPosition( 0.0f, 10.0f, -15.0f );
-		m_camera->SetRotation( 15.0f, 0.0f, 0.0f );
+		// m_camera->SetPosition( 0.0f, 10.0f, -15.0f );
+		// m_camera->SetRotation( 15.0f, 0.0f, 0.0f );
 
 		FrameFade( param.time );
 
@@ -385,48 +399,7 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 
 			if ( !draw_2d )
 			{
-				static float range = 5.0;
-				static float light_x = -range;
-				light_x += 0.05f;
-				if ( light_x >= range )
-					light_x = -range;
-
-				light_x = 5.0f;
-
-				m_shadow_light.SetPosition( light_x, 5.0f, -5.0f );
-				m_shadow_light.GenerateViewMatrix();
-				XMMATRIX t = XMMatrixTranslation( 0.0f, 0.5f, 0.0f );
-				XMMATRIX tp = XMMatrixTranslation( 0.0f, 0.2f, 0.0f );
-
-				XMMATRIX lv = m_shadow_light.GetViewMatrix();
-				XMMATRIX lp = m_shadow_light.GetProjectionMatrix();
-
-				m_shadow_depth_texture->SetRenderTarget( context );
-				m_shadow_depth_texture->ClearRenderTarget( context, 0.0f, 0.0f, 0.0f, 1.0f );
-			
-				m_sphere->Render( context );
-				m_depth_shader->Render( context, m_sphere->GetIndexCount(), t, lv, lp );
-
-				m_plane->Render( context );
-				m_depth_shader->Render( context, m_plane->GetIndexCount(), tp, lv, lp );
-
-				m_directx->SetBackBufferRenderTarget();
-				m_directx->ResetViewport();
-
-
-				m_sphere->Render( context );
-				m_shadow_shader->Render( 
-					context, m_sphere->GetIndexCount(), t, v, p, lv, lp,
-					m_sphere->GetTexture(),	m_shadow_depth_texture->GetShaderResourceView(), 
-					m_shadow_light.GetPosition(), m_shadow_light.GetAmbient(), m_shadow_light.GetDiffuse() );
-
-				m_plane->Render( context );
-				m_shadow_shader->Render(
-					context, m_plane->GetIndexCount(), tp, v, p, lv, lp,
-					m_plane->GetTexture(), 
-					m_shadow_depth_texture->GetShaderResourceView(),
-					m_shadow_light.GetPosition(), m_shadow_light.GetAmbient(), m_shadow_light.GetDiffuse() );
-
+				DrawGlowScene( context, dsv, w, v, p );
 			}
 
 
@@ -633,6 +606,7 @@ if( !p->Initialize( _device, half_width, half_height ) ) return false;
 		INITIALIZE_RENDER_TEXTURE( m_rt15 );
 		INITIALIZE_RENDER_TEXTURE( m_rt16 );
 		INITIALIZE_RENDER_TEXTURE( m_rt17 );
+		INITIALIZE_RENDER_TEXTURE( m_glow_render_texture );
 		INITIALIZE_RENDER_TEXTURE( m_blur_render_texture );
 		INITIALIZE_RENDER_TEXTURE( m_up_sample );
 		INITIALIZE_RENDER_TEXTURE( m_water_refract_texture );
@@ -659,6 +633,7 @@ if( !p->Initialize( _device, half_width, half_height ) ) return false;
 		SAFE_SHUTDOWN( m_down_sample );
 		SAFE_SHUTDOWN( m_up_sample );
 		SAFE_SHUTDOWN( m_blur_render_texture );
+		SAFE_SHUTDOWN( m_glow_render_texture );
 		SAFE_SHUTDOWN( m_rt17 );
 		SAFE_SHUTDOWN( m_rt16 );
 		SAFE_SHUTDOWN( m_rt15 );
@@ -710,12 +685,16 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 		INITIALIZE_WF_SHADER( m_projection_shader, ProjectionShader );
 		INITIALIZE_WF_SHADER( m_light_projection_shader, LightProjectionShader );
 		INITIALIZE_WF_SHADER( m_shadow_shader, ShadowShader );
+		INITIALIZE_WF_SHADER( m_glowmap_shader, GlowmapShader );
+		INITIALIZE_WF_SHADER( m_glow_shader, GlowShader );
 
 		return true;
 	}
 
 	void Graphics::ShutdownShader()
 	{
+		SAFE_SHUTDOWN( m_glow_shader );
+		SAFE_SHUTDOWN( m_glowmap_shader );
 		SAFE_SHUTDOWN( m_shadow_shader );
 		SAFE_SHUTDOWN( m_light_projection_shader );
 		SAFE_SHUTDOWN( m_projection_shader );
@@ -1517,5 +1496,118 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 		m_camera->SetPosition( 0.0f, 0.0f, 0.0f );
 		m_camera->SetRotation( 0.0f, 0.0f, 0.0f );
 		m_camera->Render();
+	}
+
+	void Graphics::DrawGlowScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p )
+	{
+		m_directx->TurnOnAlphaBlending();
+		m_directx->TurnOffZBuffer();
+
+		std::vector<float> weights = utility::CreateGaussianKernel( 23 );
+
+		XMMATRIX w;
+		XMMATRIX p;
+		XMMATRIX o;
+		XMFLOAT2 resolution;
+		m_directx->GetWorldMatrix( w );
+
+		// RenderSceneToTexture
+		{
+			m_glow_render_texture->SetRenderTarget( _context );
+			m_glow_render_texture->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
+
+			o = m_glow_render_texture->GetOrthoMatrix();
+
+			m_glow_bitmap->Render( _context, 100, 100 );
+			m_glowmap_shader->Render( _context, m_glow_bitmap->GetIndexCount(), _w, _v, o, 
+				m_glow_texture->GetTexture(), m_glowmap_texture->GetTexture() );
+
+			m_directx->SetBackBufferRenderTarget();
+			m_directx->ResetViewport();
+		}
+
+		// DownSampleTexture
+		{
+			m_down_sample->SetRenderTarget( _context );
+			m_down_sample->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
+			o = m_down_sample->GetOrthoMatrix();
+
+			m_blur_size_bitmap->Render( _context );
+			m_texture_shader->Render( _context, m_blur_size_bitmap->GetIndexCount(), w, _v, o, m_glow_render_texture->GetShaderResourceView() );
+
+			m_directx->SetBackBufferRenderTarget();
+			m_directx->ResetViewport();
+		}
+
+		// RenderHorizontalBlurToTexture
+		{
+			m_h_blur->SetRenderTarget( _context );
+			m_h_blur->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
+			o = m_h_blur->GetOrthoMatrix();
+			resolution.x = (float)m_h_blur->GetWidth();
+			resolution.y = (float)m_h_blur->GetHeight();
+
+			m_blur_size_bitmap->Render( _context );
+			m_horizontal_blur_shader->Render( _context, m_blur_size_bitmap->GetIndexCount(), w, _v, o, m_down_sample->GetShaderResourceView(), resolution, 23, weights );
+
+			m_directx->SetBackBufferRenderTarget();
+			m_directx->ResetViewport();
+		}
+
+		// RenderVerticalBlurToTexture
+		{
+			m_v_blur->SetRenderTarget( _context );
+			m_v_blur->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
+			o = m_v_blur->GetOrthoMatrix();
+			resolution.x = (float)m_v_blur->GetWidth();
+			resolution.y = (float)m_v_blur->GetHeight();
+
+			m_blur_size_bitmap->Render( _context );
+			m_vertical_blur_shader->Render( _context, m_blur_size_bitmap->GetIndexCount(), w, _v, o, m_h_blur->GetShaderResourceView(), resolution, 23, weights );
+
+			m_directx->SetBackBufferRenderTarget();
+			m_directx->ResetViewport();
+		}
+
+		// UpSampleTexture
+		{
+			m_up_sample->SetRenderTarget( _context );
+			m_up_sample->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
+			o = m_up_sample->GetOrthoMatrix();
+			m_screen_size_bitmap->Render( _context );
+			m_texture_shader->Render( _context, m_screen_size_bitmap->GetIndexCount(), w, _v, o, m_v_blur->GetShaderResourceView() );
+
+			m_directx->SetBackBufferRenderTarget();
+			m_directx->ResetViewport();
+		}
+
+		// RenderUIElementsToTexture
+		{
+			m_glow_render_texture->SetRenderTarget( _context );
+			m_glow_render_texture->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
+
+			m_directx->GetOrthoMatrix( o );
+
+			m_glow_bitmap->Render( _context, 100, 100 );
+			m_texture_shader->Render( _context, m_glow_bitmap->GetIndexCount(), w, _v, o, m_glow_texture->GetTexture() );
+
+			m_directx->SetBackBufferRenderTarget();
+			m_directx->ResetViewport();
+		}
+
+		// RenderGlowScene
+		{
+			m_directx->GetOrthoMatrix( o );
+			m_screen_size_bitmap->Render( _context );
+			m_glow_shader->Render( _context, m_screen_size_bitmap->GetIndexCount(), w, _v, o,
+				m_glow_render_texture->GetShaderResourceView(),
+				m_up_sample->GetShaderResourceView(), 3.0f 
+			);
+
+		//	m_texture_shader->Render( _context, m_screen_size_bitmap->GetIndexCount(), w, _v, o, m_up_sample->GetShaderResourceView() );
+		}
+
+		m_directx->TurnOnZBuffer();
+		m_directx->TurnOffAlphaBlending();
 	}
 }

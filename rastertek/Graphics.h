@@ -41,6 +41,8 @@ namespace wf
 	class ProjectionShader;
 	class LightProjectionShader;
 	class ShadowShader;
+	class GlowmapShader;
+	class GlowShader;
 
 	class Quad;
 	class TextureQuad;
@@ -120,6 +122,7 @@ namespace wf
 		void DrawInstanceScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 		void DrawProjectiveTextureScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 		void DrawLightProjectiveTextureScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
+		void DrawGlowScene( ID3D11DeviceContext* _context, ID3D11DepthStencilView* _dsv, const XMMATRIX& _w, const XMMATRIX& _v, const XMMATRIX& _p );
 
 	private:
 		D3D* m_directx{ nullptr };
@@ -163,6 +166,8 @@ namespace wf
 		ProjectionShader* m_projection_shader{ nullptr };
 		LightProjectionShader* m_light_projection_shader{ nullptr };
 		ShadowShader* m_shadow_shader{ nullptr };
+		GlowmapShader* m_glowmap_shader{ nullptr };
+		GlowShader* m_glow_shader{ nullptr };
 		
 		RenderTexture* m_rt1{ nullptr };
 		RenderTexture* m_rt2{ nullptr };
@@ -249,6 +254,12 @@ namespace wf
 		RasterTekModel* m_sphere{ nullptr };
 		Light m_shadow_light;
 		RenderTexture* m_shadow_depth_texture{ nullptr };
+
+		// Glow
+		RenderTexture* m_glow_render_texture{ nullptr };
+		Bitmap* m_glow_bitmap{ nullptr };
+		Texture* m_glow_texture{ nullptr };
+		Texture* m_glowmap_texture{ nullptr };
 
 
 		Viewpoint m_viewpoint;

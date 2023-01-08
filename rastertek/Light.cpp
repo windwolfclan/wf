@@ -83,9 +83,50 @@ namespace wf
 		m_position.z = _z;
 	}
 
-	XMFLOAT3 Light::GetPosition()
+	XMFLOAT3 Light::GetPosition() const
 	{
 		return m_position;
+	}
+
+	void Light::SetLookAt( float _x, float _y, float _z )
+	{
+		m_look_at.x = _x;
+		m_look_at.y = _y;
+		m_look_at.z = _z;
+	}
+
+	XMFLOAT3 Light::GetLookAt() const
+	{
+		return m_look_at;
+	}
+
+	void Light::GenerateViewMatrix()
+	{
+		XMFLOAT3 up{ 0.0f, 1.0f, 0.0f };
+
+		XMVECTOR p = XMLoadFloat3( &m_position );
+		XMVECTOR l = XMLoadFloat3( &m_look_at );
+		XMVECTOR u = XMLoadFloat3( &up );
+
+		m_view = XMMatrixLookAtLH( p, l, u );
+	}
+
+	void Light::GenerateProjectionMatrix( float _near_z, float _far_z )
+	{
+		float fov = XM_PIDIV2;
+		float aspect = 1.0f;
+
+		m_projection = XMMatrixPerspectiveFovLH( fov, aspect, _near_z, _far_z );
+	}
+
+	XMMATRIX Light::GetViewMatrix() const
+	{
+		return m_view;
+	}
+
+	XMMATRIX Light::GetProjectionMatrix() const
+	{
+		return m_projection;
 	}
 
 }

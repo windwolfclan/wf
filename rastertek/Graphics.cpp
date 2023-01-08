@@ -25,6 +25,7 @@
 #include "DepthShader.h"
 #include "GlassShader.h"
 #include "ProjectionShader.h"
+#include "ShadowShader.h"
 
 namespace wf
 {
@@ -148,6 +149,7 @@ if( !p->Initialize( device, context, tga, txt ) ) return false;
 		INITIALIZE_RASTERTEK_MODEL( m_water_bath, "./resources/water_bath.tga", "./resources/bath.txt" );
 		INITIALIZE_RASTERTEK_MODEL( m_water_wall, "./resources/water_wall.tga", "./resources/wall.txt" );
 		INITIALIZE_RASTERTEK_MODEL( m_water, "./resources/water.tga", "./resources/water.txt" );
+		INITIALIZE_RASTERTEK_MODEL( m_sphere, "./resources/ice.tga", "./resources/sphere.txt" );
 
 		
 		if ( !InitializeShader( device, _hwnd ) )
@@ -219,6 +221,11 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		m_water_height = 2.75f;
 		m_water_translation = 0.0f;
 
+		m_shadow_light.SetAmbient( 0.15f, 0.15f, 0.15f, 1.0f );
+		m_shadow_light.SetDiffuse( 1.0f, 1.0f, 1.0f, 1.0f );
+		m_shadow_light.SetLookAt( 0.0f, 0.0f, 0.0f );
+		m_shadow_light.GenerateProjectionMatrix( SCREEN_NEAR, SCREEN_DEPTH );
+
 		m_viewpoint.SetPosition( 2.0f, 5.0f, -2.0f );
 		m_viewpoint.SetLookAt( 0.0f, 0.0f, 0.0f );
 		m_viewpoint.SetProjectionParameters( XM_PIDIV2, 1.0f, 0.1f, 100.0f );
@@ -265,6 +272,7 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		SAFE_SHUTDOWN( m_water_ground );
 		SAFE_SHUTDOWN( m_water_bath );
 		SAFE_SHUTDOWN( m_water_wall );
+		SAFE_SHUTDOWN( m_sphere );
 		SAFE_SHUTDOWN( m_water );
 		SAFE_SHUTDOWN( m_plane );
 		SAFE_SHUTDOWN( m_floor );
@@ -303,8 +311,8 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 			return false;
 		}
 
-		m_camera->SetPosition( 0.0f, 7.0f, -10.0f );
-		m_camera->SetRotation( 35.0f, 0.0f, 0.0f );
+		m_camera->SetPosition( 0.0f, 10.0f, -15.0f );
+		m_camera->SetRotation( 15.0f, 0.0f, 0.0f );
 
 		FrameFade( param.time );
 
@@ -344,8 +352,8 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 			rotate = XMMatrixRotationY( rotation );
 		}
 
-		static bool draw_2d{ true };
-		/// static bool draw_2d{ false };
+		// static bool draw_2d{ true };
+		static bool draw_2d{ false };
 
 #pragma region RENDER TO TEXTURE
 		if( draw_2d )
@@ -377,35 +385,48 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 
 			if ( !draw_2d )
 			{
-				XMMATRIX v2 = m_viewpoint.GetViewMatrix();
-				XMMATRIX p2 = m_viewpoint.GetProjectionMatrix();
-				XMMATRIX t;
+				static float range = 5.0;
+				static float light_x = -range;
+				light_x += 0.05f;
+				if ( light_x >= range )
+					light_x = -range;
 
-				t = XMMatrixTranslation( 0.0f, 1.0f, 0.0f );
-				m_floor->Render( context );
-				m_light_projection_shader->Render(
-					context, m_floor->GetIndexCount(),
-					t, v, p,
-					m_floor->GetTexture(),
-					m_projection_light2.GetAmbient(),
-					m_projection_light2.GetDiffuse(),
-					m_projection_light2.GetPosition(),
-					v2, p2,
-					m_grate_texture->GetTexture()
-				);
+				light_x = 5.0f;
 
-				t = XMMatrixTranslation( 0.0f, 2.0f, 0.0f );
-				m_rastertek_model->Render( context );
-				m_light_projection_shader->Render(
-					context, m_rastertek_model->GetIndexCount(),
-					t, v, p,
-					m_rastertek_model->GetTexture(),
-					m_projection_light2.GetAmbient(),
-					m_projection_light2.GetDiffuse(),
-					m_projection_light2.GetPosition(),
-					v2, p2,
-					m_grate_texture->GetTexture()
-				);
+				m_shadow_light.SetPosition( light_x, 5.0f, -5.0f );
+				m_shadow_light.GenerateViewMatrix();
+				XMMATRIX t = XMMatrixTranslation( 0.0f, 0.5f, 0.0f );
+				XMMATRIX tp = XMMatrixTranslation( 0.0f, 0.2f, 0.0f );
+
+				XMMATRIX lv = m_shadow_light.GetViewMatrix();
+				XMMATRIX lp = m_shadow_light.GetProjectionMatrix();
+
+				m_shadow_depth_texture->SetRenderTarget( context );
+				m_shadow_depth_texture->ClearRenderTarget( context, 0.0f, 0.0f, 0.0f, 1.0f );
+			
+				m_sphere->Render( context );
+				m_depth_shader->Render( context, m_sphere->GetIndexCount(), t, lv, lp );
+
+				m_plane->Render( context );
+				m_depth_shader->Render( context, m_plane->GetIndexCount(), tp, lv, lp );
+
+				m_directx->SetBackBufferRenderTarget();
+				m_directx->ResetViewport();
+
+
+				m_sphere->Render( context );
+				m_shadow_shader->Render( 
+					context, m_sphere->GetIndexCount(), t, v, p, lv, lp,
+					m_sphere->GetTexture(),	m_shadow_depth_texture->GetShaderResourceView(), 
+					m_shadow_light.GetPosition(), m_shadow_light.GetAmbient(), m_shadow_light.GetDiffuse() );
+
+				m_plane->Render( context );
+				m_shadow_shader->Render(
+					context, m_plane->GetIndexCount(), tp, v, p, lv, lp,
+					m_plane->GetTexture(), 
+					m_shadow_depth_texture->GetShaderResourceView(),
+					m_shadow_light.GetPosition(), m_shadow_light.GetAmbient(), m_shadow_light.GetDiffuse() );
+
 			}
 
 
@@ -587,6 +608,10 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 p = new RenderTexture;\
 if( !p->Initialize( _device, _width, _height ) ) return false;
 
+#define INITIALIZE_RENDER_TEXTURE_SIZE( p, w, h )\
+p = new RenderTexture;\
+if( !p->Initialize( _device, w, h ) ) return false;
+
 #define INITIALIZE_RENDER_TEXTURE_HALF( p )\
 p = new RenderTexture;\
 if( !p->Initialize( _device, half_width, half_height ) ) return false;
@@ -613,6 +638,8 @@ if( !p->Initialize( _device, half_width, half_height ) ) return false;
 		INITIALIZE_RENDER_TEXTURE( m_water_refract_texture );
 		INITIALIZE_RENDER_TEXTURE( m_water_reflect_texture );
 		INITIALIZE_RENDER_TEXTURE( m_glass_render_texture );
+		// INITIALIZE_RENDER_TEXTURE( m_shadow_depth_texture );
+		INITIALIZE_RENDER_TEXTURE_SIZE( m_shadow_depth_texture, SHADOWMAP_WIDTH, SHADOWMAP_HEIGHT );
 		INITIALIZE_RENDER_TEXTURE_HALF( m_down_sample );
 		INITIALIZE_RENDER_TEXTURE_HALF( m_h_blur );
 		INITIALIZE_RENDER_TEXTURE_HALF( m_v_blur );
@@ -623,6 +650,7 @@ if( !p->Initialize( _device, half_width, half_height ) ) return false;
 
 	void Graphics::ShutdownRenderTexture()
 	{
+		SAFE_SHUTDOWN( m_shadow_depth_texture );
 		SAFE_SHUTDOWN( m_glass_render_texture );
 		SAFE_SHUTDOWN( m_water_refract_texture );
 		SAFE_SHUTDOWN( m_water_reflect_texture );
@@ -681,12 +709,14 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 		INITIALIZE_WF_SHADER( m_instance_texture_shader, InstanceTextureShader );
 		INITIALIZE_WF_SHADER( m_projection_shader, ProjectionShader );
 		INITIALIZE_WF_SHADER( m_light_projection_shader, LightProjectionShader );
+		INITIALIZE_WF_SHADER( m_shadow_shader, ShadowShader );
 
 		return true;
 	}
 
 	void Graphics::ShutdownShader()
 	{
+		SAFE_SHUTDOWN( m_shadow_shader );
 		SAFE_SHUTDOWN( m_light_projection_shader );
 		SAFE_SHUTDOWN( m_projection_shader );
 		SAFE_SHUTDOWN( m_instance_texture_shader );

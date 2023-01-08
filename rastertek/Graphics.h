@@ -40,6 +40,7 @@ namespace wf
 	class InstanceTextureShader;
 	class ProjectionShader;
 	class LightProjectionShader;
+	class ShadowShader;
 
 	class Quad;
 	class TextureQuad;
@@ -52,6 +53,9 @@ namespace wf
 	const bool VSYNC_ENABLED = true;
 	const float SCREEN_DEPTH = 1000.0f;
 	const float SCREEN_NEAR = 1.0f;
+
+	const int SHADOWMAP_WIDTH = 1024;
+	const int SHADOWMAP_HEIGHT = 1024;
 
 	struct FrameParam
 	{
@@ -158,6 +162,7 @@ namespace wf
 		InstanceTextureShader* m_instance_texture_shader{ nullptr };
 		ProjectionShader* m_projection_shader{ nullptr };
 		LightProjectionShader* m_light_projection_shader{ nullptr };
+		ShadowShader* m_shadow_shader{ nullptr };
 		
 		RenderTexture* m_rt1{ nullptr };
 		RenderTexture* m_rt2{ nullptr };
@@ -239,6 +244,12 @@ namespace wf
 		int m_mouse_y{ 0 };
 		int m_width{ 0 };
 		int m_height{ 0 };
+
+		// Shadow
+		RasterTekModel* m_sphere{ nullptr };
+		Light m_shadow_light;
+		RenderTexture* m_shadow_depth_texture{ nullptr };
+
 
 		Viewpoint m_viewpoint;
 	};

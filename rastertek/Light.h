@@ -22,7 +22,16 @@ namespace wf
 		float GetSpecularPower() const;
 
 		void SetPosition( float _x, float _y, float _z );
-		XMFLOAT3 GetPosition();
+		XMFLOAT3 GetPosition() const;
+
+		void SetLookAt( float _x, float _y, float _z );
+		XMFLOAT3 GetLookAt() const;
+
+		void GenerateViewMatrix();
+		void GenerateProjectionMatrix( float _near_z, float _far_z );
+
+		XMMATRIX GetViewMatrix() const;
+		XMMATRIX GetProjectionMatrix() const;
 
 	private:
 		XMFLOAT3 m_position{ 0.0f, 0.0f, 0.0f };
@@ -31,5 +40,9 @@ namespace wf
 		XMFLOAT3 m_direction{ 0.0f, 0.0f, 0.0f };
 		XMFLOAT4 m_specular{ 0.0f, 0.0f, 0.0f, 0.0f };
 		float m_specular_power{ 1.0f };
+		
+		XMFLOAT3 m_look_at{ 0.0f, 0.0f, 0.0f };
+		XMMATRIX m_view{};
+		XMMATRIX m_projection{};
 	};
 }

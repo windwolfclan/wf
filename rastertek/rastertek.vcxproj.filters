@@ -189,6 +189,12 @@
     <ClInclude Include="Viewpoint.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="헤더.h">
+      <Filter>ShaderClass</Filter>
+    </ClInclude>
+    <ClInclude Include="ShadowShader.h">
+      <Filter>ShaderClass</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="System.cpp">
@@ -338,6 +344,9 @@
     <ClCompile Include="Viewpoint.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="ShadowShader.cpp">
+      <Filter>ShaderClass</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="color_vs.hlsl">
@@ -476,6 +485,12 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="projection_ps.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shadow_vs.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shadow_ps.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

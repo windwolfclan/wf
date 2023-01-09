@@ -76,7 +76,7 @@ namespace wf
 	constexpr int RENDER_TEXTURE_ARRAY = 5;
 	constexpr int TEXTURE_ARRAY_COUNT = 6;
 
-	constexpr int QUAD_COUNT = 22;
+	constexpr int QUAD_COUNT = 23;
 
 	class Graphics
 	{
@@ -186,6 +186,7 @@ namespace wf
 		RenderTexture* m_rt15{ nullptr };
 		RenderTexture* m_rt16{ nullptr };
 		RenderTexture* m_rt17{ nullptr };
+		RenderTexture* m_rt18{ nullptr };
 		
 		std::array<TextureArray*, TEXTURE_ARRAY_COUNT> m_texture_arrays;
 		std::array<Quad*, QUAD_COUNT> m_quads;

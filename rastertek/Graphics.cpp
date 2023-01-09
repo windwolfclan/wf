@@ -366,8 +366,8 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 			rotate = XMMatrixRotationY( rotation );
 		}
 
-		// static bool draw_2d{ true };
-		static bool draw_2d{ false };
+		static bool draw_2d{ true };
+		// static bool draw_2d{ false };
 
 #pragma region RENDER TO TEXTURE
 		if( draw_2d )
@@ -388,6 +388,7 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 			DrawInstanceScene( context, dsv, w, v, p );
 			DrawProjectiveTextureScene( context, dsv, w, v, p );
 			DrawLightProjectiveTextureScene( context, dsv, w, v, p );
+			DrawGlowScene( context, dsv, w, v, p );
 
 			m_directx->SetBackBufferRenderTarget();
 		}
@@ -399,7 +400,6 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 
 			if ( !draw_2d )
 			{
-				DrawGlowScene( context, dsv, w, v, p );
 			}
 
 
@@ -606,6 +606,7 @@ if( !p->Initialize( _device, half_width, half_height ) ) return false;
 		INITIALIZE_RENDER_TEXTURE( m_rt15 );
 		INITIALIZE_RENDER_TEXTURE( m_rt16 );
 		INITIALIZE_RENDER_TEXTURE( m_rt17 );
+		INITIALIZE_RENDER_TEXTURE_SIZE( m_rt18, 150, 150 );
 		INITIALIZE_RENDER_TEXTURE( m_glow_render_texture );
 		INITIALIZE_RENDER_TEXTURE( m_blur_render_texture );
 		INITIALIZE_RENDER_TEXTURE( m_up_sample );
@@ -634,6 +635,7 @@ if( !p->Initialize( _device, half_width, half_height ) ) return false;
 		SAFE_SHUTDOWN( m_up_sample );
 		SAFE_SHUTDOWN( m_blur_render_texture );
 		SAFE_SHUTDOWN( m_glow_render_texture );
+		SAFE_SHUTDOWN( m_rt18 );
 		SAFE_SHUTDOWN( m_rt17 );
 		SAFE_SHUTDOWN( m_rt16 );
 		SAFE_SHUTDOWN( m_rt15 );
@@ -762,6 +764,7 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 		{ 900, 700 },
 		{ 1100, 100 },
 		{ 1100, 300 },
+		{ 1100, 500 },
 		};
 
 		for ( int i = 0; i < QUAD_COUNT; ++i )
@@ -950,6 +953,13 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 			{
 				// light projective texture
 				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt17->GetShaderResourceView() ) ) { return; }
+				break;
+			}
+
+			case 22:
+			{
+				// glow
+				if ( !m_texture_shader->Render( context, index_count, w, v, o, m_rt18->GetShaderResourceView() ) ) { return; }
 				break;
 			}
 
@@ -1469,7 +1479,7 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 		m_floor->Render( _context );
 		m_light_projection_shader->Render(
 			_context, m_floor->GetIndexCount(),
-			t, _v, _p,
+			t, v, _p,
 			m_floor->GetTexture(),
 			m_projection_light2.GetAmbient(),
 			m_projection_light2.GetDiffuse(),
@@ -1482,7 +1492,7 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 		m_rastertek_model->Render( _context );
 		m_light_projection_shader->Render(
 			_context, m_rastertek_model->GetIndexCount(),
-			t, _v, _p,
+			t, v, _p,
 			m_rastertek_model->GetTexture(),
 			m_projection_light2.GetAmbient(),
 			m_projection_light2.GetDiffuse(),
@@ -1506,7 +1516,6 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 		std::vector<float> weights = utility::CreateGaussianKernel( 23 );
 
 		XMMATRIX w;
-		XMMATRIX p;
 		XMMATRIX o;
 		XMFLOAT2 resolution;
 		m_directx->GetWorldMatrix( w );
@@ -1597,6 +1606,9 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 
 		// RenderGlowScene
 		{
+			m_rt18->SetRenderTarget( _context );
+			m_rt18->ClearRenderTarget( _context, 0.0f, 0.0f, 0.0f, 1.0f );
+
 			m_directx->GetOrthoMatrix( o );
 			m_screen_size_bitmap->Render( _context );
 			m_glow_shader->Render( _context, m_screen_size_bitmap->GetIndexCount(), w, _v, o,
@@ -1604,6 +1616,8 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 				m_up_sample->GetShaderResourceView(), 3.0f 
 			);
 
+			m_directx->SetBackBufferRenderTarget();
+			m_directx->ResetViewport();
 		//	m_texture_shader->Render( _context, m_screen_size_bitmap->GetIndexCount(), w, _v, o, m_up_sample->GetShaderResourceView() );
 		}
 

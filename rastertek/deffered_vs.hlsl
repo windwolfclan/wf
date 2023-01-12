@@ -26,10 +26,11 @@ PS_INPUT deffered_vs( VS_INPUT input )
 
 	input.pos.w = 1.0f;
 
-
 	output.pos = mul( input.pos, w );
 	output.pos = mul( output.pos, v );
 	output.pos = mul( output.pos, p );
+
+	output.tex = input.tex;
 
 	output.normal = mul( input.normal, ( float3x3 )w );
 	output.normal = normalize( output.normal );

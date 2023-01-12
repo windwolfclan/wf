@@ -15,6 +15,7 @@ namespace wf
 		texture_desc.MipLevels = 1;
 		texture_desc.ArraySize = 1;
 		texture_desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+		texture_desc.SampleDesc.Count = 1;
 		texture_desc.Usage = D3D11_USAGE_DEFAULT;
 		texture_desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 		texture_desc.CPUAccessFlags = 0;

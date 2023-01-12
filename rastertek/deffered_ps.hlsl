@@ -16,7 +16,7 @@ struct PS_OUTPUT
 	float4 normal : SV_TARGET1;
 };
 
-PS_OUTPUT deffered_ps( PS_INPUT input ) : SV_TARGET
+PS_OUTPUT deffered_ps( PS_INPUT input )
 {
 	PS_OUTPUT output = (PS_OUTPUT)0;
 

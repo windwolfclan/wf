@@ -413,12 +413,24 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 				m_deffered_buffer->ClearRenderTargets( context, 0.0f, 0.0f, 0.0f, 1.0f );
 
 				m_rastertek_model->Render( context );
-				m_deffered_shader->Render( context, m_rastertek_model->GetIndexCount(), w, v, p, m_rastertek_model->GetTexture() );
+				m_deffered_shader->Render( context, m_rastertek_model->GetIndexCount(), rotate, v, p, m_ice_texture->GetTexture() );
 
 				m_directx->SetBackBufferRenderTarget();
 				m_directx->ResetViewport();
 
-				m_screen
+				m_directx->TurnOffZBuffer();
+
+				m_light.SetDirection( -1.0f, 0.0f, 1.0f );
+				m_screen_size_bitmap->Render( context )	;
+				m_deffered_light_shader->Render( context,
+					m_screen_size_bitmap->GetIndexCount(), 
+					w, v, o,
+					m_deffered_buffer->GetShaderResourceView( 0 ),
+					m_deffered_buffer->GetShaderResourceView( 1 ),
+					m_light.GetDirection() 
+				);
+
+				m_directx->TurnOnZBuffer();
 			}
 
 

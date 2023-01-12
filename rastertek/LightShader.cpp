@@ -196,6 +196,10 @@ namespace wf
 
 	DefferedLightShader::DefferedLightShader()
 	{
+		m_vs = L"light_vs.hlsl";
+		m_ps = L"light_ps.hlsl";
+		m_vs_main = "deffered_light_vs";
+		m_ps_main = "deffered_light_ps";
 	}
 
 	bool DefferedLightShader::Render( ID3D11DeviceContext* _context, int _index_count, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView* _srv, ID3D11ShaderResourceView* _normal, XMFLOAT3 _light_dir )

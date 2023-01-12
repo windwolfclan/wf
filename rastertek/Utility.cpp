@@ -61,7 +61,7 @@ namespace wf
 
 			return _device->CreateSamplerState( &sampler_desc, &_sampler_state );
 		}
-		
+
 		std::vector<float> CreateGaussianKernel( const size_t length )
 		{
 			assert( length % 2 == 1 );

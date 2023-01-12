@@ -125,7 +125,15 @@ namespace wf
 
 		_context->PSSetSamplers( 0, 1, &m_sampler_state );
 
+		if ( m_point_state )
+		{
+			_context->PSSetSamplers( 1, 1, &m_point_state );
+		}
+
 		_context->DrawIndexed( _index_count, 0, 0 );
+
+		ID3D11SamplerState* null_state{ nullptr };
+		_context->PSSetSamplers( 1, 1, &null_state );
 	}
 
 	bool LightShader::InitializeLayout( ID3D11Device* _device, ID3D10Blob*& _blob )
@@ -179,10 +187,86 @@ namespace wf
 
 	void LightShader::ReleaseBuffers()
 	{
+		SAFE_RELEASE( m_point_state );
 		SAFE_RELEASE( m_sampler_state );
 		SAFE_RELEASE( m_light_buffer );
 		SAFE_RELEASE( m_camera_buffer );
 		SAFE_RELEASE( m_matrix_buffer );
+	}
+
+	DefferedLightShader::DefferedLightShader()
+	{
+	}
+
+	bool DefferedLightShader::Render( ID3D11DeviceContext* _context, int _index_count, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView* _srv, ID3D11ShaderResourceView* _normal, XMFLOAT3 _light_dir )
+	{
+		if ( !SetShaderParameters( _context, _w, _v, _p, _srv, _normal, _light_dir ) )
+		{
+			return false;
+		}
+
+		RenderShader( _context, _index_count );
+
+		return true;
+	}
+
+	bool DefferedLightShader::SetShaderParameters( ID3D11DeviceContext* _context, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView* _srv, ID3D11ShaderResourceView* _normal, XMFLOAT3 _light_dir )
+	{
+		{
+			_w = XMMatrixTranspose( _w );
+			_v = XMMatrixTranspose( _v );
+			_p = XMMatrixTranspose( _p );
+
+			D3D11_MAPPED_SUBRESOURCE mappedResource;
+			if ( SUCCEEDED( _context->Map( m_matrix_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource ) ) )
+			{
+				MatrixBufferType* data = (MatrixBufferType*)mappedResource.pData;
+				data->w = _w;
+				data->v = _v;
+				data->p = _p;
+
+				_context->Unmap( m_matrix_buffer, 0 );
+			}
+
+			UINT slot = 0;
+			_context->VSSetConstantBuffers( slot, 1, &m_matrix_buffer );
+		}
+
+		{
+			D3D11_MAPPED_SUBRESOURCE mappedResource;
+			if ( SUCCEEDED( _context->Map( m_light_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource ) ) )
+			{
+				LightBufferType* data = (LightBufferType*)mappedResource.pData;
+				data->light_dir = _light_dir;
+
+				_context->Unmap( m_light_buffer, 0 );
+			}
+
+			UINT slot = 0;
+			_context->PSSetConstantBuffers( slot, 1, &m_light_buffer );
+		}
+
+		_context->PSSetShaderResources( 0, 1, &_srv );
+		_context->PSSetShaderResources( 1, 1, &_normal );
+
+		return true;
+	}
+
+	bool DefferedLightShader::InitializeBuffers( ID3D11Device* _device )
+	{
+		if ( !__super::InitializeBuffers( _device ) )
+		{
+			return false;
+		}
+
+		HRESULT hr = utility::CreateClampSampler( _device, m_point_state );
+		if ( FAILED( hr ) )
+		{
+			return false;
+		}
+
+
+		return true;
 	}
 
 }

@@ -14,6 +14,7 @@
 namespace wf
 {
 	class Texture;
+	class DefferedBuffer;
 
 	class ColorShader;
 	class TessellationColorShader;
@@ -43,6 +44,9 @@ namespace wf
 	class ShadowShader;
 	class GlowmapShader;
 	class GlowShader;
+	class DefferedShader;
+	class DefferedLightShader;
+
 
 	class Quad;
 	class TextureQuad;
@@ -168,6 +172,8 @@ namespace wf
 		ShadowShader* m_shadow_shader{ nullptr };
 		GlowmapShader* m_glowmap_shader{ nullptr };
 		GlowShader* m_glow_shader{ nullptr };
+		DefferedShader* m_deffered_shader{ nullptr };
+		DefferedLightShader* m_deffered_light_shader{ nullptr };
 		
 		RenderTexture* m_rt1{ nullptr };
 		RenderTexture* m_rt2{ nullptr };
@@ -190,6 +196,8 @@ namespace wf
 		
 		std::array<TextureArray*, TEXTURE_ARRAY_COUNT> m_texture_arrays;
 		std::array<Quad*, QUAD_COUNT> m_quads;
+
+		DefferedBuffer* m_deffered_buffer{ nullptr };
 
 		// fire
 		Texture* m_blue_texture{ nullptr };

@@ -3,6 +3,7 @@
 
 #include "Quad.h"
 #include "Texture.h"
+#include "DefferedBuffer.h"
 
 #include "ColorShader.h"
 #include "TextureShader.h"
@@ -28,6 +29,8 @@
 #include "ShadowShader.h"
 #include "GlowmapShader.h"
 #include "GlowShader.h"
+#include "DefferedBuffer.h"
+#include "DefferedShader.h"
 
 namespace wf
 {
@@ -146,6 +149,11 @@ namespace wf
 			return false;
 		}
 
+		m_deffered_buffer = new DefferedBuffer;
+		if ( !m_deffered_buffer->Initialize( device, _width, _height, SCREEN_NEAR, SCREEN_DEPTH ) )
+		{
+			return false;
+		}
 
 #define INITIALIZE_RASTERTEK_MODEL( p, tga, txt )\
 p = new RasterTekModel;\
@@ -278,6 +286,7 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		ShutdownShader();
 
 		// 
+		SAFE_SHUTDOWN( m_deffered_buffer );
 		SAFE_SHUTDOWN( m_glow_bitmap );
 		SAFE_SHUTDOWN( m_blur_bitmap );
 		SAFE_SHUTDOWN( m_cursor );
@@ -366,8 +375,8 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 			rotate = XMMatrixRotationY( rotation );
 		}
 
-		static bool draw_2d{ true };
-		// static bool draw_2d{ false };
+		// static bool draw_2d{ true };
+		static bool draw_2d{ false };
 
 #pragma region RENDER TO TEXTURE
 		if( draw_2d )
@@ -400,6 +409,16 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 
 			if ( !draw_2d )
 			{
+				m_deffered_buffer->SetRenderTargets( context );
+				m_deffered_buffer->ClearRenderTargets( context, 0.0f, 0.0f, 0.0f, 1.0f );
+
+				m_rastertek_model->Render( context );
+				m_deffered_shader->Render( context, m_rastertek_model->GetIndexCount(), w, v, p, m_rastertek_model->GetTexture() );
+
+				m_directx->SetBackBufferRenderTarget();
+				m_directx->ResetViewport();
+
+				m_screen
 			}
 
 
@@ -689,12 +708,16 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 		INITIALIZE_WF_SHADER( m_shadow_shader, ShadowShader );
 		INITIALIZE_WF_SHADER( m_glowmap_shader, GlowmapShader );
 		INITIALIZE_WF_SHADER( m_glow_shader, GlowShader );
+		INITIALIZE_WF_SHADER( m_deffered_shader, DefferedShader );
+		INITIALIZE_WF_SHADER( m_deffered_light_shader, DefferedLightShader );
 
 		return true;
 	}
 
 	void Graphics::ShutdownShader()
 	{
+		SAFE_SHUTDOWN( m_deffered_light_shader );
+		SAFE_SHUTDOWN( m_deffered_shader );
 		SAFE_SHUTDOWN( m_glow_shader );
 		SAFE_SHUTDOWN( m_glowmap_shader );
 		SAFE_SHUTDOWN( m_shadow_shader );

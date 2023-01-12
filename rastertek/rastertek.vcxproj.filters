@@ -201,6 +201,12 @@
     <ClInclude Include="GlowShader.h">
       <Filter>ShaderClass</Filter>
     </ClInclude>
+    <ClInclude Include="DefferedShader.h">
+      <Filter>ShaderClass</Filter>
+    </ClInclude>
+    <ClInclude Include="DefferedBuffer.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="System.cpp">
@@ -359,6 +365,12 @@
     <ClCompile Include="GlowShader.cpp">
       <Filter>ShaderClass</Filter>
     </ClCompile>
+    <ClCompile Include="DefferedShader.cpp">
+      <Filter>ShaderClass</Filter>
+    </ClCompile>
+    <ClCompile Include="DefferedBuffer.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="color_vs.hlsl">
@@ -515,6 +527,12 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="glow_ps.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="deffered_vs.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="deffered_ps.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

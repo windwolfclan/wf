@@ -5,7 +5,7 @@ namespace wf
 	class LightShader
 		: public ShaderBase
 	{
-	private:
+	protected:
 		struct MatrixBufferType
 		{
 			XMMATRIX w;
@@ -48,7 +48,7 @@ namespace wf
 			XMFLOAT3 _light_dir
 		);
 
-	private:
+	protected:
 		bool SetShaderParameters(
 			ID3D11DeviceContext* _context,
 			XMMATRIX _w,
@@ -68,10 +68,45 @@ namespace wf
 		virtual bool InitializeBuffers( ID3D11Device* _device ) override;
 		virtual void ReleaseBuffers() override;
 
-	private:
+	protected:
 		ID3D11Buffer* m_matrix_buffer{ nullptr };
 		ID3D11Buffer* m_camera_buffer{ nullptr };
 		ID3D11Buffer* m_light_buffer{ nullptr };
 		ID3D11SamplerState* m_sampler_state{ nullptr };
+		ID3D11SamplerState* m_point_state{ nullptr };
+	};
+
+	class DefferedLightShader
+		: public LightShader
+	{
+	public:
+		DefferedLightShader();
+
+		bool Render(
+			ID3D11DeviceContext* _context,
+			int _index_count,
+			XMMATRIX _w,
+			XMMATRIX _v,
+			XMMATRIX _p,
+			ID3D11ShaderResourceView* _srv,
+			ID3D11ShaderResourceView* _normal,
+			XMFLOAT3 _light_dir
+		);
+
+		bool SetShaderParameters(
+			ID3D11DeviceContext* _context,
+			XMMATRIX _w,
+			XMMATRIX _v,
+			XMMATRIX _p,
+			ID3D11ShaderResourceView* _srv,
+			ID3D11ShaderResourceView* _normal,
+			XMFLOAT3 _light_dir
+		);
+
+	protected:
+		virtual bool InitializeBuffers( ID3D11Device* _device ) override;
+
+	private:
+	
 	};
 }

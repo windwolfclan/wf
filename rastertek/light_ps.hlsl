@@ -1,5 +1,7 @@
 Texture2D src_texture : register( t0 );
+Texture2D normal_texture : register( t1 );
 SamplerState sample_state : register( s0 );
+SamplerState point_state : register( s1 );
 
 cbuffer LightBuffer
 {
@@ -41,6 +43,28 @@ float4 LightPixelShader( PS_INPUT input ) : SV_TARGET
 	color *= src_color;
 
 	color = saturate( color + specular_color );
+
+	return color;
+}
+
+
+struct DEFFERED_PS
+{
+	float4 pos : SV_POSITION;
+	float2 tex : TEXCOORD0;
+};
+
+float4 deffered_light_ps( DEFFERED_PS input ) : SV_TARGET
+{
+	float4 src_color = src_texture.Sample( point_state, input.tex );
+	
+	float4 normal_color = normal_texture.Sample( point_state, input.tex );
+
+	float3 light_direction = -direction;
+	
+	float light_intensity = saturate( dot( normal_color.xyz, light_direction ) );
+
+	float4 color = saturate( src_color * light_intensity );
 
 	return color;
 }

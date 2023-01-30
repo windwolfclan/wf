@@ -37,6 +37,7 @@ protected:
 
 protected:
 	bool InitializeMainWindow();
+	void CalculateFrameStats();
 
 protected:
 	HINSTANCE m_instance{ nullptr };

@@ -64,6 +64,7 @@ int AppBase::Run()
 			}
 			else
 			{
+				CalculateFrameStats();
 				Update( m_game_timer );
 				Render( m_game_timer );
 			}
@@ -312,6 +313,34 @@ bool AppBase::InitializeMainWindow()
 	UpdateWindow( m_wnd );
 
 	return true;
+}
+
+void AppBase::CalculateFrameStats()
+{
+	static int frame_count{ 0 };
+	static float elapsed{ 0.0f };
+
+	elapsed += m_game_timer.GetDeltaTime();
+
+	++frame_count;
+	if ( m_game_timer.GetTotalTime() - elapsed >= 1.0f )
+	{
+		float fps = (float)frame_count; // fps = frameCnt / 1
+		float mspf = 1000.0f / fps;
+
+		std::wstring fpsStr = std::to_wstring( fps );
+		std::wstring mspfStr = std::to_wstring( mspf );
+
+		std::wstring text = m_window_caption +
+			L"    fps: " + fpsStr +
+			L"   mspf: " + mspfStr;
+
+		SetWindowText( m_wnd, text.c_str() );
+
+		// Reset for next average.
+		frame_count = 0;
+		elapsed += 1.0f;
+	}
 }
 
 NAMESPACE_WF_E

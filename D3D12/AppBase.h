@@ -2,6 +2,7 @@
 
 NAMESPACE_WF_S
 
+
 class AppBase
 {
 	// static
@@ -27,7 +28,6 @@ public:
 	virtual LRESULT MsgProc( HWND _hwnd, UINT _msg, WPARAM _wparam, LPARAM _lparam );
 
 protected:
-	virtual void OnResize();
 	virtual void Update( const GameTimer& _game_timer ) = 0;
 	virtual void Render( const GameTimer& _game_timer ) = 0;
 
@@ -53,6 +53,9 @@ protected:
 	int m_client_height{ 900 };
 
 	GameTimer m_game_timer;
+
+	std::shared_ptr<D3D12Context> context{ nullptr };
+
 };
 
 NAMESPACE_WF_E

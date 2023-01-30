@@ -22,6 +22,10 @@ AppBase::AppBase( HINSTANCE _instance )
 
 AppBase::~AppBase()
 {
+	if ( context )
+	{
+		context->TerminateContext();
+	}
 }
 
 HINSTANCE AppBase::GetInstance() const
@@ -81,7 +85,18 @@ bool AppBase::Initialize()
 		return false;
 	}
 
-	OnResize();
+	context = std::make_shared<D3D12Context>( m_wnd, m_client_width, m_client_height );
+	if ( !context )
+	{
+		return false;
+	}
+
+	if ( !context->InitializeContext() )
+	{
+		return false;
+	}
+	
+	context->OnResize( m_client_width, m_client_height );
 
 	return true;
 }
@@ -111,6 +126,49 @@ LRESULT AppBase::MsgProc( HWND _hwnd, UINT _msg, WPARAM _wparam, LPARAM _lparam 
 			m_client_width = LOWORD( _lparam );
 			m_client_height = HIWORD( _lparam );
 
+			if ( context )
+			{
+				switch ( _wparam )
+				{
+					case SIZE_MINIMIZED:
+						m_app_paused = true;
+						m_minimized = true;
+						m_maximized = false;
+					break;
+
+					case SIZE_MAXIMIZED:
+						m_app_paused = true;
+						m_minimized = false;
+						m_maximized = true;
+
+						context->OnResize( m_client_width, m_client_height );
+					break;
+
+					case SIZE_RESTORED:
+						if ( m_minimized )
+						{
+							m_app_paused = false;
+							m_minimized = false;
+							context->OnResize( m_client_width, m_client_height );
+						}
+						else if ( m_maximized )
+						{
+							m_app_paused = false;
+							m_maximized = false;
+							context->OnResize( m_client_width, m_client_height );
+						}
+						else if ( m_resizing )
+						{
+
+						}
+						else
+						{
+							context->OnResize( m_client_width, m_client_height );
+						}
+					break;
+				}
+			}
+
 			return 0;
 		}
 
@@ -127,7 +185,10 @@ LRESULT AppBase::MsgProc( HWND _hwnd, UINT _msg, WPARAM _wparam, LPARAM _lparam 
 			m_app_paused = false;
 			m_resizing = false;
 			m_game_timer.Start();
-			OnResize();
+			if ( context )
+			{
+				context->OnResize( m_client_width, m_client_height );
+			}
 			return 0;
 		}
 
@@ -183,11 +244,6 @@ LRESULT AppBase::MsgProc( HWND _hwnd, UINT _msg, WPARAM _wparam, LPARAM _lparam 
 	}
 
 	return DefWindowProc( _hwnd, _msg, _wparam, _lparam );
-}
-
-void AppBase::OnResize()
-{
-
 }
 
 void AppBase::OnMouseDown( WPARAM _btn, int _x, int _y )

@@ -36,6 +36,12 @@
     <ClCompile Include="BasicApp.cpp">
       <Filter>App</Filter>
     </ClCompile>
+    <ClCompile Include="D3DUtil.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Context.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppBase.h">
@@ -49,6 +55,15 @@
     </ClInclude>
     <ClInclude Include="BasicApp.h">
       <Filter>App</Filter>
+    </ClInclude>
+    <ClInclude Include="D3DUtil.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="d3dx12.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Context.h">
+      <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

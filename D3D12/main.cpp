@@ -15,15 +15,25 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE prevInstance,
 		return - 1;
 	}
 
-	if ( !app->Initialize() )
+	try
 	{
-		return -2;
+		if ( !app->Initialize() )
+		{
+			return -2;
+		}
+
+		int ret = app->Run();
+
+	}
+	catch ( wf::DxException& e )
+	{
+		MessageBox( nullptr, e.ToString().c_str(), L"HR Failed", MB_OK );
+
+		SAFE_DELETE( app );
+		return -3;
 	}
 
-	int ret = app->Run();
-
-	delete app;
-	app = nullptr;
+	SAFE_DELETE( app );
 
 	return 0;
 }

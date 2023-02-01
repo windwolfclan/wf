@@ -25,6 +25,7 @@ public:
 	int Run();
 
 	virtual bool Initialize();
+	virtual void Terminate();
 	virtual LRESULT MsgProc( HWND _hwnd, UINT _msg, WPARAM _wparam, LPARAM _lparam );
 
 protected:
@@ -38,6 +39,8 @@ protected:
 protected:
 	bool InitializeMainWindow();
 	void CalculateFrameStats();
+
+	ID3D12Device* GetDevice() const;
 
 protected:
 	HINSTANCE m_instance{ nullptr };

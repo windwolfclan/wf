@@ -102,6 +102,11 @@ bool AppBase::Initialize()
 	return true;
 }
 
+void AppBase::Terminate()
+{
+	
+}
+
 LRESULT AppBase::MsgProc( HWND _hwnd, UINT _msg, WPARAM _wparam, LPARAM _lparam )
 {
 	switch ( _msg )
@@ -341,6 +346,11 @@ void AppBase::CalculateFrameStats()
 		frame_count = 0;
 		elapsed += 1.0f;
 	}
+}
+
+ID3D12Device* AppBase::GetDevice() const
+{
+	return context->GetDevice();
 }
 
 NAMESPACE_WF_E

@@ -42,7 +42,10 @@ using namespace DirectX;
 
 #define SAFE_RELEASE( p ) if ( p ) { p->Release(); p = nullptr; }
 
-#include "D3D12Context.h"
 #include "D3DUtil.h"
+#include "MathHelper.h"
+#include "GeometryGenerator.h"
+#include "UploadBuffer.h"
+#include "D3D12Context.h"
 #include "GameTimer.h"
 #include "AppBase.h"

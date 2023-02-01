@@ -19,6 +19,9 @@
     <Filter Include="App">
       <UniqueIdentifier>{decc8148-d369-4c86-8c71-0fe8f94b696e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shaders">
+      <UniqueIdentifier>{4d94c477-d9bd-4acf-8bad-8446a494094d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -40,6 +43,18 @@
       <Filter>common</Filter>
     </ClCompile>
     <ClCompile Include="D3D12Context.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="UploadBuffer.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="Tutorial6BoxApp.cpp">
+      <Filter>App</Filter>
+    </ClCompile>
+    <ClCompile Include="MathHelper.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="GeometryGenerator.cpp">
       <Filter>common</Filter>
     </ClCompile>
   </ItemGroup>
@@ -65,5 +80,22 @@
     <ClInclude Include="D3D12Context.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="UploadBuffer.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="Tutorial6BoxApp.h">
+      <Filter>App</Filter>
+    </ClInclude>
+    <ClInclude Include="MathHelper.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="GeometryGenerator.h">
+      <Filter>common</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="shaders\color.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

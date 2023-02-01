@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "BasicApp.h"
+#include "Tutorial6BoxApp.h"
 
 
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE prevInstance,
@@ -9,7 +10,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE prevInstance,
 	_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
 #endif
 
-	wf::BasicApp* app = new wf::BasicApp( hInstance );
+	wf::Tutorial6BoxApp* app = new wf::Tutorial6BoxApp( hInstance );
 	if ( !app )
 	{
 		return - 1;
@@ -19,6 +20,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE prevInstance,
 	{
 		if ( !app->Initialize() )
 		{
+			app->Terminate();
+			SAFE_DELETE( app );
+
 			return -2;
 		}
 
@@ -29,8 +33,18 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE prevInstance,
 	{
 		MessageBox( nullptr, e.ToString().c_str(), L"HR Failed", MB_OK );
 
+		if ( app )
+		{
+			app->Terminate();
+		}
+		
 		SAFE_DELETE( app );
 		return -3;
+	}
+
+	if ( app )
+	{
+		app->Terminate();
 	}
 
 	SAFE_DELETE( app );

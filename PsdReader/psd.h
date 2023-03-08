@@ -40,7 +40,30 @@ namespace psd
 
 	struct LayerMask
 	{
+		int32_t length{ 0 };
+		int32_t t1{ 0 };
+		int32_t l1{ 0 };
+		int32_t b1{ 0 };
+		int32_t r1{ 0 };
+		int8_t color{ 0 };
+		int8_t flags{ 0 };
+		int8_t mask_parameters{};
 
+		// mask parameters bit flags present
+		int8_t user_mask_density{ 0 };
+		double user_mask_feather{ 0.0 };
+		int8_t vector_mask_density{ 0 };
+		double vector_mask_feather{ 0.0 };
+
+		int8_t _flags{ 0 };
+		int8_t user_mask_background{ 0 };
+
+		int32_t t2{ 0 };
+		int32_t l2{ 0 };
+		int32_t b2{ 0 };
+		int32_t r2{ 0 };
+
+		void ReadLayerMaskData( std::istream& stream );
 	};
 
 	struct LayerRecord
@@ -58,6 +81,10 @@ namespace psd
 		uint8_t flags{ 0 };
 		uint8_t filter{ 0 };
 		uint32_t extra_length{ 0 };
+
+		std::string name_mbcs{};
+		std::wstring name_wbcs{};
+		int32_t section_divider{ 0 };
 
 		void ReadLayerRecordData( std::istream& stream );
 	};

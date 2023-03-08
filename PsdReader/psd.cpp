@@ -1,10 +1,9 @@
 #include "pch.h"
 #include "psd.h"
 
-#include <iostream>
-#include <sstream>
-
 NAMESPACE_WF_S
+
+// https://www.adobe.com/devnet-apps/photoshop/fileformatashtml/#50577409_13084
 
 void check( std::istream& stream )
 {
@@ -118,6 +117,10 @@ namespace psd
         read( length, stream );
     }
 
+    void LayerMask::ReadLayerMaskData( std::istream& stream )
+    {
+    }
+
     void LayerRecord::ReadLayerRecordData( std::istream& stream )
     {
         channels.clear();
@@ -141,8 +144,92 @@ namespace psd
         read( clipping, stream );
         read( flags, stream );
         read( filter, stream );
+
+        // Extra data
         read( extra_length, stream );
-        stream.ignore( extra_length );
+        std::streampos layer_mask_position = stream.tellg();
+        
+        // Layer mask / adjustment layer data
+        {
+            int32_t data_length{ 0 };
+            read( data_length, stream );
+            stream.ignore( data_length );
+        }
+
+        // Layer blending ranges data
+        {
+            int32_t data_length{ 0 };
+            read( data_length, stream );
+            stream.ignore( data_length );
+        }
+
+        // Layer name
+        {
+            uint8_t length{ 0 };
+            read( length, stream );
+
+            char buf[ 256 ]{ 0, };
+            read( reinterpret_cast<unsigned char*>( buf ), length, stream );
+
+            name_mbcs = buf;
+        }
+
+        // Additional Layer Information
+        int32_t additional_layer_signature{ 0 };
+        while ( extra_length - ( stream.tellg() - layer_mask_position ) > 4 )
+        {
+            if ( 0 == additional_layer_signature )
+            {
+                read( additional_layer_signature, stream );
+            }
+            else
+            {
+                uint8_t byte{ 0 };
+                read( byte, stream );
+                additional_layer_signature = ( additional_layer_signature << 8 ) | byte;
+            }
+
+            if ( '8BIM' != additional_layer_signature )
+            {
+                continue;
+            }
+
+			int32_t additional_layer_key{ 0 };
+			read( additional_layer_key, stream );
+
+            int32_t additional_layer_data_length{ 0 };
+			read( additional_layer_data_length, stream );
+
+			std::streampos block_position = stream.tellg();
+
+			if ( 'lsct' == additional_layer_key )
+			{
+				read( section_divider, stream );
+			}
+
+			if ( 'luni' == additional_layer_key )
+			{
+				uint32_t length = 0;
+				read( length, stream );
+
+                wchar_t name[ 256 ]{ 0, };
+				for ( auto i = 0u; i < length; i++ )
+				{
+					uint16_t word = 0;
+					read( word, stream );
+					name[ i ] = word;
+				}
+
+                name_wbcs = name;
+			}
+
+			stream.ignore( additional_layer_data_length - ( stream.tellg() - block_position ) );
+			additional_layer_signature = 0;
+		}
+
+
+
+        stream.ignore( extra_length - ( stream.tellg() - layer_mask_position ) );
     }
 
     void LayerAndMask::ReadData( std::istream& stream )
@@ -163,8 +250,6 @@ namespace psd
 
         // stream.ignore( length );
     }
-   
-
 }
 
 NAMESPACE_WF_E

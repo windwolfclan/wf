@@ -1,9 +1,20 @@
 #pragma once
 
+#include "image.h"
+
 NAMESPACE_WF_S
 
 namespace psd
 {
+	enum class LayerDivider
+	{
+		none		= -1,
+		any			= 0,
+		open		= 1,
+		close		= 2,
+		divider		= 3,
+	};
+
 	struct Header
 	{
 		std::array< uint8_t, 4> signature{ 0, 0, 0, 0 };
@@ -34,8 +45,15 @@ namespace psd
 	{
 		int16_t id{ 0 };
 		int32_t length{};	// data length
+		int32_t stride{ 0 };
+		std::vector<uint8_t> datas{};
 
+		void Initialize( int16_t id, int32_t height, int32_t width );
 		void ReadChannelData( std::istream& stream );
+		void ReadRawData( std::istream& stream, int32_t height, int32_t width );
+		void ReadRleData( std::istream& stream, int32_t height, int32_t width );
+		void UnpackBits( std::vector<uint8_t>& dst, int32_t offset, size_t bytes_per_scanline, std::istream& stream );
+		uint8_t* GetScanline( int32_t y ) const;
 	};
 
 	struct LayerMask
@@ -86,7 +104,11 @@ namespace psd
 		std::wstring name_wbcs{};
 		int32_t section_divider{ 0 };
 
+		Image image{};
+
 		void ReadLayerRecordData( std::istream& stream );
+		void ReadImageData( std::istream& stream );
+		Channel& GetChannel( int32_t id );
 	};
 
 	struct LayerAndMask
@@ -99,6 +121,7 @@ namespace psd
 
 		void ReadData( std::istream& stream );
 	};
+
 }
 
 NAMESPACE_WF_E

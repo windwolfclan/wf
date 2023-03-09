@@ -111,10 +111,88 @@ namespace psd
         // ImageResourceBlocks
     }
 
+    void Channel::Initialize( int16_t id, int32_t height, int32_t width )
+    {
+        this->id = id;
+        datas.resize( height * width, 0xff );
+    }
+
     void Channel::ReadChannelData( std::istream& stream )
     {
         read( id, stream );
         read( length, stream );
+    }
+
+    void Channel::ReadRawData( std::istream& stream, int32_t height, int32_t width )
+    {
+        stride = width;
+        datas.resize( height * width );
+        read( datas, stream );
+    }
+
+    void Channel::ReadRleData( std::istream& stream, int32_t height, int32_t width )
+    {
+        std::vector<uint16_t> scanline_byte_counts;
+        for ( auto y = 0; y < height; ++y )
+        {
+            uint16_t value{ 0 };
+            read( value, stream );
+            scanline_byte_counts.push_back( value );
+        }
+
+        stride = width;
+        datas.resize( height * width );
+
+        for ( auto y = 0; y < height; ++y )
+        {
+            const auto bytes_per_scanline = scanline_byte_counts[ y ];
+            const auto offset = y * stride;
+
+            UnpackBits( datas, offset, bytes_per_scanline, stream );
+        }
+    }
+
+    void Channel::UnpackBits( std::vector<uint8_t>& dst, int32_t offset, size_t bytes_per_scanline, std::istream& stream )
+    {
+        size_t read_bytes = 0u;
+
+        while ( read_bytes < bytes_per_scanline )
+        {
+            uint8_t control_byte = 0;
+            read( control_byte, stream );
+            ++read_bytes;
+
+            if ( 0x80 == control_byte )
+            {
+                for ( auto j = 0; j < control_byte + 1; ++j )
+                {
+                    uint8_t single_value{ 0 };
+                    read( single_value, stream );
+                    ++read_bytes;
+
+                    dst[ offset ] = single_value;
+                    ++offset;
+                }
+            }
+            else
+            {
+                uint8_t span_value{ 0 };
+                read( span_value, stream );
+                ++read_bytes;
+
+                auto count = ( 256 - control_byte ) + 1;
+                for ( auto j = 0; j < count; ++j )
+                {
+                    dst[ offset ] = span_value;
+                    ++offset;
+                }
+            }
+        }
+    }
+
+    uint8_t* Channel::GetScanline( int32_t y ) const
+    {
+        return const_cast<uint8_t*>( datas.data() + y * stride );
     }
 
     void LayerMask::ReadLayerMaskData( std::istream& stream )
@@ -227,9 +305,74 @@ namespace psd
 			additional_layer_signature = 0;
 		}
 
-
-
         stream.ignore( extra_length - ( stream.tellg() - layer_mask_position ) );
+    }
+
+    void LayerRecord::ReadImageData( std::istream& stream )
+    {
+        int32_t height = b - t;
+        int32_t width = r - l;
+
+        for ( Channel& channel : channels )
+        {
+            uint16_t compression{ 0 };
+            read( compression, stream );
+
+            switch ( compression )
+            {
+                // Raw image data
+                case 0:
+                {
+                    channel.ReadRawData( stream, height, width );
+                    break;
+                }
+
+                case 1:
+                {
+                    channel.ReadRleData( stream, height, width );
+                    break;
+                }
+            }
+        }
+
+        // rgb
+        if ( 3 == channel_count )
+        {
+            Channel channel;
+            channel.Initialize( -1, height, width );
+            channels.push_back( channel );
+            ++channel_count;
+        }
+
+        image.init( width, height );
+
+        for ( int32_t y = 0; y < height; ++y )
+        {
+            uint32_t* dst = image.getScanline( y );
+
+            uint8_t* red = GetChannel( 0 ).GetScanline( y );
+            uint8_t* green = GetChannel( 1 ).GetScanline( y );
+            uint8_t* blue = GetChannel( 2 ).GetScanline( y );
+            uint8_t* alpha = GetChannel( -1 ).GetScanline( y );
+
+            for ( int32_t x = 0; x < width; ++x )
+            {
+                uint8_t a = alpha[ x ];
+                uint8_t r = a > 0 ? red[ x ] : 0;
+                uint8_t g = a > 0 ? green[ x ] : 0;
+                uint8_t b = a > 0 ? blue[ x ] : 0;
+
+
+                // ¿œ¥‹ ARGB
+                dst[ x ] = ( a << 24 ) | ( r << 16 ) | ( g << 8 ) | b;
+            }
+        }
+    }
+
+    Channel& LayerRecord::GetChannel( int32_t id )
+    {
+        auto iter = std::find_if( channels.begin(), channels.end(), [id]( const Channel& channel ) { return channel.id == id; } );
+        return *iter;
     }
 
     void LayerAndMask::ReadData( std::istream& stream )
@@ -247,6 +390,13 @@ namespace psd
             layer_record.ReadLayerRecordData( stream );
             layer_records.emplace_back( layer_record );
         }
+
+        for ( int16_t i = 0; i < layer_count; ++i )
+        {
+            LayerRecord& layer_record = layer_records[ i ];
+            layer_record.ReadImageData( stream );
+        }
+       
 
         // stream.ignore( length );
     }

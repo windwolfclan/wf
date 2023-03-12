@@ -313,6 +313,8 @@ namespace psd
         int32_t height = b - t;
         int32_t width = r - l;
 
+
+        bool fail{ false };
         for ( Channel& channel : channels )
         {
             uint16_t compression{ 0 };
@@ -332,8 +334,17 @@ namespace psd
                     channel.ReadRleData( stream, height, width );
                     break;
                 }
+
+                default:
+                {
+                    fail = true;
+                    break;
+                }
             }
         }
+
+        if ( fail )
+            return;
 
         // rgb
         if ( 3 == channel_count )

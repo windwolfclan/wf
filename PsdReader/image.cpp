@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "image.h"
+#include "tga.h"
 
 NAMESPACE_WF_S
 
@@ -42,7 +43,7 @@ namespace psd
     // save image to file
     void Image::save( const std::string& filename ) const
     {
-       // savetga( filename, const_cast<uint32_t*>( getData().data() ), getWidth(), getHeight() );
+        savetga( filename, const_cast<uint32_t*>( getData().data() ), getWidth(), getHeight() );
     }
 
     // load image from file

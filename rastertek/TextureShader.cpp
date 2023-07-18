@@ -122,6 +122,94 @@ namespace wf
 		SAFE_RELEASE( m_matrix_buffer );
 	}
 
+
+	SliceShader::SliceShader()
+	{
+		m_vs = L"texture_vs.hlsl";
+		m_ps = L"texture_ps.hlsl";
+		m_vs_main = "TextureVertexShader";
+		m_ps_main = "SlicePixelShader";
+	}
+
+	bool SliceShader::Render( ID3D11DeviceContext* _context, int _index_count, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView* _srv, SliceBuffer& _slice_buffer )
+	{
+		if( !SetShaderParameters( _context, _w, _v, _p, _srv, _slice_buffer ) )
+		{
+			return false;
+		}
+		
+		RenderShader( _context, _index_count );
+
+		return true;
+	}
+
+	bool SliceShader::SetShaderParameters( ID3D11DeviceContext* _context, XMMATRIX _w, XMMATRIX _v, XMMATRIX _p, ID3D11ShaderResourceView* _srv, SliceBuffer& _slice_buffer )
+	{
+		_w = XMMatrixTranspose( _w );
+		_v = XMMatrixTranspose( _v );
+		_p = XMMatrixTranspose( _p );
+
+		D3D11_MAPPED_SUBRESOURCE mappedResource;
+		if( SUCCEEDED( _context->Map( m_matrix_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource ) ) )
+		{
+			MatrixBufferType* data = (MatrixBufferType*)mappedResource.pData;
+			data->w = _w;
+			data->v = _v;
+			data->p = _p;
+			_context->Unmap( m_matrix_buffer, 0 );
+		}
+
+		if( SUCCEEDED( _context->Map( m_slice_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource ) ) )
+		{
+			SliceBuffer* data = (SliceBuffer*)mappedResource.pData;
+			data->resolution = _slice_buffer.resolution;
+			data->border = _slice_buffer.border;
+			_context->Unmap( m_slice_buffer, 0 );
+		}
+
+		UINT slot = 0;
+		_context->VSSetConstantBuffers( slot, 1, &m_matrix_buffer );
+		_context->PSSetConstantBuffers( slot, 1, &m_slice_buffer );
+		_context->PSSetShaderResources( 0, 1, &_srv );
+
+		return true;
+	}
+
+	void SliceShader::RenderShader( ID3D11DeviceContext* _context, int _index_count )
+	{
+		_context->IASetInputLayout( m_layout );
+
+		_context->VSSetShader( m_vertex_shader, nullptr, 0 );
+
+		_context->PSSetShader( m_pixel_shader, nullptr, 0 );
+
+		_context->PSSetSamplers( 0, 1, &m_sampler_state );
+
+		_context->DrawIndexed( _index_count, 0, 0 );
+	}
+
+	bool SliceShader::InitializeBuffers( ID3D11Device* _device )
+	{
+		if( !__super::InitializeBuffers( _device ) )
+		{
+			return false;
+		}
+
+		HRESULT hr = utility::CreateDynamicWriteBuffer( _device, m_slice_buffer, sizeof( SliceBuffer ) );
+		if( FAILED( hr ) )
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	void SliceShader::ReleaseBuffers()
+	{
+		__super::ReleaseBuffers();
+		SAFE_RELEASE( m_slice_buffer );
+	}
+
 	InstanceTextureShader::InstanceTextureShader()
 	{
 		m_vs = L"texture_vs.hlsl";
@@ -172,5 +260,6 @@ namespace wf
 
 		return true;
 	}
+
 
 }

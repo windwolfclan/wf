@@ -32,6 +32,9 @@
 #include "DefferedBuffer.h"
 #include "DefferedShader.h"
 
+static float tx{ 256.0f };
+static float ty{ 256.0f };
+
 namespace wf
 {
 	Graphics::Graphics()
@@ -114,13 +117,13 @@ namespace wf
 		}
 
 		m_fire = new RasterTekModel;
-		if ( !m_fire->Initialize( device, context, "./resources/stone.tga", "./resources/quad.txt" ) )
+		if ( !m_fire->Initialize( device, context, "./resources/bubble1.tga", "./resources/quad2.txt" ) )
 		{
 			return false;
 		}
 
 		m_triangles = new InstanceModel;
-		if ( !m_triangles->Initialize( device, context, "./resources/ice.tga" ) )
+		if ( !m_triangles->Initialize( device, context, "./resources/bubble2.tga" ) )
 		{
 			return false;
 		}
@@ -133,6 +136,12 @@ namespace wf
 
 		m_cursor = new Bitmap;
 		if ( !m_cursor->Initialize( device, context, _width, _height, "./resources/windwolf.tga", 32, 32 ) )
+		{
+			return false;
+		}
+
+		m_cursor2 = new Bitmap;
+		if( !m_cursor2->Initialize( device, context, _width, _height, "./resources/slice.tga", tx, ty ) )
 		{
 			return false;
 		}
@@ -187,6 +196,8 @@ if( !p->Initialize( device, w, h ) ) return false;
 		INITIALIZE_RENDER_TARGET_BITMAP( m_blur_size_bitmap, half_width, half_height );
 		INITIALIZE_RENDER_TARGET_BITMAP( m_screen_size_bitmap, _width, _height );
 		INITIALIZE_RENDER_TARGET_BITMAP( m_glass_bitmap, _width, _height );
+		INITIALIZE_RENDER_TARGET_BITMAP( m_src_bitmap, 250.0f, 250.0f );
+		INITIALIZE_RENDER_TARGET_BITMAP( m_dst_bitmap, 250.0f, 250.0f );
 
 #define INITIALIZE_TEXTURE( p, path )\
 p = new Texture;\
@@ -276,6 +287,8 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		SAFE_SHUTDOWN( m_blue_texture );
 
 		// RednerTargetBitmap
+		SAFE_SHUTDOWN( m_dst_bitmap );
+		SAFE_SHUTDOWN( m_src_bitmap );
 		SAFE_SHUTDOWN( m_glass_bitmap );
 		SAFE_SHUTDOWN( m_screen_size_bitmap );
 		SAFE_SHUTDOWN( m_blur_size_bitmap );
@@ -290,6 +303,7 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		SAFE_SHUTDOWN( m_glow_bitmap );
 		SAFE_SHUTDOWN( m_blur_bitmap );
 		SAFE_SHUTDOWN( m_cursor );
+		SAFE_SHUTDOWN( m_cursor2 );
 		SAFE_SHUTDOWN( m_text );
 		SAFE_SHUTDOWN( m_fire );
 		SAFE_SHUTDOWN( m_water_ground );
@@ -304,6 +318,7 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 		SAFE_SHUTDOWN( m_light_shader );
 		SAFE_SHUTDOWN( m_light_model );
 		SAFE_SHUTDOWN( m_texture_shader );
+		SAFE_SHUTDOWN( m_slice_shader );
 		SAFE_SHUTDOWN( m_texture_model );
 		SAFE_SHUTDOWN( m_tessellation_color_shader );
 		SAFE_SHUTDOWN( m_color_shader );
@@ -405,34 +420,47 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 
 		// render
 		{
-			draw_2d ? m_directx->BeginScene( 0.0f, 0.0f, 1.0f, 1.0f ) : m_directx->BeginScene( 0.0f, 0.0f, 0.0f, 1.0f );
+			draw_2d ? m_directx->BeginScene( 0.0f, 0.0f, 1.0f, 1.0f ) : m_directx->BeginScene( 0.2f, 0.2f, 0.5f, 1.0f );
 
 			if ( !draw_2d )
 			{
-				m_deffered_buffer->SetRenderTargets( context );
-				m_deffered_buffer->ClearRenderTargets( context, 0.0f, 0.0f, 0.0f, 1.0f );
-
-				m_rastertek_model->Render( context );
-				m_deffered_shader->Render( context, m_rastertek_model->GetIndexCount(), rotate, v, p, m_ice_texture->GetTexture() );
-
-				m_directx->SetBackBufferRenderTarget();
-				m_directx->ResetViewport();
-
 				m_directx->TurnOffZBuffer();
 
-				m_light.SetDirection( -1.0f, 0.0f, 1.0f );
-				m_screen_size_bitmap->Render( context )	;
-				m_deffered_light_shader->Render( context,
-					m_screen_size_bitmap->GetIndexCount(), 
-					w, v, o,
-					m_deffered_buffer->GetShaderResourceView( 0 ),
-					m_deffered_buffer->GetShaderResourceView( 1 ),
-					m_light.GetDirection() 
-				);
+				ID3D11DeviceContext* context = m_directx->GetDeviceContext();
+				XMMATRIX w;
+				XMMATRIX v;
+				XMMATRIX o;
+
+				m_directx->GetWorldMatrix( w );
+				m_camera->GetViewMatrix( v );
+				m_directx->GetOrthoMatrix( o );
+
+				constexpr int CURSOR_SIZE = 32;
+
+				int x = m_mouse_x;
+				int y = m_mouse_y;
+				int width = m_directx->GetWidth();
+				int height = m_directx->GetHeight();
+
+				XMMATRIX t = XMMatrixTranslation( 50.0f, 0.0f, 0.0f );
+
+				m_directx->TurnOnAlphaBlending();
+
+				m_dst_bitmap->Render( context );
+				m_texture_shader->Render( context, m_dst_bitmap->GetIndexCount(), w, v, o, m_triangles->GetTexture() );
+				
+				float blend_factor[ 4 ]{ 0.0F, 0.0F, 0.0F, 0.0F };
+				auto multiply = m_directx->m_multiply_blend_state;
+				context->OMSetBlendState( multiply, blend_factor, 0xffffffff );
+				
+				m_src_bitmap->Render( context );
+				m_texture_shader->Render( context, m_src_bitmap->GetIndexCount(), w, v, o, m_fire->GetTexture() );
+				
+
+				m_directx->TurnOffAlphaBlending();
 
 				m_directx->TurnOnZBuffer();
 			}
-
 
 			m_camera->SetPosition( 0.0f, 0.0f, -5.0f );
 			m_camera->SetRotation( 0.0f, 0.0f, 0.0f );
@@ -442,6 +470,10 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 			// 2D Draw
 			m_directx->GetWorldMatrix( w );
 			m_directx->TurnOffZBuffer();
+
+			{
+				
+			}
 
 			if ( draw_2d )
 			{
@@ -488,6 +520,27 @@ if( !p->LoadDDS( device, context, path ) ) return false;
 
 		m_cursor->Render( context, x, y );
 		m_texture_shader->Render( context, m_cursor->GetIndexCount(), w, v, o, m_cursor->GetTexture() );
+
+
+		static float sx{ 128.0f };
+		static float sy{ 128.0f };
+
+		static SliceBuffer buffer;
+		buffer.resolution.x = tx;
+		buffer.resolution.y = ty;
+		buffer.resolution.z = sx;
+		buffer.resolution.w = sy;
+
+		buffer.border = XMFLOAT4(
+			18.0f,
+			18.0f,
+			18.0f,
+			18.0f
+		);
+
+		// m_cursor2->Render( context, x, y );
+		// m_slice_shader->Render( context, m_cursor2->GetIndexCount(), w, v, o, m_cursor2->GetTexture(), buffer );
+
 	}
 
 	bool Graphics::InitializeTextureArray( ID3D11Device*& _device, ID3D11DeviceContext*& _context )
@@ -695,6 +748,7 @@ if( !p->Initialize( _device, _hwnd ) ) return false;
 		INITIALIZE_WF_SHADER( m_color_shader, ColorShader );
 		INITIALIZE_WF_SHADER( m_tessellation_color_shader, TessellationColorShader );
 		INITIALIZE_WF_SHADER( m_texture_shader, TextureShader );
+		INITIALIZE_WF_SHADER( m_slice_shader, SliceShader );
 		INITIALIZE_WF_SHADER( m_light_shader, LightShader );
 		INITIALIZE_WF_SHADER( m_dual_texture_shader, DualTextureShader );
 		INITIALIZE_WF_SHADER( m_lightmap_shader, LightmapShader );

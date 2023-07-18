@@ -61,6 +61,8 @@ namespace wf
 		ID3D11DepthStencilState* m_depth_disabled_stencil_state{ nullptr };
 		ID3D11BlendState* m_alpha_enable_blend_state{ nullptr };
 		ID3D11BlendState* m_alpha_disable_blend_state{ nullptr };
+	public:
+		ID3D11BlendState* m_multiply_blend_state{ nullptr };
 
 		D3D11_VIEWPORT m_viewport;
 		XMMATRIX m_projection_matrix{};

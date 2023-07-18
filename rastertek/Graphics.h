@@ -19,6 +19,7 @@ namespace wf
 	class ColorShader;
 	class TessellationColorShader;
 	class TextureShader;
+	class SliceShader;
 	class LightShader;
 	class DualTextureShader;
 	class LightmapShader;
@@ -147,6 +148,7 @@ namespace wf
 		ColorShader* m_color_shader{ nullptr };
 		TessellationColorShader* m_tessellation_color_shader{ nullptr };
 		TextureShader* m_texture_shader{ nullptr };
+		SliceShader* m_slice_shader{ nullptr };
 		LightShader* m_light_shader{ nullptr };
 		DualTextureShader* m_dual_texture_shader{ nullptr };
 		LightmapShader* m_lightmap_shader{ nullptr };
@@ -240,6 +242,8 @@ namespace wf
 		RenderTargetBitmap* m_blur_size_bitmap{ nullptr };
 		RenderTargetBitmap* m_screen_size_bitmap{ nullptr };
 		RenderTargetBitmap* m_glass_bitmap{ nullptr };
+		RenderTargetBitmap* m_src_bitmap{ nullptr };
+		RenderTargetBitmap* m_dst_bitmap{ nullptr };
 
 		// fade
 		float m_fade_time{ 0.0f };
@@ -254,6 +258,7 @@ namespace wf
 
 		// mouse cursor
 		Bitmap* m_cursor{ nullptr };
+		Bitmap* m_cursor2{ nullptr };
 		int m_mouse_x{ 0 };
 		int m_mouse_y{ 0 };
 		int m_width{ 0 };

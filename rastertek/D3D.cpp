@@ -298,6 +298,25 @@ namespace wf
 			return false;
 		}
 
+		::ZeroMemory( &blend_desc, sizeof( blend_desc ) );
+		blend_desc.RenderTarget[ 0 ].BlendEnable = TRUE;
+		// blend_desc.RenderTarget[ 0 ].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALPHA; 0x0f;
+		blend_desc.RenderTarget[ 0 ].RenderTargetWriteMask = 0x0f;
+
+		blend_desc.RenderTarget[ 0 ].BlendOp = D3D11_BLEND_OP_ADD;
+		blend_desc.RenderTarget[ 0 ].SrcBlend = D3D11_BLEND_INV_SRC_ALPHA;
+		blend_desc.RenderTarget[ 0 ].DestBlend = D3D11_BLEND_SRC_ALPHA;
+		
+		blend_desc.RenderTarget[ 0 ].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+		blend_desc.RenderTarget[ 0 ].SrcBlendAlpha = D3D11_BLEND_ZERO;
+		blend_desc.RenderTarget[ 0 ].DestBlendAlpha = D3D11_BLEND_ONE;
+
+		hr = m_device->CreateBlendState( &blend_desc, &m_multiply_blend_state );
+		if( FAILED( hr ) )
+		{
+			return false;
+		}
+
 
 		ZeroMemory( &m_viewport, sizeof( m_viewport ) );
 		m_viewport.Width = (float)_width;
@@ -326,6 +345,7 @@ namespace wf
 			m_swapchain->SetFullscreenState( false, nullptr );
 		}
 
+		SAFE_RELEASE( m_multiply_blend_state );
 		SAFE_RELEASE( m_alpha_disable_blend_state );
 		SAFE_RELEASE( m_alpha_enable_blend_state );
 		SAFE_RELEASE( m_wire_frame );
